@@ -12,5 +12,46 @@ void main() {
       expect(_testHeld.erlebnisse, _testHeld.defaults['erlebnisse']);
     });
 
+    test('Set values ', () {
+      final _testHeld = new Held.initial();
+      _testHeld.iBild=3;
+      _testHeld.name='test';
+      _testHeld.geschlecht='w';
+      _testHeld.maxImages=10;
+      _testHeld.addErlebniss='test';
+
+      expect(_testHeld.iBild, 3);
+      expect(_testHeld.name, 'test');
+      expect(_testHeld.geschlecht, 'w');
+      expect(_testHeld.maxImages, 10);
+      expect(_testHeld.erlebnisse, ['test']);
+
+      _testHeld.addErlebniss='';
+      expect(_testHeld.erlebnisse,['test']);
+
+      String _error;
+      try{_testHeld.iBild=-1;} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid imange index!');
+      try{_testHeld.iBild=null;} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid imange index!');
+
+      try{_testHeld.name='';} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid name!');
+      try{_testHeld.name=null;} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid name!');
+
+      try{_testHeld.geschlecht='q';} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid sex!');
+      try{_testHeld.geschlecht=null;} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid sex!');
+
+      try{_testHeld.maxImages=-1;} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid number of images!');
+      try{_testHeld.maxImages=null;} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid number of images!');
+      try{_testHeld.maxImages=2;} on Exception catch(error){_error = error.toString();}
+      expect(_error, 'Exception: Invalid number of images!');
+    });
+
   });
 }

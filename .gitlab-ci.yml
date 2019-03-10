@@ -1,10 +1,5 @@
 image: cirrusci/flutter
 
-variables:
-before_script:
-- flutter channel beta
-- flutter upgrade
-
 stages:
 - test
 - deploy
@@ -12,4 +7,4 @@ stages:
 unitTests:
   stage: test
   script:
-  - flutter test --coverage
+  - flutter test

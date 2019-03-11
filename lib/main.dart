@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() => runApp(MyApp());
 
@@ -6,14 +7,14 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState(){
     // Implement reading from file here
-    return new _MyAppState(new Held.initial());
+    return new _MyAppState(hero: new Held.initial());
   }
 }
 
 class _MyAppState extends State<MyApp> {
   Held hero;
 
-  _MyAppState(this.hero);
+  _MyAppState({this.hero});
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +23,12 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.amber,
       ),
-      home: new UserPage(this.hero),
+      home: new _UserPage(hero: this.hero),
     );
   }
 }
 
-class DialogonalClipper extends CustomClipper<Path> {
+class _DialogonalClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     Path path = new Path();
@@ -42,32 +43,46 @@ class DialogonalClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-class UserPage extends StatefulWidget {
+class _UserPage extends StatefulWidget {
   final Held hero;
 
-  UserPage(this.hero,{Key key}) : super(key: key);
+  const _UserPage({Key key, this.hero}) : super(key: key);
 
   @override
-  _UserPageState createState() => new _UserPageState(hero);
+  _UserPageState createState() => new _UserPageState(hero: this.hero);
 }
 
-class _UserPageState extends State<UserPage> {
+class _UserPageState extends State<_UserPage> {
   Held hero;
-  _UserPageState(this.hero);
-
   double _imageHeight = 200.0;
+  double _screenHeight;
+  _UserPageState({this.hero});
+
   @override
   Widget build(BuildContext context) {
+    _screenHeight = MediaQuery.of(context).size.height;
     return new Scaffold(
       body: new Container(
-        height: 300.0,
+        height: _screenHeight,
         width: MediaQuery.of(context).size.width,
         child: new Stack(
           children: <Widget>[
             _buildTopPanel(),
-            _buildProfileRow(this.hero)],
+            _buildProfileRow(this.hero),
+            _buildUserButton()],
         )
       )
+    );
+  }
+
+  Widget _buildUserButton() {
+    double _fromTop = _screenHeight - 80.0;
+    return new Positioned(
+        top: _fromTop,
+        right: 18.0,
+        child:new _AnimatedButton(
+          //onClick: _changeFilterState,
+        )
     );
   }
 
@@ -75,11 +90,11 @@ class _UserPageState extends State<UserPage> {
     return new Positioned.fill(
       bottom: null,
       child: new ClipPath(
-        clipper: new DialogonalClipper(),
+        clipper: new _DialogonalClipper(),
         child: Container(
             height: _imageHeight,
             width: MediaQuery.of(context).size.width,
-            color: Colors.amber)
+            color: Colors.amber[100])
       ),
     );
   }
@@ -177,3 +192,84 @@ class Held{
   // This getter is only for testing
   Map<String,dynamic> get defaults => _defaults;
 }
+
+class _AnimatedButton extends StatefulWidget {
+  final VoidCallback onClick;
+
+  const _AnimatedButton({Key key, this.onClick}) : super(key: key);
+
+  @override
+  _AnimatedButtonState createState() => new _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<_AnimatedButton> with SingleTickerProviderStateMixin  {
+  AnimationController _animationController;
+  Animation<Color> _colorAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = new AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 200));
+    _colorAnimation = new ColorTween(begin: Colors.amber[100], end: Colors.amber)
+        .animate(_animationController);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new AnimatedBuilder(
+      animation: _animationController,
+      builder: (BuildContext context, Widget child) {
+        return _buildButtonCore();
+      },
+    );
+  }
+
+  Widget _buildButtonCore() {
+    double scaleFactor = 2 * (_animationController.value - 0.5).abs();
+    return Container(
+          width: 70.0,
+          height: 70.0,
+          child:
+              FloatingActionButton(
+                onPressed: _onButtonTap,
+                child: new Transform(
+                  alignment: Alignment.center,
+                  transform: new Matrix4.identity()..scale(1.0, scaleFactor),
+                  child: new Icon(
+                    _animationController.value > 0.5 ? Icons.account_circle : Icons.settings,
+                    color: Colors.black, size: 50.0),
+                ),
+                backgroundColor: _colorAnimation.value,
+              )
+          );
+  }
+
+  open() {
+    if (_animationController.isDismissed) {
+      _animationController.forward();
+    }
+  }
+
+  close() {
+    if (_animationController.isCompleted) {
+      _animationController.reverse();
+    }
+  }
+
+  _onButtonTap() {
+    if (_animationController.isDismissed) {
+      open();
+    } else {
+      close();
+    }
+  }
+}
+

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'dart:math' as math;
 import 'main.dart';
 
+//Cuts the square box on the top of the screen diagonally
 class _DiagonalClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -18,6 +19,7 @@ class _DiagonalClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
+//Main user page class
 class UserPage extends StatefulWidget {
   final Held hero;
   final Function heroCallback;
@@ -36,6 +38,7 @@ class UserPageState extends State<UserPage> {
 
   UserPageState({this.hero, this.heroCallback});
 
+  //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
     setState(() {
       hero = newHero;
@@ -47,6 +50,7 @@ class UserPageState extends State<UserPage> {
   Widget build(BuildContext context) {
     _screenHeight = MediaQuery.of(context).size.height;
     return new Scaffold(
+      //Add new screen elements here
         body: new Container(
             height: _screenHeight,
             width: MediaQuery.of(context).size.width,
@@ -61,6 +65,7 @@ class UserPageState extends State<UserPage> {
   }
 }
 
+//Button for main menu
 class UserButton extends StatelessWidget {
   final Function updateHero;
   final Held hero;
@@ -82,6 +87,7 @@ class UserButton extends StatelessWidget {
   }
 }
 
+//Builds panel on top of the screen
 class TopPanel extends StatelessWidget {
   final double imageHeight;
 
@@ -101,6 +107,7 @@ class TopPanel extends StatelessWidget {
   }
 }
 
+//Builds the user image and name to show in top panel
 class ProfileRow extends StatelessWidget {
   final Held hero;
   final double imageHeight;
@@ -113,6 +120,7 @@ class ProfileRow extends StatelessWidget {
         padding: new EdgeInsets.only(left: 16.0, top: imageHeight / 2.3),
         child: new Row(
           children: [
+            //Here we set the avatar image - the image is taken from hero
             new CircleAvatar(
                 minRadius: 64.0,
                 maxRadius: 64.0,
@@ -123,6 +131,7 @@ class ProfileRow extends StatelessWidget {
                         'images/user_images/dog_${hero.iBild}.jpg'),
                     minRadius: 60.0,
                     maxRadius: 60.0))),
+            //Add some padding and then put in user name and description
             new Padding(
               padding: const EdgeInsets.only(left: 12.0),
               child: new Column(
@@ -133,11 +142,12 @@ class ProfileRow extends StatelessWidget {
                     hero.name,
                     style: new TextStyle(
                         fontSize: 32.0,
+                        fontStyle: FontStyle.italic,
                         color: Colors.black,
                         fontWeight: FontWeight.w500),
                   ),
                   new Text(
-                    'Beruf: ' + ((hero.geschlecht == 'w') ? 'Abenteurerin' : 'Abenteurer'),
+                    (hero.geschlecht == 'w') ? 'Abenteurerin' : 'Abenteurer',
                     style: new TextStyle(
                         fontSize: 14.0,
                         fontStyle: FontStyle.italic,
@@ -152,6 +162,7 @@ class ProfileRow extends StatelessWidget {
   }
 }
 
+//Animated button for main menu
 class AnimatedButton extends StatefulWidget {
   final Function updateHero;
   final Held hero;
@@ -169,8 +180,10 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   Animation<Color> _colorAnimation;
   Function updateHero;
   Held hero;
+  //Define parameters for button size and menu size here
   final double _expandedSize = 240.0;
   final double _hiddenSize = 70.0;
+  //Colors for when menu is clecked and when it is not
   Color _unselectedColor = Colors.amber[200];
   Color _selectedColor = Colors.amber;
 
@@ -179,13 +192,16 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   @override
   void initState() {
     super.initState();
+    //Animation controller for manu expansion
     _animationController = new AnimationController(
         vsync: this,
         duration: Duration(milliseconds: 200));
+    //Animation for color change of menu when clicked
     _colorAnimation = new ColorTween(begin: _unselectedColor, end: _selectedColor)
         .animate(_animationController);
   }
 
+  //Makr sure to kill the animation controller when the widget is disposed off
   @override
   void dispose() {
     _animationController.dispose();
@@ -202,6 +218,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
         builder: (BuildContext context, Widget child) {
           return new Stack(
             alignment: Alignment.center,
+            //Here we add the menu options: to-do: add actual functions via _onIconClick
             children: <Widget>[
               ExpandedBackground(hero: hero, animationController: _animationController,
               hiddenSize: _hiddenSize, expandedSize: _expandedSize,),
@@ -220,18 +237,21 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
     );
   }
 
+  //When menu is closed - play the animation forward
   open() {
     if (_animationController.isDismissed) {
       _animationController.forward();
     }
   }
 
+  //when it is open - play it backwards
   close() {
     if (_animationController.isCompleted) {
       _animationController.reverse();
     }
   }
 
+  //Call functions above
   _onButtonTap() {
     if (_animationController.isDismissed) {
       open();
@@ -240,6 +260,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
     }
   }
 
+  //This is just a dummy function now - need to add actual functionality
   _onIconClick() {
     (hero.geschlecht=='w')?hero.geschlecht='m':hero.geschlecht='w';
     updateHero(newHero: hero);
@@ -247,8 +268,10 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   }
 }
 
+//Class for menu options
 class OptionButton extends StatelessWidget {
   final AnimationController animationController;
+  //Functions to be called are passed as onIconClick
   final Function onIconClick;
   final double angle;
   final IconData icon;
@@ -262,8 +285,10 @@ class OptionButton extends StatelessWidget {
       return Container();
     }
 
+    //Size-in icons when the menu is expanded
     double iconSize = 40.0 * animationController.value;
 
+    //Rotate widgets on circular menu - then rotate them to al be straight
     return new Transform.rotate(
       angle: angle,
       child: new Align(
@@ -288,9 +313,11 @@ class OptionButton extends StatelessWidget {
   }
 }
 
+//Class for expanding menu background
 class ExpandedBackground extends StatelessWidget {
   final AnimationController animationController;
   final Held hero;
+  //Parameters that determine menu size
   final double hiddenSize, expandedSize;
 
   ExpandedBackground({this.hero, this.animationController, this.hiddenSize, this.expandedSize});
@@ -302,6 +329,7 @@ class ExpandedBackground extends StatelessWidget {
     return new Container(
       height: size,
       width: size,
+      //Color depends on user sex
       decoration: new BoxDecoration(
           shape: BoxShape.circle,
           color: (hero.geschlecht == 'w') ? Colors.red : Colors.blue
@@ -310,9 +338,11 @@ class ExpandedBackground extends StatelessWidget {
   }
 }
 
+//Main Menu button
 class MenuButton extends StatelessWidget {
   final AnimationController animationController;
   final Animation colorAnimation;
+  //onButtonTap calls back to open/close function
   final Function onButtonTap;
   final double hiddenSize;
 
@@ -331,12 +361,14 @@ class MenuButton extends StatelessWidget {
             alignment: Alignment.center,
             transform: new Matrix4.identity()
               ..scale(1.0, scaleFactor),
+            //Icon depends on the state of the animation
             child: new Icon(
                 animationController.value > 0.5
                     ? Icons.supervisor_account
                     : Icons.settings,
                 color: Colors.black, size: 50.0),
           ),
+          //Color will change with animation
           backgroundColor: colorAnimation.value,
         )
     );

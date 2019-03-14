@@ -12,6 +12,7 @@ class MyApp extends StatefulWidget {
   }
 }
 
+//All user information should be store and kept-updated here
 class _MyAppState extends State<MyApp> {
   Held hero;
 
@@ -28,7 +29,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.amber,
       ),
-      home: new UserPage(hero: hero, heroCallback: heroCallback),
+      home: Scaffold(body: UserPage(hero: hero, heroCallback: heroCallback)),
     );
   }
 }

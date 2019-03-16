@@ -58,10 +58,36 @@ class UserPageState extends State<UserPage> {
               children: <Widget>[
                 TopPanel(imageHeight: _imageHeight),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
+                License(screenHeight: _screenHeight),
                 UserButton(screenHeight:_screenHeight,updateHero:updateHero,hero:hero)],
             )
         )
     );
+  }
+}
+
+//Builds the license information button for the app
+class License extends StatelessWidget{
+  final screenHeight;
+
+  License({this.screenHeight});
+
+  @override
+  Widget build(BuildContext context) {
+    double _fromTop = screenHeight - 65.0;
+    Positioned license = new Positioned(
+        top: _fromTop,
+        left: 5.0,
+        child: new IconButton(
+            iconSize: 40.0,
+            icon: new Icon(Icons.assignment),
+            onPressed:() => showLicensePage(
+                context: context,
+                applicationName: 'Hundetage',
+                applicationVersion: '1.0',
+                applicationIcon: Image.asset('images/icon.png')))
+    );
+    return license;
   }
 }
 
@@ -87,7 +113,7 @@ class UserButton extends StatelessWidget {
   }
 }
 
-//Builds panel on top of the screen
+//Builds empty panel on top of the screen
 class TopPanel extends StatelessWidget {
   final double imageHeight;
 
@@ -183,7 +209,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   //Define parameters for button size and menu size here
   final double _expandedSize = 240.0;
   final double _hiddenSize = 70.0;
-  //Colors for when menu is clecked and when it is not
+  //Colors for when menu is clicked and when it is not
   Color _unselectedColor = Colors.amber[200];
   Color _selectedColor = Colors.amber;
 

@@ -67,6 +67,27 @@ void main() {
     _findMenuIcon = find.byIcon(Icons.add_a_photo);
     expect(_findMenuIcon, findsNothing);
   });
+
+  testWidgets('Test License', (WidgetTester _tester) async {
+    final Held _testHeld = new Held.initial();
+    UserPage _widget = UserPage(hero: _testHeld,heroCallback: ()=>null);
+      await _tester.pumpWidget(
+          StaticTestWidget(returnWidget: _widget));
+
+      //Click on license button
+      var _findButton = find.byType(IconButton);
+      expect(_findButton, findsOneWidget);
+      await _tester.tap(find.byType(IconButton));
+      //Wait for animation to terminate
+      await _tester.pumpAndSettle();
+      //Check Title is there
+      var _findTitleText = find.text('Licenses');
+      expect(_findTitleText, findsOneWidget);
+      //Check App Title is maintained
+      var _findAppText = find.text('Hundetage');
+      expect(_findAppText, findsOneWidget);
+      }
+    );
 }
 
 class StaticTestWidget extends StatelessWidget{

@@ -15,5 +15,6 @@ dependencies:
 flutter:
   uses-material-design: true
   assets:
+  - images/icon.png
   - images/user_screen_top_image.png
   - images/user_images/dog_0.jpg

@@ -24,15 +24,13 @@ class _DiagonalClipper extends CustomClipper<Path> {
 class MainPage extends StatefulWidget {
   final Held hero;
   final Function heroCallback;
-  final int nImages;
 
-  const MainPage({Key key, this.hero, this.heroCallback, this.nImages}) : super(key: key);
+  const MainPage({Key key, this.hero, this.heroCallback}) : super(key: key);
 
   @override
   MainPageState createState() => new MainPageState(
       hero: hero,
-      heroCallback: heroCallback,
-      nImages: nImages);
+      heroCallback: heroCallback);
 }
 
 class MainPageState extends State<MainPage> {
@@ -40,9 +38,8 @@ class MainPageState extends State<MainPage> {
   Function heroCallback;
   double _imageHeight = 200.0;
   double screenHeight, screenWidth;
-  int nImages;
 
-  MainPageState({this.hero, this.heroCallback, this.nImages});
+  MainPageState({this.hero, this.heroCallback});
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -69,8 +66,7 @@ class MainPageState extends State<MainPage> {
                 UserButton(screenHeight:screenHeight,
                     screenWidth: screenWidth,
                     updateHero:updateHero,
-                    hero:hero,
-                    nImages: nImages)],
+                    hero:hero)],
             )
         )
     );
@@ -106,11 +102,10 @@ class License extends StatelessWidget{
 class UserButton extends StatelessWidget {
   final Function updateHero;
   final Held hero;
-  final int nImages;
   final double screenHeight, screenWidth;
 
   UserButton({this.screenHeight, this.screenWidth, this.updateHero,
-    this.hero, this.nImages});
+    this.hero});
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +115,6 @@ class UserButton extends StatelessWidget {
         right: -75.0,
         child: new AnimatedButton(
           hero: hero,
-          nImages: nImages,
           updateHero: updateHero,
           screenWidth: screenWidth,
           screenHeight: screenHeight,
@@ -208,17 +202,15 @@ class ProfileRow extends StatelessWidget {
 class AnimatedButton extends StatefulWidget {
   final Function updateHero;
   final Held hero;
-  final int nImages;
   final double screenWidth, screenHeight;
 
-  const AnimatedButton({this.updateHero, this.hero, this.nImages,
+  const AnimatedButton({this.updateHero, this.hero,
   this.screenWidth, this.screenHeight});
 
   @override
   AnimatedButtonState createState() => new AnimatedButtonState(
       hero: hero,
       updateHero: updateHero,
-      nImages: nImages,
       screenHeight: screenHeight,
       screenWidth: screenWidth);
 }
@@ -228,7 +220,6 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   Animation<Color> _colorAnimation;
   Function updateHero;
   Held hero;
-  int nImages;
   double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
   final double _expandedSize = 240.0;
@@ -237,7 +228,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   Color _unselectedColor = Colors.amber[200];
   Color _selectedColor = Colors.amber;
 
-  AnimatedButtonState({this.updateHero, this.hero, this.nImages,
+  AnimatedButtonState({this.updateHero, this.hero,
   this.screenWidth, this.screenHeight});
 
   @override
@@ -316,10 +307,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
         context,
         MaterialPageRoute(builder: (context) => UserPage(
           hero: hero,
-          screenHeight: screenHeight,
-          screenWidth: screenWidth,
-          heroCallback: updateHero,
-          nImages: nImages)));
+          heroCallback: updateHero)));
   }
 
   //This is just a dummy function now - need to add actual functionality

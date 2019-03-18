@@ -5,21 +5,19 @@ import 'main_screen.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
-  final int nImages = 7;
 
   @override
   _MyAppState createState(){
     // Implement reading from file here
-    return new _MyAppState(hero: new Held.initial(), nImages: nImages);
+    return new _MyAppState(hero: new Held.initial());
   }
 }
 
 //All user information should be store and kept-updated here
 class _MyAppState extends State<MyApp> {
   Held hero;
-  int nImages;
 
-  _MyAppState({this.hero, this.nImages});
+  _MyAppState({this.hero});
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
@@ -32,7 +30,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.amber,
       ),
-      home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback, nImages: nImages)),
+      home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback)),
     );
   }
 }
@@ -48,7 +46,7 @@ class Held{
     'name': 'Teemu',
     'geschlecht': 'w',
     'iBild': 0,
-    'maxImages': 5,
+    'maxImages': 7,
     'erlebnisse': <String>[]};
 
   Held(this._name,this._geschlecht,this._iBild,this._maxImages,this._erlebnisse);
@@ -70,7 +68,7 @@ class Held{
     (valIn=='m' || valIn=='w')?_geschlecht = valIn:throw new Exception('Invalid sex!');
   }
   set iBild(int valIn){
-    (valIn != null && valIn >=0 && valIn < maxImages)?_iBild = valIn:throw new Exception('Invalid imange index!');
+    (valIn != null && valIn >=0 && valIn <= maxImages)?_iBild = valIn:throw new Exception('Invalid imange index!');
   }
   set maxImages(int valIn){
     (valIn!=null && valIn>iBild && valIn!=0)?_maxImages=valIn:throw new Exception('Invalid number of images!');

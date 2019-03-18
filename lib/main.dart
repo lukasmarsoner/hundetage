@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'user_screen.dart';
+import 'main_screen.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
+  final int nImages = 7;
+
   @override
   _MyAppState createState(){
     // Implement reading from file here
-    return new _MyAppState(hero: new Held.initial());
+    return new _MyAppState(hero: new Held.initial(), nImages: nImages);
   }
 }
 
 //All user information should be store and kept-updated here
 class _MyAppState extends State<MyApp> {
   Held hero;
+  int nImages;
 
-  _MyAppState({this.hero});
+  _MyAppState({this.hero, this.nImages});
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
@@ -29,7 +32,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.amber,
       ),
-      home: Scaffold(body: UserPage(hero: hero, heroCallback: heroCallback)),
+      home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback, nImages: nImages)),
     );
   }
 }

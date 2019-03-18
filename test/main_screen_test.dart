@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hundetage/user_screen.dart';
+import 'package:hundetage/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
 
@@ -13,7 +13,7 @@ void main() {
         StaticTestWidget(returnWidget: ProfileRow(hero: _testHeld, imageHeight: 10.0))
     );
 
-    //See if user screen looks as it should
+    //See if main screen looks as it should
     final _findUsername = find.text(_testHeld.name);
     final _findJob = find.text((_testHeld.geschlecht == 'w') ? 'Abenteurerin' : 'Abenteurer');
 
@@ -70,7 +70,7 @@ void main() {
 
   testWidgets('Test License', (WidgetTester _tester) async {
     final Held _testHeld = new Held.initial();
-    UserPage _widget = UserPage(hero: _testHeld,heroCallback: ()=>null);
+    MainPage _widget = MainPage(hero: _testHeld,heroCallback: ()=>null);
       await _tester.pumpWidget(
           StaticTestWidget(returnWidget: _widget));
 

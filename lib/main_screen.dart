@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'user_settings.dart';
 import 'dart:math' as math;
 import 'main.dart';
 
@@ -19,24 +20,29 @@ class _DiagonalClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-//Main user page class
-class UserPage extends StatefulWidget {
+//Main page class
+class MainPage extends StatefulWidget {
   final Held hero;
   final Function heroCallback;
+  final int nImages;
 
-  const UserPage({Key key, this.hero, this.heroCallback}) : super(key: key);
+  const MainPage({Key key, this.hero, this.heroCallback, this.nImages}) : super(key: key);
 
   @override
-  UserPageState createState() => new UserPageState(hero: hero, heroCallback: heroCallback);
+  MainPageState createState() => new MainPageState(
+      hero: hero,
+      heroCallback: heroCallback,
+      nImages: nImages);
 }
 
-class UserPageState extends State<UserPage> {
+class MainPageState extends State<MainPage> {
   Held hero;
   Function heroCallback;
   double _imageHeight = 200.0;
-  double _screenHeight;
+  double screenHeight, screenWidth;
+  int nImages;
 
-  UserPageState({this.hero, this.heroCallback});
+  MainPageState({this.hero, this.heroCallback, this.nImages});
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -48,18 +54,23 @@ class UserPageState extends State<UserPage> {
 
   @override
   Widget build(BuildContext context) {
-    _screenHeight = MediaQuery.of(context).size.height;
+    screenHeight = MediaQuery.of(context).size.height;
+    screenWidth  = MediaQuery.of(context).size.width;
     return new Scaffold(
       //Add new screen elements here
         body: new Container(
-            height: _screenHeight,
+            height: screenHeight,
             width: MediaQuery.of(context).size.width,
             child: new Stack(
               children: <Widget>[
                 TopPanel(imageHeight: _imageHeight),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
-                License(screenHeight: _screenHeight),
-                UserButton(screenHeight:_screenHeight,updateHero:updateHero,hero:hero)],
+                License(screenHeight: screenHeight),
+                UserButton(screenHeight:screenHeight,
+                    screenWidth: screenWidth,
+                    updateHero:updateHero,
+                    hero:hero,
+                    nImages: nImages)],
             )
         )
     );
@@ -68,9 +79,9 @@ class UserPageState extends State<UserPage> {
 
 //Builds the license information button for the app
 class License extends StatelessWidget{
-  final screenHeight;
+  final screenHeight, screenWidth;
 
-  License({this.screenHeight});
+  License({this.screenHeight, this.screenWidth});
 
   @override
   Widget build(BuildContext context) {
@@ -95,9 +106,11 @@ class License extends StatelessWidget{
 class UserButton extends StatelessWidget {
   final Function updateHero;
   final Held hero;
-  final double screenHeight;
+  final int nImages;
+  final double screenHeight, screenWidth;
 
-  UserButton({this.screenHeight, this.updateHero, this.hero});
+  UserButton({this.screenHeight, this.screenWidth, this.updateHero,
+    this.hero, this.nImages});
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +120,10 @@ class UserButton extends StatelessWidget {
         right: -75.0,
         child: new AnimatedButton(
           hero: hero,
+          nImages: nImages,
           updateHero: updateHero,
+          screenWidth: screenWidth,
+          screenHeight: screenHeight,
         )
     );
   }
@@ -154,7 +170,7 @@ class ProfileRow extends StatelessWidget {
                     .blue,
                 child: Center(child: new CircleAvatar(
                     backgroundImage: new AssetImage(
-                        'images/user_images/dog_${hero.iBild}.jpg'),
+                        'images/user_images/hund_${hero.iBild}.jpg'),
                     minRadius: 60.0,
                     maxRadius: 60.0))),
             //Add some padding and then put in user name and description
@@ -192,13 +208,19 @@ class ProfileRow extends StatelessWidget {
 class AnimatedButton extends StatefulWidget {
   final Function updateHero;
   final Held hero;
+  final int nImages;
+  final double screenWidth, screenHeight;
 
-  const AnimatedButton({this.updateHero, this.hero});
+  const AnimatedButton({this.updateHero, this.hero, this.nImages,
+  this.screenWidth, this.screenHeight});
 
   @override
   AnimatedButtonState createState() => new AnimatedButtonState(
       hero: hero,
-      updateHero: updateHero);
+      updateHero: updateHero,
+      nImages: nImages,
+      screenHeight: screenHeight,
+      screenWidth: screenWidth);
 }
 
 class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProviderStateMixin  {
@@ -206,6 +228,8 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   Animation<Color> _colorAnimation;
   Function updateHero;
   Held hero;
+  int nImages;
+  double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
   final double _expandedSize = 240.0;
   final double _hiddenSize = 70.0;
@@ -213,7 +237,8 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   Color _unselectedColor = Colors.amber[200];
   Color _selectedColor = Colors.amber;
 
-  AnimatedButtonState({this.updateHero, this.hero});
+  AnimatedButtonState({this.updateHero, this.hero, this.nImages,
+  this.screenWidth, this.screenHeight});
 
   @override
   void initState() {
@@ -251,7 +276,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
               OptionButton(icon: Icons.cloud_queue, angle: 0.0,
                   animationController: _animationController, onIconClick: _onIconClick),
               OptionButton(icon: Icons.account_circle, angle: -math.pi / 4,
-                  animationController: _animationController, onIconClick: _onIconClick),
+                  animationController: _animationController, onIconClick: _launchUserSettings),
               OptionButton(icon: Icons.add_a_photo, angle: -2 * math.pi / 4,
                   animationController: _animationController, onIconClick: _onIconClick),
               MenuButton(animationController: _animationController, onButtonTap: _onButtonTap,
@@ -284,6 +309,17 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
     } else {
       close();
     }
+  }
+
+  _launchUserSettings(){
+    Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => UserPage(
+          hero: hero,
+          screenHeight: screenHeight,
+          screenWidth: screenWidth,
+          heroCallback: updateHero,
+          nImages: nImages)));
   }
 
   //This is just a dummy function now - need to add actual functionality

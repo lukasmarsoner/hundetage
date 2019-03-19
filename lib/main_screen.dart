@@ -306,6 +306,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
     Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => UserPage(
+          closeMenu: () => close(),
           hero: hero,
           heroCallback: updateHero)));
   }

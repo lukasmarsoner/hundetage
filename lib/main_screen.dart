@@ -178,7 +178,6 @@ class ProfileRow extends StatelessWidget {
                     style: new TextStyle(
                         fontSize: 32.0,
                         fontStyle: FontStyle.italic,
-                        color: Colors.black,
                         fontWeight: FontWeight.w500),
                   ),
                   new Text(

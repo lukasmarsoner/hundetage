@@ -41,18 +41,23 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
     //or the previous one - depending on if the page view is visible or not
     return MaterialApp(home:
         Scaffold(
+        //Avoid shifting the text field over other things in the stack when it has focus
+        resizeToAvoidBottomPadding: false,
       //Add new screen elements here
         body: new Container(height: screenHeight,
                  child: new Stack(
                 //make sure to build the Image selection (Page View) on top of everything else
                 children: <Widget>[
-              Container(
+              Center(child: Container(
                   //Padding set so as to not squeeze the circle at the bottom which
                   //it has a height of screenHeight/1.8
                   padding: EdgeInsets.only(top:(1-1/2.8)*screenHeight),
                   child:Center(child: GenderSelector(hero: hero, heroCallback: heroCallback)),
-              ),
+              )),
               _userImageRow(),
+              Center(child: Container(
+                  width: screenWidth/2,
+                  child: UserNameField(hero:hero, heroCallback: updateHero))),
             ]
          )
         )
@@ -183,7 +188,7 @@ class GenderSelectorState extends State<GenderSelector>
                   decoration: BoxDecoration(
                     boxShadow: <BoxShadow>[BoxShadow(spreadRadius: 4)],
                       shape: BoxShape.circle,
-                      color: Colors.amber
+                      color: Colors.amber[200]
                   )
               ),
               Center(child:maleIcon),
@@ -227,6 +232,50 @@ class RotatedIcon extends AnimatedWidget
             )
             )
         )
+    );
+  }
+}
+
+class UserNameField extends StatefulWidget{
+  final Held hero;
+  final Function heroCallback;
+
+  UserNameField({this.hero, this.heroCallback});
+
+  @override
+  UserNameFieldState createState() => new UserNameFieldState(hero: hero, heroCallback: heroCallback);
+}
+
+class UserNameFieldState extends State<UserNameField>{
+  Held hero;
+  Function heroCallback;
+  TextEditingController _controller;
+
+  UserNameFieldState({this.hero, this.heroCallback});
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = new TextEditingController(text: hero.name);
+  }
+
+  updateUser(String name){
+    setState(() {
+      hero.name = name;
+    });
+    heroCallback(newHero: hero);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      maxLength: 10,
+      style: TextStyle(fontSize: 32.0,
+          fontStyle: FontStyle.italic,
+          fontWeight: FontWeight.w500),
+      maxLengthEnforced: true,
+      controller: _controller,
+      onChanged: (name) => updateUser(name),
     );
   }
 }

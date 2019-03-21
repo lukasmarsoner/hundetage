@@ -6,7 +6,6 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
-  rect_getter:
   flutter:
     sdk: flutter
   flutter_test:
@@ -16,6 +15,10 @@ dependencies:
 flutter:
   uses-material-design: true
   assets:
+  - images/symbol_m.png
+  - images/symbol_w.png
+  - images/symbol_m_b.png
+  - images/symbol_w_b.png
   - images/icon.png
   - images/user_screen_top_image.png
   - images/user_images/hund_0.jpg

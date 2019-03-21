@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:rect_getter/rect_getter.dart';
-import 'dart:math' as math;
 import 'main.dart';
+import 'dart:math' as math;
 
 //User settings main class
 class UserPage extends StatefulWidget {
@@ -14,80 +13,17 @@ class UserPage extends StatefulWidget {
   @override
   UserPageState createState() => new UserPageState(
       hero: hero,
-      heroCallback: heroCallback,
-      closeMenu: closeMenu);
+      heroCallback: heroCallback);
 }
 
 class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   Held hero;
-  Function heroCallback, closeMenu;
+  Function heroCallback;
   List pageKeys;
   GlobalKey userKey;
   double screenHeight, screenWidth;
-  //Gets turned on and of when the user clicks on the image
-  bool isPageViewVisible = false;
-  AnimationController _animationController;
-  Animation<Rect> rectAnimation;
-  //Used to build the image along the animation from main screen to page view
-  OverlayEntry transitionOverlayEntry;
-  PageController _pageController = PageController();
-  //Getter for the Page View index
-  int get currentIndex => _pageController.page.round();
 
-  UserPageState({this.hero, this.heroCallback, this.closeMenu});
-
-  //Create stuff properly...
-  @override
-  void initState() {
-    super.initState();
-    transitionOverlayEntry = _createOverlayEntry();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 200),
-    );
-    _animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed ||
-          status == AnimationStatus.dismissed) {
-        transitionOverlayEntry.remove();
-      }
-      if (status == AnimationStatus.completed) {
-        _setPageViewVisible(true);
-      } else if (status == AnimationStatus.reverse) {
-        _setPageViewVisible(false);
-      }
-    });
-  }
-
-  OverlayEntry _createOverlayEntry() {
-    return OverlayEntry(
-      builder: (context) {
-        //Builds image along the path of the animation
-        return AnimatedBuilder(
-          animation: rectAnimation,
-          builder: (context, child) {
-            return Positioned(
-              //Position is controlled by the animation state...
-              top: rectAnimation.value.top,
-              left: rectAnimation.value.left,
-              child: Image.asset(
-                'images/user_images/hund_${hero.iBild}.jpg',
-                //...size as well
-                height: rectAnimation.value.height,
-                width: rectAnimation.value.width,
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  //...and get rid of it
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+  UserPageState({this.hero, this.heroCallback});
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -99,65 +35,28 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
-    //Get positions of images in animation
-    pageKeys = List.generate(hero.maxImages, (i) => RectGetter.createGlobalKey());
-    userKey = RectGetter.createGlobalKey();
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth  = MediaQuery.of(context).size.width;
     //When we hit the back button we want to either go back to the main screen
     //or the previous one - depending on if the page view is visible or not
-    return WillPopScope(
-        onWillPop: () async {
-          if (isPageViewVisible) {
-            hero.iBild = currentIndex % (hero.maxImages+1);
-            updateHero(newHero: hero);
-            _hidePageView(hero.iBild);
-            return false;
-          }
-          closeMenu();
-          return true;
-        },
-      child: MaterialApp(home:
+    return MaterialApp(home:
         Scaffold(
       //Add new screen elements here
-        body: new Container(
-            width: screenWidth,
-             child: Column(
-             children: <Widget>[
-               new Stack(
-              //make sure to build the Image selection (Page View) on top of everything else
+        body: new Container(height: screenHeight,
+                 child: new Stack(
+                //make sure to build the Image selection (Page View) on top of everything else
                 children: <Widget>[
-                  _userImageRow(),
-                  //Covers the background when page view is launched
-                  _buildWhiteCurtain(),
-                  _buildPageView()
-                ],
-               ),
-               //Add stuff here!!!
-           ]
-          )
+              Container(
+                  //Padding set so as to not squeeze the circle at the bottom which
+                  //it has a height of screenHeight/1.8
+                  padding: EdgeInsets.only(top:(1-1/2.8)*screenHeight),
+                  child:Center(child: GenderSelector(hero: hero, heroCallback: heroCallback)),
+              ),
+              _userImageRow(),
+            ]
+         )
         )
       )
-    )
-   );
-  }
-
-  AnimatedBuilder _buildWhiteCurtain() {
-    //Rebuild on animation changes
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return _animationController.isDismissed
-            //Replace the curtain with empty container if controller is dismissed
-            ? Container()
-            : Positioned.fill(
-          child: Opacity(
-            //Never fully cover the background
-            opacity: _animationController.value*0.9,
-            child: Container(color: Colors.white),
-          ),
-        );
-      },
     );
   }
 
@@ -185,17 +84,14 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
         onPressed: () => _clickHandler(true));
     Widget _userImage = Container(
         width: (1-3/10)*screenWidth,
-        child: RectGetter(
-            key: userKey,
-            child: new GestureDetector(
+        child: GestureDetector(
             onHorizontalDragEnd: (DragEndDetails details){
               double dx = details.velocity.pixelsPerSecond.dx;
               if(dx>0.0&&dx>10.0)
                 {_clickHandler(false);}
               else if(dx<0.0&&dx.abs()>10.0)
                 {_clickHandler(true);}},
-            onTap: () => _showPageView(hero.iBild),
-            child: new Image.asset('images/user_images/hund_${hero.iBild}.jpg'))));
+            child: new Image.asset('images/user_images/hund_${hero.iBild}.jpg')));
 
     return Container(
       height: screenHeight / 2.5,
@@ -208,169 +104,129 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
     ]));
   }
 
-  //All the page view stuff goes here
-  Widget _buildPageView() {
-    PageView pageView = PageView.builder(
-      controller: _pageController,
-      itemBuilder: (context, i) {
-        return Center(
-          child: RectGetter(
-            key: pageKeys[i],
-            child: Image.asset('images/user_images/hund_${i%(hero.maxImages+1)}.jpg')),
-        );
-      },
-    );
-
-    return Opacity(
-      //Hides Page view by making it transparent
-      opacity: isPageViewVisible ? 1 : 0,
-      child: IgnorePointer(
-        //Make sure the page view ignores clicks when it is hidden
-        ignoring: !isPageViewVisible,
-        child: pageView,
-      ),
-    );
-  }
-
-  //Starts animation
-  void _showPageView(int index) async {
-    _pageController.jumpToPage(index);
-    await Future.delayed(Duration(milliseconds: 50));
-    _startTransition(true);
-  }
-
-  //Ends animation
-  void _hidePageView(int index) async {
-    updateHero(newHero: hero);
-    await Future.delayed(Duration(milliseconds: 50));
-    _startTransition(false);
-  }
-
-  //Controls the animation between Page View and the main image
-  void _startTransition(bool toPageView) {
-    Rect userRect = RectGetter.getRectFromKey(userKey);
-    Rect pageRect = RectGetter.getRectFromKey(pageKeys[hero.iBild]);
-
-    rectAnimation = RectTween(
-      begin: userRect,
-      end: pageRect,
-    ).animate(_animationController);
-
-    //Add entry to overlay
-    Overlay.of(context).insert(transitionOverlayEntry);
-
-    if (toPageView) {
-      _animationController.forward();
-    } else {
-      _animationController.reverse();
-    }
-  }
-
-  //Sets Page View to visible
-  void _setPageViewVisible(bool visible) {
-    setState(() => isPageViewVisible = visible);
-  }
-
 }
 
+class GenderSelector extends StatefulWidget {
+  final Held hero;
+  final Function heroCallback;
 
-class GenderSelection extends StatelessWidget {
+  GenderSelector({this.hero, this.heroCallback});
+
+  @override
+  GenderSelectorState createState() => new GenderSelectorState(hero: hero, heroCallback: heroCallback);
+}
+
+//We control the animation of the sex selection from here
+class GenderSelectorState extends State<GenderSelector>
+    with SingleTickerProviderStateMixin{
+  AnimationController _animationController;
+  Held hero;
+  Function heroCallback;
+  double _rotAngle = math.pi;
+
+  GenderSelectorState({this.hero, this.heroCallback});
+
+  //Here we mainly handle the animation
+  @override
+  void initState() {
+    _animationController = new AnimationController(
+      vsync: this,
+      lowerBound: 0.0,
+      upperBound: _rotAngle,
+      //Sets the selection in the right starting position
+      value: hero.geschlecht=='w'?0.0:_rotAngle,
+    );
+    super.initState();
+  }
+
+  updateHero(Held newHero){
+    setState(() {
+      hero = newHero;
+      heroCallback(newHero: hero);
+    });
+  }
+
+  void changeGender(String geschlecht){
+    //setState(() => null);
+    hero.geschlecht = geschlecht;
+    //Actually animate the selection - direction depends on the selected sex
+    _animationController.animateTo(
+      geschlecht=='w'?0.0:_rotAngle,
+      duration: Duration(milliseconds: 500),
+    );
+    //Make sure to tell the parent widgets about the new sex
+    updateHero(hero);
+  }
+
+  //Kill the animation controller when we no longer need it
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth  = MediaQuery.of(context).size.width;
+    double circleWidth = screenWidth / 1.8;
+    Widget maleIcon = RotatedIcon(geschlecht: 'm', height: circleWidth, hero: hero,
+        listenable: _animationController, rotAngle: _rotAngle, changeGender: changeGender);
+    Widget femaleIcon = RotatedIcon(geschlecht: 'w', height: circleWidth, hero: hero,
+        listenable: _animationController, rotAngle: _rotAngle, changeGender: changeGender);
     return Container(
-      width: screenWidth / 6,
-      height: screenWidth / 6,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color.fromRGBO(244, 244, 244, 1.0),
-      ),
+        width: circleWidth,
+        height: circleWidth,
+        child: Stack(
+            children: [
+              Container(
+                  width: circleWidth,
+                  decoration: BoxDecoration(
+                    boxShadow: <BoxShadow>[BoxShadow(spreadRadius: 4)],
+                      shape: BoxShape.circle,
+                      color: Colors.amber
+                  )
+              ),
+              Center(child:maleIcon),
+              Center(child:femaleIcon)
+            ]
+        )
     );
   }
 }
 
-class GenderLine extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    double screenWidth  = MediaQuery.of(context).size.width;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: screenWidth / 8,
-        top: screenWidth / 8,
-      ),
-      child: Container(
-        height: screenWidth / 8,
-        width: 1.0,
-        color: Color.fromRGBO(216, 217, 223, 0.54),
-      ),
-    );
-  }
-}
+class RotatedIcon extends AnimatedWidget
+{
+  final String geschlecht;
+  final double height, rotAngle;
+  final Function changeGender;
+  final Listenable listenable;
+  final Held hero;
+  //Even though they have the same size - male symbol looks larger
+  //This scaling fixes that
+  final Map<String,double> _iconSize = {'m': 50,'w':60};
 
 
-const double _defaultGenderAngle = math.pi / 4;
-const Map<Gender, double> _genderAngles = {
-  Gender.female: -_defaultGenderAngle,
-  Gender.other: 0.0,
-  Gender.male: _defaultGenderAngle,
-};
-
-//This moves the gender icons into position
-//Here the full comments from Marcin's blog
-class GenderIconTranslated extends StatelessWidget {
-  static final Map<Gender, String> _genderImages = {
-    Gender.female: "images/gender_female.svg",
-    Gender.other: "images/gender_other.svg",
-    Gender.male: "images/gender_male.svg",
-  };
-
-  final Gender gender;
-
-  const GenderIconTranslated({Key key, this.gender}) : super(key: key);
-
-  bool get _isOtherGender => gender == Gender.other;
-
-  String get _assetName => _genderImages[gender];
+  RotatedIcon({this.geschlecht, this.height, this.listenable,
+    this.rotAngle, this.changeGender, this.hero}):super(listenable: listenable);
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth  = MediaQuery.of(context).size.width;
-    Widget icon = Padding(
-      padding: EdgeInsets.only(left: screenWidth / 3),
-      child: SvgPicture.asset(
-        _assetName,
-        height: 10.0,
-        width: 10.0,
-      ),
+    Animation animation = listenable;
+    return Transform.rotate(
+      //This makes sure we turn the selection properly
+        angle: animation.value + (geschlecht == 'w' ? 0.0 : rotAngle),
+        child: Transform.translate(
+            offset: Offset(0.0, -height / 3),
+            child: Transform.rotate(
+                angle: -(animation.value + (geschlecht == 'w' ? 0.0 : rotAngle)),
+                child: IconButton(
+                iconSize: _iconSize[geschlecht],
+                onPressed: () => changeGender(geschlecht),
+                //Choses the right icon based on which gender is currently selected
+                icon: Image.asset('images/symbol_$geschlecht${hero.geschlecht==geschlecht?'':'_b'}.png'),
+            )
+            )
+        )
     );
-
-    Widget rotatedIcon = Transform.rotate(
-      angle: -_genderAngles[gender],
-      child: icon,
-    );
-
-    Widget iconWithALine = Padding(
-      padding: EdgeInsets.only(bottom: screenWidth / 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          rotatedIcon,
-          GenderLine(),
-        ],
-      ),
-    );
-
-    Widget rotatedIconWithALine = Transform.rotate(
-      alignment: Alignment.bottomCenter,
-      angle: _genderAngles[gender],
-      child: iconWithALine,
-    );
-
-    Widget centeredIconWithALine = Padding(
-      padding: EdgeInsets.only(bottom: screenWidth / 8),
-      child: rotatedIconWithALine,
-    );
-
-    return centeredIconWithALine;
   }
 }

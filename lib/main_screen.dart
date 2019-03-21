@@ -160,8 +160,7 @@ class ProfileRow extends StatelessWidget {
             new CircleAvatar(
                 minRadius: 64.0,
                 maxRadius: 64.0,
-                backgroundColor: (hero.geschlecht == 'w') ? Colors.red : Colors
-                    .blue,
+                backgroundColor: (hero.geschlecht == 'w') ? Colors.red : Colors.blue,
                 child: Center(child: new CircleAvatar(
                     backgroundImage: new AssetImage(
                         'images/user_images/hund_${hero.iBild}.jpg'),
@@ -303,17 +302,17 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   }
 
   _launchUserSettings(){
+    close();
     Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => UserPage(
-          closeMenu: () => close(),
           hero: hero,
           heroCallback: updateHero)));
   }
 
   //This is just a dummy function now - need to add actual functionality
   _onIconClick() {
-    (hero.geschlecht=='w')?hero.geschlecht='m':hero.geschlecht='w';
+    //(hero.geschlecht=='w')?hero.geschlecht='m':hero.geschlecht='w';
     updateHero(newHero: hero);
     close();
   }

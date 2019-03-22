@@ -188,7 +188,7 @@ class GenderSelectorState extends State<GenderSelector>
                   decoration: BoxDecoration(
                     boxShadow: <BoxShadow>[BoxShadow(spreadRadius: 4)],
                       shape: BoxShape.circle,
-                      color: Colors.amber[200]
+                      color: Colors.transparent
                   )
               ),
               Center(child:maleIcon),

@@ -2,18 +2,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hundetage/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
+import 'utilities.dart';
 
 void main() {
   // Stuff we need for testing
   final Held _testHeld = new Held.initial();
 
-  // Test top panes of main menu
+  // Test top panels of main menu
   testWidgets('Test main-screen', (WidgetTester _tester) async {
     await _tester.pumpWidget(
         StaticTestWidget(returnWidget: ProfileRow(hero: _testHeld, imageHeight: 10.0))
     );
 
-    //See if main screen looks as it should
+    //See if the main screen looks as it should
     final _findUsername = find.text(_testHeld.name);
     final _findJob = find.text((_testHeld.geschlecht == 'w') ? 'Abenteurerin' : 'Abenteurer');
 
@@ -88,16 +89,4 @@ void main() {
       expect(_findAppText, findsOneWidget);
       }
     );
-}
-
-class StaticTestWidget extends StatelessWidget{
-  final Widget returnWidget;
-
-  StaticTestWidget({this.returnWidget});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(body:returnWidget));
-  }
 }

@@ -60,7 +60,7 @@ class MainPageState extends State<MainPage> {
             width: MediaQuery.of(context).size.width,
             child: new Stack(
               children: <Widget>[
-                TopPanel(imageHeight: _imageHeight),
+                TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
                 License(screenHeight: screenHeight),
                 UserButton(screenHeight:screenHeight,
@@ -126,8 +126,9 @@ class UserButton extends StatelessWidget {
 //Builds empty panel on top of the screen
 class TopPanel extends StatelessWidget {
   final double imageHeight;
+  final Held hero;
 
-  TopPanel({this.imageHeight});
+  TopPanel({this.imageHeight, this.hero});
   @override
   Widget build(BuildContext context) {
     return new Positioned.fill(
@@ -137,7 +138,7 @@ class TopPanel extends StatelessWidget {
           child: Container(
               height: imageHeight,
               width: MediaQuery.of(context).size.width,
-              color: Colors.amber[200])
+              color: hero.geschlecht == 'w'? Colors.blueAccent : Colors.orangeAccent)
       ),
     );
   }
@@ -160,7 +161,7 @@ class ProfileRow extends StatelessWidget {
             new CircleAvatar(
                 minRadius: 64.0,
                 maxRadius: 64.0,
-                backgroundColor: (hero.geschlecht == 'w') ? Colors.red : Colors.blue,
+                backgroundColor: Colors.black,
                 child: Center(child: new CircleAvatar(
                     backgroundImage: new AssetImage(
                         'images/user_images/hund_${hero.iBild}.jpg'),
@@ -185,7 +186,6 @@ class ProfileRow extends StatelessWidget {
                     style: new TextStyle(
                         fontSize: 14.0,
                         fontStyle: FontStyle.italic,
-                        color: Colors.black,
                         fontWeight: FontWeight.w300),
                   ),
                 ],
@@ -222,15 +222,15 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   //Define parameters for button size and menu size here
   final double _expandedSize = 240.0;
   final double _hiddenSize = 70.0;
-  //Colors for when menu is clicked and when it is not
-  Color _unselectedColor = Colors.amber[200];
-  Color _selectedColor = Colors.amber;
 
   AnimatedButtonState({this.updateHero, this.hero,
   this.screenWidth, this.screenHeight});
 
   @override
   void initState() {
+    //Colors for when menu is clicked and when it is not
+    Color _unselectedColor = hero.geschlecht == 'w'? Colors.blueAccent[200] : Colors.orangeAccent[200];
+    Color _selectedColor = hero.geschlecht == 'w'? Colors.blueAccent : Colors.orangeAccent;
     super.initState();
     //Animation controller for manu expansion
     _animationController = new AnimationController(

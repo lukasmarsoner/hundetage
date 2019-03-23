@@ -1,9 +1,5 @@
 image: cirrusci/flutter
 
-before_script:
-- flutter channel stable
-- flutter packages get
-
 stages:
 - test
 - coverage
@@ -11,6 +7,8 @@ stages:
 UnitWidgetTests:
   stage: test
   script:
+  - flutter channel stable
+  - flutter packages get
   - flutter test --coverage
   artifacts:
     paths:

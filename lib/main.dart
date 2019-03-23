@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'main_screen.dart';
+import 'dart:async';
+import 'utilities.dart';
 
 void main() => runApp(MyApp());
 
@@ -94,3 +96,35 @@ class Held{
   Map<String,dynamic> get defaults => _defaults;
 }
 
+class Adventure{
+  // Properties of adventures
+  String name;
+  int version;
+  Map<int,Map<String,dynamic>> story;
+
+  Adventure({this.name,this.version,this.story});
+
+  factory Adventure.fromJson(Map<String, dynamic> _jsonData){
+    return Adventure(
+        name:_jsonData['name'],
+        version: _jsonData['version'],
+        story: _jsonData['story']
+    );
+  }
+
+}
+
+class GeneralData{
+  //Contains stuff needed by all adventures
+  Map<String,Map<String,String>> gendering;
+  Map<String,Map<String,String>> erlebnisse;
+
+  GeneralData({this.gendering,this.erlebnisse});
+
+  factory GeneralData.fromJson(Map<String, dynamic> _jsonData){
+    return GeneralData(
+        gendering:_jsonData['gendering'],
+        erlebnisse: _jsonData['erlebnisse']
+    );
+  }
+}

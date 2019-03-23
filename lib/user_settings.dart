@@ -42,11 +42,11 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
             child: new Column(
               //make sure to build the Image selection (Page View) on top of everything else
                 children: <Widget>[
-                  //User image
+                  //User image - wrapped to allow for hero transition from main page
                   Container(
                       width: screenWidth,
                       height: screenHeight/2.2,
-                      child: UserImageRow(hero: hero,heroCallback: heroCallback,)),
+                      child: UserImageRow(hero: hero,heroCallback: heroCallback)),
                   //Username
                   Container(
                       padding: EdgeInsets.only(top: screenHeight/30),
@@ -134,23 +134,30 @@ class UserImageRowState extends State<UserImageRow> {
                   _clickHandler(false);
                 }
               },
-              child: CircleAvatar(
-                  minRadius: _circleSize,
-                  maxRadius: _circleSize,
-                  backgroundColor: hero.geschlecht == 'm'
-                      ? Colors.blueAccent
-                      : Colors.redAccent,
-                  child: Center(child: new CircleAvatar(
-                      minRadius: _circleSize * 0.95,
-                      maxRadius: _circleSize * 0.95,
-                      backgroundImage: new AssetImage(
-                          'images/user_images/hund_${hero.iBild}.jpg')
-                  )
+              child: new Hero(
+                  tag: 'userImage',
+                  child: new Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                          child: CircleAvatar(
+                              minRadius: _circleSize,
+                              maxRadius: _circleSize,
+                              backgroundColor: hero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
+                              child: Center(child: new CircleAvatar(
+                                  minRadius: _circleSize * 0.95,
+                                  maxRadius: _circleSize * 0.95,
+                                  backgroundImage: new AssetImage(
+                                      'images/user_images/hund_${hero.iBild}.jpg')
+                              )
+                              )
+                          )
+                      )
                   )
               )
           ),
           _rightButton
-        ])
+        ]
+      )
     );
   }
 }

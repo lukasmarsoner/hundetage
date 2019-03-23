@@ -38,6 +38,7 @@ class MainPageState extends State<MainPage> {
   Function heroCallback;
   double _imageHeight = 200.0;
   double screenHeight, screenWidth;
+  Rect rect;
 
   MainPageState({this.hero, this.heroCallback});
 
@@ -53,7 +54,8 @@ class MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth  = MediaQuery.of(context).size.width;
-    return new Scaffold(
+    return Stack(children: <Widget>[
+      new Scaffold(
       //Add new screen elements here
         body: new Container(
             height: screenHeight,
@@ -69,6 +71,8 @@ class MainPageState extends State<MainPage> {
                     hero:hero)],
             )
         )
+      ),
+    ]
     );
   }
 }
@@ -100,12 +104,12 @@ class License extends StatelessWidget{
 
 //Button for main menu
 class UserButton extends StatelessWidget {
-  final Function updateHero;
+  final Function updateHero, updateRipple;
   final Held hero;
   final double screenHeight, screenWidth;
 
   UserButton({this.screenHeight, this.screenWidth, this.updateHero,
-    this.hero});
+    this.hero, this.updateRipple});
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +122,7 @@ class UserButton extends StatelessWidget {
           updateHero: updateHero,
           screenWidth: screenWidth,
           screenHeight: screenHeight,
+            updateRipple: updateRipple
         )
     );
   }
@@ -162,11 +167,17 @@ class ProfileRow extends StatelessWidget {
                 minRadius: 64.0,
                 maxRadius: 64.0,
                 backgroundColor: Colors.black,
-                child: Center(child: new CircleAvatar(
-                    backgroundImage: new AssetImage(
-                        'images/user_images/hund_${hero.iBild}.jpg'),
-                    minRadius: 60.0,
-                    maxRadius: 60.0))),
+                //Used to transition the image to other screens
+                child: new Hero(
+                  tag: 'userImage',
+                  child: new Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                          child: Center(child: new CircleAvatar(
+                              backgroundImage: new AssetImage(
+                                  'images/user_images/hund_${hero.iBild}.jpg'),
+                              minRadius: 60.0,
+                              maxRadius: 60.0)))))),
             //Add some padding and then put in user name and description
             new Padding(
               padding: const EdgeInsets.only(left: 12.0),
@@ -199,24 +210,25 @@ class ProfileRow extends StatelessWidget {
 
 //Animated button for main menu
 class AnimatedButton extends StatefulWidget {
-  final Function updateHero;
+  final Function updateHero, updateRipple;
   final Held hero;
   final double screenWidth, screenHeight;
 
   const AnimatedButton({this.updateHero, this.hero,
-  this.screenWidth, this.screenHeight});
+  this.screenWidth, this.screenHeight, this.updateRipple});
 
   @override
   AnimatedButtonState createState() => new AnimatedButtonState(
       hero: hero,
       updateHero: updateHero,
       screenHeight: screenHeight,
-      screenWidth: screenWidth);
+      screenWidth: screenWidth,
+      updateRipple: updateRipple);
 }
 
 class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProviderStateMixin  {
   AnimationController _animationController;
-  Function updateHero;
+  Function updateHero, updateRipple;
   Held hero;
   double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
@@ -224,12 +236,12 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   final double _hiddenSize = 70.0;
 
   AnimatedButtonState({this.updateHero, this.hero,
-  this.screenWidth, this.screenHeight});
+  this.screenWidth, this.screenHeight, this.updateRipple});
 
   @override
   void initState() {
     super.initState();
-    //Animation controller for manu expansion
+    //Animation controller for menu expansion
     _animationController = new AnimationController(
         vsync: this,
         duration: Duration(milliseconds: 200));
@@ -257,11 +269,12 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
               ExpandedBackground(hero: hero, animationController: _animationController,
               hiddenSize: _hiddenSize, expandedSize: _expandedSize,),
               OptionButton(icon: Icons.cloud_queue, angle: 0.0,
-                  animationController: _animationController, onIconClick: _onIconClick),
+                  animationController: _animationController, onIconClick: () => _onIconClick),
               OptionButton(icon: Icons.account_circle, angle: -math.pi / 4,
-                  animationController: _animationController, onIconClick: _launchUserSettings),
+                    animationController: _animationController,
+                    onIconClick: () => _goToNextPage(nextPage: 'user')),
               OptionButton(icon: Icons.add_a_photo, angle: -2 * math.pi / 4,
-                  animationController: _animationController, onIconClick: _onIconClick),
+                  animationController: _animationController, onIconClick: () => _onIconClick),
               MenuButton(animationController: _animationController, onButtonTap: _onButtonTap,
               hero: hero, hiddenSize: _hiddenSize)
             ],
@@ -294,13 +307,16 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
     }
   }
 
-  _launchUserSettings(){
+  _goToNextPage({String nextPage}){
     close();
+    //Chose which page to go to
+    if(nextPage == 'user'){
     Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => UserPage(
           hero: hero,
-          heroCallback: updateHero)));
+          heroCallback: updateHero))
+    );}
   }
 
   //This is just a dummy function now - need to add actual functionality

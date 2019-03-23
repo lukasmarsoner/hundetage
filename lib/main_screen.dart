@@ -215,7 +215,6 @@ class AnimatedButton extends StatefulWidget {
 
 class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProviderStateMixin  {
   AnimationController _animationController;
-  Animation<Color> _colorAnimation;
   Function updateHero;
   Held hero;
   double screenWidth, screenHeight;
@@ -228,20 +227,14 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
 
   @override
   void initState() {
-    //Colors for when menu is clicked and when it is not
-    Color _unselectedColor = hero.geschlecht == 'w'? Colors.blueAccent[200] : Colors.orangeAccent[200];
-    Color _selectedColor = hero.geschlecht == 'w'? Colors.blueAccent : Colors.orangeAccent;
     super.initState();
     //Animation controller for manu expansion
     _animationController = new AnimationController(
         vsync: this,
         duration: Duration(milliseconds: 200));
-    //Animation for color change of menu when clicked
-    _colorAnimation = new ColorTween(begin: _unselectedColor, end: _selectedColor)
-        .animate(_animationController);
   }
 
-  //Makr sure to kill the animation controller when the widget is disposed off
+  //Makes sure to kill the animation controller when the widget is disposed off
   @override
   void dispose() {
     _animationController.dispose();
@@ -269,7 +262,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
               OptionButton(icon: Icons.add_a_photo, angle: -2 * math.pi / 4,
                   animationController: _animationController, onIconClick: _onIconClick),
               MenuButton(animationController: _animationController, onButtonTap: _onButtonTap,
-              colorAnimation: _colorAnimation, hiddenSize: _hiddenSize)
+              hero: hero, hiddenSize: _hiddenSize)
             ],
           );
         },
@@ -381,7 +374,7 @@ class ExpandedBackground extends StatelessWidget {
       //Color depends on user sex
       decoration: new BoxDecoration(
           shape: BoxShape.circle,
-          color: (hero.geschlecht == 'w') ? Colors.red : Colors.blue
+          color: hero.geschlecht == 'w' ? Colors.blueAccent : Colors.orangeAccent
       ),
     );
   }
@@ -390,15 +383,19 @@ class ExpandedBackground extends StatelessWidget {
 //Main Menu button
 class MenuButton extends StatelessWidget {
   final AnimationController animationController;
-  final Animation colorAnimation;
   //onButtonTap calls back to open/close function
   final Function onButtonTap;
   final double hiddenSize;
+  final Held hero;
 
-  MenuButton({this.animationController, this.hiddenSize, this.onButtonTap, this.colorAnimation});
+  MenuButton({this.animationController, this.hiddenSize, this.onButtonTap,
+    this.hero});
 
   @override
   Widget build(BuildContext context) {
+    //Colors for when menu is clicked and when it is not
+    Color _unselectedColor = hero.geschlecht == 'w'? Colors.blueAccent : Colors.orangeAccent;
+    Color _selectedColor = hero.geschlecht == 'w'? Colors.orangeAccent : Colors.blueAccent;
     double scaleFactor = 2 * (animationController.value - 0.5).abs();
     return Container(
         width: hiddenSize,
@@ -418,7 +415,7 @@ class MenuButton extends StatelessWidget {
                 color: Colors.black, size: 50.0),
           ),
           //Color will change with animation
-          backgroundColor: colorAnimation.value,
+          backgroundColor: animationController.value > 0.5?_selectedColor:_unselectedColor
         )
     );
   }

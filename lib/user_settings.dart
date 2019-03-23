@@ -37,6 +37,7 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth  = MediaQuery.of(context).size.width;
+    double _circleWidth = screenWidth / 1.8;
     //When we hit the back button we want to either go back to the main screen
     //or the previous one - depending on if the page view is visible or not
     return MaterialApp(home:
@@ -45,19 +46,23 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
         resizeToAvoidBottomPadding: false,
       //Add new screen elements here
         body: new Container(height: screenHeight,
-                 child: new Stack(
+                 child: new Column(
                 //make sure to build the Image selection (Page View) on top of everything else
                 children: <Widget>[
-              Center(child: Container(
-                  //Padding set so as to not squeeze the circle at the bottom which
-                  //it has a height of screenHeight/1.8
-                  padding: EdgeInsets.only(top:(1-1/2.8)*screenHeight),
-                  child:Center(child: GenderSelector(hero: hero, heroCallback: heroCallback)),
-              )),
-              _userImageRow(),
-              Center(child: Container(
-                  width: screenWidth/2,
-                  child: UserNameField(hero:hero, heroCallback: updateHero))),
+                  //User image
+                  Container(
+                      padding: EdgeInsets.only(left: (screenWidth - _circleWidth*1.2)/2),
+                      child: _userImageRow(_circleWidth)),
+                  //Username
+                  Container(
+                      padding: EdgeInsets.only(top: screenHeight/15),
+                      width: screenWidth/2,
+                      child: UserNameField(hero:hero, heroCallback: updateHero)),
+                  //User gender
+                  Container(
+                    padding: EdgeInsets.only(top: screenHeight/15),
+                    child:GenderSelector(hero: hero, heroCallback: heroCallback),
+                  ),
             ]
          )
         )
@@ -66,7 +71,7 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   }
 
   //All the user image stuff goes here
-  Widget _userImageRow(){
+  Widget _userImageRow(double _circleWidth){
     //Handler for paging through the user images
     _clickHandler(bool left){
       if(left){
@@ -79,16 +84,9 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
       }
     }
 
-    Widget _rightButton = new IconButton(
-        iconSize: screenWidth / 10,
-        icon: new Icon(Icons.arrow_forward_ios),
-        onPressed: () => _clickHandler(false));
-    Widget _leftButton = new IconButton(
-        iconSize: screenWidth / 10,
-        icon: new Icon(Icons.arrow_back_ios),
-        onPressed: () => _clickHandler(true));
     Widget _userImage = Container(
-        width: (1-3/10)*screenWidth,
+        width: _circleWidth*1.2,
+        height: _circleWidth*1.2,
         child: GestureDetector(
             onHorizontalDragEnd: (DragEndDetails details){
               double dx = details.velocity.pixelsPerSecond.dx;
@@ -96,16 +94,26 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
                 {_clickHandler(false);}
               else if(dx<0.0&&dx.abs()>10.0)
                 {_clickHandler(true);}},
-            child: new Image.asset('images/user_images/hund_${hero.iBild}.jpg')));
+             child: CircleAvatar(
+                  minRadius: _circleWidth*1.2,
+                  maxRadius: _circleWidth*1.2,
+                  backgroundColor: hero.geschlecht == 'w' ? Colors.blueAccent : Colors.orangeAccent,
+                    child: Center(child: new CircleAvatar(
+                    minRadius: _circleWidth*0.52,
+                    maxRadius: _circleWidth*0.52,
+                  backgroundImage: new AssetImage('images/user_images/hund_${hero.iBild}.jpg')
+                )
+               )
+            )
+          )
+        );
 
     return Container(
       height: screenHeight / 2.5,
       width: screenWidth,
       padding: EdgeInsets.only(top:50.0),
       child: Row(children: <Widget>[
-      _leftButton,
-      _userImage,
-      _rightButton
+      _userImage
     ]));
   }
 

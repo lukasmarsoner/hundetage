@@ -2,9 +2,8 @@ image: cirrusci/flutter
 
 stages:
 - test
-- deploy
 
-unitTests:
+Widget_and_Unit_Tests:
   stage: test
   script:
   - flutter test

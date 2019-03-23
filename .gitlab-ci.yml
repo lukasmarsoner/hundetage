@@ -1,9 +1,9 @@
 image: cirrusci/flutter
 
 before_script:
-  - flutter doctor
-  - flutter channel stable
-  - flutter packages get
+- flutter doctor
+- flutter channel stable
+- flutter packages get
 
 stages:
 - test
@@ -12,16 +12,17 @@ stages:
 UnitWidgetTests:
   stage: test
   script:
-    - flutter test --coverage
-    artifacts:
+  - flutter test --coverage
+  artifacts:
     paths:
     - coverage
+
 
 coverage:
   stage: coverage
   coverage: '/^\s+lines.+: (\d+.\d*%)/'
   dependencies:
-    - UnitWidgetTests
+  - UnitWidgetTests
   script:
-    - genhtml -o coverage coverage/lcov.info
-    - flutter test test/user_settings_test.dart
+  - genhtml -o coverage coverage/lcov.info
+  - flutter test test/user_settings_test.dart

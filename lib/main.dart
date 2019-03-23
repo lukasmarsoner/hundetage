@@ -26,10 +26,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.amber,
-      ),
+      title: 'Hundetage',
       home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback)),
     );
   }
@@ -40,10 +37,19 @@ class Held{
   String _name, _geschlecht;
   int _iBild, _maxImages;
   List<String> _erlebnisse;
+  Map<int,Map<String,String>> _berufe = {
+    0: {'m': 'Ein gewiefter Abenteurer', 'w': 'Eine gewiefte Abenteurerin'},
+    1: {'m': 'Der stärkste Hund im Land', 'w': 'Die stärkste Hündin im Land'},
+    2: {'m': 'Hat schon alles gesehen', 'w': 'Hat schon alles gesehen'},
+    3: {'m': 'Nichts kann ihn aufhalten', 'w': 'Nichts kann sie aufhalten'},
+    4: {'m': 'Der neugierigste Hund der Stadt', 'w': 'Die neugierigste Hündin der Stadt'},
+    5: {'m': 'Ihm kann man nichts vormachen', 'w': 'Ihr kann man nichts vormachen'},
+    6: {'m': 'Genauso wuschelig wie tapfer', 'w': 'Genauso wuschelig wie tapfer'},
+    7: {'m': 'Dein bester Freund', 'w': 'Deine beste Freundin'}};
 
   // Default values for user
   Map<String,dynamic> _defaults = {
-    'name': 'Teemu',
+    'name': 'Mara',
     'geschlecht': 'w',
     'iBild': 0,
     'maxImages': 7,
@@ -83,6 +89,7 @@ class Held{
   int get maxImages => _maxImages;
   String get geschlecht => _geschlecht;
   List<String> get erlebnisse => _erlebnisse;
+  Map<int,Map<String,String>> get berufe => _berufe;
   // This getter is only for testing
   Map<String,dynamic> get defaults => _defaults;
 }

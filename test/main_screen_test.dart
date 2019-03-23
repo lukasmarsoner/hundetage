@@ -16,7 +16,8 @@ void main() {
 
     //See if the main screen looks as it should
     final _findUsername = find.text(_testHeld.name);
-    final _findJob = find.text((_testHeld.geschlecht == 'w') ? 'Abenteurerin' : 'Abenteurer');
+    final String _beruf = _testHeld.berufe[_testHeld.iBild][_testHeld.geschlecht];
+    final _findJob = find.text(_beruf);
 
     expect(_findUsername, findsOneWidget);
     expect(_findJob, findsOneWidget);

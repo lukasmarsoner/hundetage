@@ -10,6 +10,13 @@ void main() {
       expect(_testHeld.geschlecht, _testHeld.defaults['geschlecht']);
       expect(_testHeld.maxImages, _testHeld.defaults['maxImages']);
       expect(_testHeld.erlebnisse, _testHeld.defaults['erlebnisse']);
+      expect(_testHeld.berufe.length,_testHeld.maxImages+1);
+      //Check that descriptions are set for al heros
+      for(int i=0;i<_testHeld.berufe.length;i++){
+        expect(_testHeld.berufe[i].keys.length,2);
+        expect(_testHeld.berufe[i]['w'],isNotEmpty);
+        expect(_testHeld.berufe[i]['m'],isNotEmpty);
+      }
     });
 
     test('Set values ', () {

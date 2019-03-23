@@ -138,7 +138,7 @@ class TopPanel extends StatelessWidget {
           child: Container(
               height: imageHeight,
               width: MediaQuery.of(context).size.width,
-              color: hero.geschlecht == 'w'? Colors.blueAccent : Colors.orangeAccent)
+              color: hero.geschlecht == 'm'? Colors.blueAccent : Colors.redAccent)
       ),
     );
   }
@@ -177,15 +177,16 @@ class ProfileRow extends StatelessWidget {
                   new Text(
                     hero.name,
                     style: new TextStyle(
-                        fontSize: 32.0,
-                        fontStyle: FontStyle.italic,
+                        fontSize: 28.0,
+                        color: hero.geschlecht=='m'?Colors.white:Colors.black,
                         fontWeight: FontWeight.w500),
                   ),
                   new Text(
-                    (hero.geschlecht == 'w') ? 'Abenteurerin' : 'Abenteurer',
+                    hero.berufe[hero.iBild][hero.geschlecht],
                     style: new TextStyle(
                         fontSize: 14.0,
                         fontStyle: FontStyle.italic,
+                        color: hero.geschlecht=='m'?Colors.white:Colors.black,
                         fontWeight: FontWeight.w300),
                   ),
                 ],
@@ -304,7 +305,6 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
 
   //This is just a dummy function now - need to add actual functionality
   _onIconClick() {
-    //(hero.geschlecht=='w')?hero.geschlecht='m':hero.geschlecht='w';
     updateHero(newHero: hero);
     close();
   }
@@ -374,7 +374,7 @@ class ExpandedBackground extends StatelessWidget {
       //Color depends on user sex
       decoration: new BoxDecoration(
           shape: BoxShape.circle,
-          color: hero.geschlecht == 'w' ? Colors.blueAccent : Colors.orangeAccent
+          color: hero.geschlecht == 'm' ? Colors.blueAccent : Colors.redAccent
       ),
     );
   }
@@ -394,8 +394,8 @@ class MenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //Colors for when menu is clicked and when it is not
-    Color _unselectedColor = hero.geschlecht == 'w'? Colors.blueAccent : Colors.orangeAccent;
-    Color _selectedColor = hero.geschlecht == 'w'? Colors.orangeAccent : Colors.blueAccent;
+    Color _unselectedColor = hero.geschlecht == 'm'? Colors.blueAccent : Colors.redAccent;
+    Color _selectedColor = hero.geschlecht=='m'?Colors.white:Colors.black;
     double scaleFactor = 2 * (animationController.value - 0.5).abs();
     return Container(
         width: hiddenSize,
@@ -408,11 +408,13 @@ class MenuButton extends StatelessWidget {
             transform: new Matrix4.identity()
               ..scale(1.0, scaleFactor),
             //Icon depends on the state of the animation
-            child: new Icon(
-                animationController.value > 0.5
-                    ? Icons.supervisor_account
-                    : Icons.settings,
-                color: Colors.black, size: 50.0),
+            child: animationController.value > 0.5
+            ?new Icon(Icons.supervisor_account,
+                color: hero.geschlecht=='m'?Colors.black:Colors.white,
+                size: 50.0)
+            :new Icon(Icons.settings,
+                color: hero.geschlecht=='m'?Colors.white:Colors.black,
+                size: 50.0)
           ),
           //Color will change with animation
           backgroundColor: animationController.value > 0.5?_selectedColor:_unselectedColor

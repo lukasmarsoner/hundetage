@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'main_screen.dart';
-import 'dart:async';
+import 'dart:async' show Future;
 import 'utilities.dart';
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatefulWidget {
+void asb() async{    GeneralData _generalData = GeneralData();
+_generalData = await _generalData.updateFromJson();}
+
+class MyApp extends StatefulWidget{
 
   @override
   _MyAppState createState(){
@@ -16,7 +19,7 @@ class MyApp extends StatefulWidget {
 }
 
 //All user information should be store and kept-updated here
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp>{
   Held hero;
 
   _MyAppState({this.hero});
@@ -118,13 +121,30 @@ class GeneralData{
   //Contains stuff needed by all adventures
   Map<String,Map<String,String>> gendering;
   Map<String,Map<String,String>> erlebnisse;
+  String genderingFile = 'general_data/gendering.json';
+  String erlebnisseFile = 'general_data/erlebnisse.json';
 
   GeneralData({this.gendering,this.erlebnisse});
 
-  factory GeneralData.fromJson(Map<String, dynamic> _jsonData){
+  //Maps the entries from a JSON Map<String, dynamic> to a Map<String, Map<String,String>>
+  Map<String,Map<String,String>> dynamicToMap(Map<String, dynamic> parsedJson){
+    Map<String, Map<String, String>> _outMap = {};
+    List<String> _mainKeys = parsedJson.keys.toList();
+    for(int i=0;i<_mainKeys.length;i++){
+      List<String> _subKeys = parsedJson[_mainKeys[i]].keys.toList();
+      _outMap[_mainKeys[i]] = {};
+      for(int j=0;j<_subKeys.length;j++){
+        _outMap[_mainKeys[i]][_subKeys[j]] =parsedJson[_mainKeys[i]][_subKeys[j]];
+      }
+    }
+    return _outMap;
+  }
+
+  //Read JSON asynchronously
+  Future updateFromJson() async{
     return GeneralData(
-        gendering:_jsonData['gendering'],
-        erlebnisse: _jsonData['erlebnisse']
+        gendering: dynamicToMap(await loadJsonAsset(genderingFile)),
+        erlebnisse: dynamicToMap(await loadJsonAsset(erlebnisseFile))
     );
   }
 }

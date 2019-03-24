@@ -16,17 +16,19 @@ dependencies:
 flutter:
   uses-material-design: true
   assets:
-  - images/symbol_m.png
-  - images/symbol_w.png
-  - images/symbol_m_b.png
-  - images/symbol_w_b.png
-  - images/icon.png
-  - images/user_screen_top_image.png
-  - images/user_images/hund_0.jpg
-  - images/user_images/hund_1.jpg
-  - images/user_images/hund_2.jpg
-  - images/user_images/hund_3.jpg
-  - images/user_images/hund_4.jpg
-  - images/user_images/hund_5.jpg
-  - images/user_images/hund_6.jpg
-  - images/user_images/hund_7.jpg
+    - general_data/gendering.json
+    - general_data/erlebnisse.json
+    - images/symbol_m.png
+    - images/symbol_w.png
+    - images/symbol_m_b.png
+    - images/symbol_w_b.png
+    - images/icon.png
+    - images/user_screen_top_image.png
+    - images/user_images/hund_0.jpg
+    - images/user_images/hund_1.jpg
+    - images/user_images/hund_2.jpg
+    - images/user_images/hund_3.jpg
+    - images/user_images/hund_4.jpg
+    - images/user_images/hund_5.jpg
+    - images/user_images/hund_6.jpg
+    - images/user_images/hund_7.jpg

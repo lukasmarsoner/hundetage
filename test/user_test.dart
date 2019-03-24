@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hundetage/main.dart';
 
 void main() {
-  group('SetGet', () {
+  group('Hero Class Set-Get', () {
     test('Initialize with defaults', () {
       final _testHeld = new Held.initial();
       expect(_testHeld.iBild, _testHeld.defaults['iBild']);

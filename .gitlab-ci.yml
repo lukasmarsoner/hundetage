@@ -15,7 +15,7 @@ UnitWidgetTests:
     - coverage
 
 coverage:
-  image: registry.gitlab.com/marsoner/docker-for-test-coverage/
+  image: registry.gitlab.com/marsoner/docker-for-test-coverage:latest
   stage: coverage
   coverage: '/^\s+lines.+: (\d+.\d*%)/'
   dependencies:

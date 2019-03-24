@@ -21,4 +21,5 @@ coverage:
   dependencies:
   - UnitWidgetTests
   script:
+  - apt-get install lcov gcov
   - genhtml -o coverage coverage/lcov.info

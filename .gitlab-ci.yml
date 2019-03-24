@@ -15,11 +15,11 @@ UnitWidgetTests:
     - coverage
 
 coverage:
-  image: ubuntu:16.04
+  image: ubuntu:18.04.2
   stage: coverage
   coverage: '/^\s+lines.+: (\d+.\d*%)/'
   dependencies:
   - UnitWidgetTests
   script:
-  - apt-get install lcov gcov
+  - apt-get install gnupg lcov
   - genhtml -o coverage coverage/lcov.info

@@ -15,7 +15,7 @@ UnitWidgetTests:
     - coverage
 
 coverage:
-  image: registry.gitlab.com/marsoner/docker-for-flutter/:latest
+  image: registry.gitlab.com/marsoner/docker-for-test-coverage/
   stage: coverage
   coverage: '/^\s+lines.+: (\d+.\d*%)/'
   dependencies:

@@ -15,11 +15,10 @@ UnitWidgetTests:
     - coverage
 
 coverage:
-  image: ubuntu:18.04.2
+  image: image: registry.gitlab.com/marsoner/docker-for-flutter/:latest
   stage: coverage
   coverage: '/^\s+lines.+: (\d+.\d*%)/'
   dependencies:
   - UnitWidgetTests
   script:
-  - apt-get install gnupg lcov
   - genhtml -o coverage coverage/lcov.info

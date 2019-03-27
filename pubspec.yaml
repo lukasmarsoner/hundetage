@@ -9,15 +9,18 @@ dependencies:
   rect_getter:
   flutter:
     sdk: flutter
+  cupertino_icons:
+  firebase_core:
+  cloud_firestore:
+
+dev_dependencies:
   flutter_test:
     sdk: flutter
-  cupertino_icons:
+  mockito:
 
 flutter:
   uses-material-design: true
   assets:
-    - general_data/gendering.json
-    - general_data/erlebnisse.json
     - images/symbol_m.png
     - images/symbol_w.png
     - images/symbol_m_b.png

@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "681496978779",
+    "firebase_url": "https://hundetage-51cac.firebaseio.com",
+    "project_id": "hundetage-51cac",
+    "storage_bucket": "hundetage-51cac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:681496978779:android:a21c87eabe8754f7",
+        "android_client_info": {
+          "package_name": "de.hundetage.hundetage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "681496978779-reak7koe8fs0aa5ggu3gg7a37jc8c13d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOQ6QF0koS10ies1Ftk9YUtaNkG4dZl3k"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

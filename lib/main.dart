@@ -1,35 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'main_screen.dart';
-import 'dart:async' show Future;
-import 'utilities.dart';
+import 'firebase_utilities.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() => runApp(MyApp());
 
-void asb() async{    GeneralData _generalData = GeneralData();
-_generalData = await _generalData.updateFromJson();}
+void main() async{
+  //GeneralData generalData = await initializeGeneralData();
+  GeneralData generalData = await loadGeneraldata(Firestore());
+  runApp(MyApp(generalData: generalData));
+}
 
 class MyApp extends StatefulWidget{
+  final GeneralData generalData;
+
+  MyApp({this.generalData});
 
   @override
   _MyAppState createState(){
-    // Implement reading from file here
-    return new _MyAppState(hero: new Held.initial());
+    return new _MyAppState(hero: new Held.initial(), generalData: generalData);
   }
 }
 
-//All user information should be store and kept-updated here
+//All global should be store and kept-updated here
 class _MyAppState extends State<MyApp>{
   Held hero;
+  GeneralData generalData;
 
-  _MyAppState({this.hero});
+  _MyAppState({this.hero, this.generalData});
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return MaterialApp(
       title: 'Hundetage',
       home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback)),
@@ -119,32 +124,10 @@ class Adventure{
 
 class GeneralData{
   //Contains stuff needed by all adventures
+  //gendering contains mappings for male/female versions of words
+  //erlebnisse contains all possible memories that can be collected during the adventures
   Map<String,Map<String,String>> gendering;
   Map<String,Map<String,String>> erlebnisse;
-  String genderingFile = 'general_data/gendering.json';
-  String erlebnisseFile = 'general_data/erlebnisse.json';
 
-  GeneralData({this.gendering,this.erlebnisse});
-
-  //Maps the entries from a JSON Map<String, dynamic> to a Map<String, Map<String,String>>
-  Map<String,Map<String,String>> dynamicToMap(Map<String, dynamic> parsedJson){
-    Map<String, Map<String, String>> _outMap = {};
-    List<String> _mainKeys = parsedJson.keys.toList();
-    for(int i=0;i<_mainKeys.length;i++){
-      List<String> _subKeys = parsedJson[_mainKeys[i]].keys.toList();
-      _outMap[_mainKeys[i]] = {};
-      for(int j=0;j<_subKeys.length;j++){
-        _outMap[_mainKeys[i]][_subKeys[j]] =parsedJson[_mainKeys[i]][_subKeys[j]];
-      }
-    }
-    return _outMap;
-  }
-
-  //Read JSON asynchronously
-  Future updateFromJson() async{
-    return GeneralData(
-        gendering: dynamicToMap(await loadJsonAsset(genderingFile)),
-        erlebnisse: dynamicToMap(await loadJsonAsset(erlebnisseFile))
-    );
-  }
+  GeneralData({this.gendering, this.erlebnisse});
 }

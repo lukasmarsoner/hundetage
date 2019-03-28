@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'user_settings.dart';
 import 'dart:math' as math;
+import 'erlebnisse.dart';
 import 'main.dart';
 
 //Cuts the square box on the top of the screen diagonally
@@ -23,24 +25,27 @@ class _DiagonalClipper extends CustomClipper<Path> {
 //Main page class
 class MainPage extends StatefulWidget {
   final Held hero;
+  final GeneralData generalData;
   final Function heroCallback;
 
-  const MainPage({Key key, this.hero, this.heroCallback}) : super(key: key);
+  const MainPage({Key key, this.hero, this.heroCallback, this.generalData}) : super(key: key);
 
   @override
   MainPageState createState() => new MainPageState(
       hero: hero,
+      generalData: generalData,
       heroCallback: heroCallback);
 }
 
 class MainPageState extends State<MainPage> {
   Held hero;
   Function heroCallback;
+  GeneralData generalData;
   double _imageHeight = 200.0;
   double screenHeight, screenWidth;
   Rect rect;
 
-  MainPageState({this.hero, this.heroCallback});
+  MainPageState({this.hero, this.heroCallback, this.generalData});
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -54,19 +59,22 @@ class MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth  = MediaQuery.of(context).size.width;
+    Firestore firestore = new Firestore();
     return Stack(children: <Widget>[
       new Scaffold(
       //Add new screen elements here
         body: new Container(
             height: screenHeight,
-            width: MediaQuery.of(context).size.width,
+            width: screenWidth,
             child: new Stack(
               children: <Widget>[
                 TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
                 License(screenHeight: screenHeight),
+                AbenteuerAuswahl(screenHeight: screenHeight, firestore: firestore),
                 UserButton(screenHeight:screenHeight,
                     screenWidth: screenWidth,
+                    generalData: generalData,
                     updateHero:updateHero,
                     hero:hero)],
             )
@@ -106,10 +114,11 @@ class License extends StatelessWidget{
 class UserButton extends StatelessWidget {
   final Function updateHero, updateRipple;
   final Held hero;
+  final GeneralData generalData;
   final double screenHeight, screenWidth;
 
   UserButton({this.screenHeight, this.screenWidth, this.updateHero,
-    this.hero, this.updateRipple});
+    this.generalData, this.hero, this.updateRipple});
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +128,7 @@ class UserButton extends StatelessWidget {
         right: -75.0,
         child: new AnimatedButton(
           hero: hero,
+          generalData: generalData,
           updateHero: updateHero,
           screenWidth: screenWidth,
           screenHeight: screenHeight,
@@ -212,9 +222,10 @@ class ProfileRow extends StatelessWidget {
 class AnimatedButton extends StatefulWidget {
   final Function updateHero, updateRipple;
   final Held hero;
+  final GeneralData generalData;
   final double screenWidth, screenHeight;
 
-  const AnimatedButton({this.updateHero, this.hero,
+  const AnimatedButton({this.updateHero, this.hero, this.generalData,
   this.screenWidth, this.screenHeight, this.updateRipple});
 
   @override
@@ -223,19 +234,21 @@ class AnimatedButton extends StatefulWidget {
       updateHero: updateHero,
       screenHeight: screenHeight,
       screenWidth: screenWidth,
+      generalData: generalData,
       updateRipple: updateRipple);
 }
 
 class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProviderStateMixin  {
   AnimationController _animationController;
   Function updateHero, updateRipple;
+  GeneralData generalData;
   Held hero;
   double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
   final double _expandedSize = 240.0;
   final double _hiddenSize = 70.0;
 
-  AnimatedButtonState({this.updateHero, this.hero,
+  AnimatedButtonState({this.updateHero, this.hero, this.generalData,
   this.screenWidth, this.screenHeight, this.updateRipple});
 
   @override
@@ -274,7 +287,8 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
                     animationController: _animationController,
                     onIconClick: () => _goToNextPage(nextPage: 'user')),
               OptionButton(icon: Icons.add_a_photo, angle: -2 * math.pi / 4,
-                  animationController: _animationController, onIconClick: () => _onIconClick),
+                  animationController: _animationController,
+                  onIconClick: () => _goToNextPage(nextPage: 'erlebnisse')),
               MenuButton(animationController: _animationController, onButtonTap: _onButtonTap,
               hero: hero, hiddenSize: _hiddenSize)
             ],
@@ -317,6 +331,13 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
           hero: hero,
           heroCallback: updateHero))
     );}
+    else if(nextPage == 'erlebnisse'){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => Erlebnisse(
+              hero: hero,
+              generalData: generalData,))
+      );}
   }
 
   //This is just a dummy function now - need to add actual functionality
@@ -438,3 +459,60 @@ class MenuButton extends StatelessWidget {
     );
   }
 }
+
+//Adventure-Selection Stream builder
+class AbenteuerAuswahl extends StatelessWidget{
+  final double screenHeight;
+  final Firestore firestore;
+
+  AbenteuerAuswahl({this.screenHeight, this.firestore});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: firestore.collection('abenteuer').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return LinearProgressIndicator();
+        return _buildTiledSelection(context, snapshot.data.documents);
+        },
+    );
+  }
+
+  //Builds the tiled list for adventure selection
+  Widget _buildTiledSelection(BuildContext context, List<DocumentSnapshot> snapshot) {
+    final double _screenHeight = MediaQuery.of(context).size.height;
+    return GridView.count(
+      crossAxisCount: 2,
+      padding: EdgeInsets.only(top: _screenHeight / 3, left: 10.0),
+      children: snapshot.map((data) => _buildTile(context, data)).toList(),
+    );
+  }
+
+  Widget _buildTile(BuildContext context, DocumentSnapshot data) {
+    final record = Adventure.fromSnapshot(data);
+    return GridTile(
+        child: Card(
+        child: MaterialButton(onPressed: () => print(record.name),
+              child: record.image),
+              ),
+        );
+  }
+}
+
+class Adventure {
+  final String name;
+  final double version;
+  Image image;
+
+  Adventure.fromMap(Map<String, dynamic> map)
+      : assert(map['name'] != null),
+        assert(map['image'] != null),
+        assert(map['version'] != null),
+        name = map['name'],
+        version = map['version'],
+        image = Image.network(map['image'], fit: BoxFit.cover);
+
+  Adventure.fromSnapshot(DocumentSnapshot snapshot)
+      : this.fromMap(snapshot.data);
+}
+

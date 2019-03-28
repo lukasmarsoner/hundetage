@@ -6,14 +6,16 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
-  rect_getter:
+  rect_getter: 0.0.1
   flutter:
     sdk: flutter
-  cupertino_icons:
-  firebase_core:
-  cloud_firestore:
+  cupertino_icons: 0.1.2
+  firebase_core: 0.3.1+1
+  cloud_firestore: 0.9.7
+  firebase_storage: 2.1.0+1
 
 dev_dependencies:
+  image_test_utils: ^1.0.0
   flutter_test:
     sdk: flutter
   mockito:

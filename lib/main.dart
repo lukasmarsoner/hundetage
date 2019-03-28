@@ -7,7 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async{
   //GeneralData generalData = await initializeGeneralData();
-  GeneralData generalData = await loadGeneraldata(Firestore());
+  GeneralData generalData = await loadGeneralData(Firestore());
   runApp(MyApp(generalData: generalData));
 }
 
@@ -37,7 +37,8 @@ class _MyAppState extends State<MyApp>{
   Widget build(BuildContext context){
     return MaterialApp(
       title: 'Hundetage',
-      home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback)),
+      home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback,
+          generalData: generalData)),
     );
   }
 }
@@ -129,5 +130,5 @@ class GeneralData{
   Map<String,Map<String,String>> gendering;
   Map<String,Map<String,String>> erlebnisse;
 
-  GeneralData({this.gendering, this.erlebnisse});
+  GeneralData({this.gendering,this.erlebnisse});
 }

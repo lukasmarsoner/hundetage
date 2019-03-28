@@ -88,6 +88,5 @@ void main() {
       //Check App Title is maintained
       var _findAppText = find.text('Hundetage');
       expect(_findAppText, findsOneWidget);
-      }
-    );
+      });
 }

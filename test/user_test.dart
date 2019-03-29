@@ -1,8 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hundetage/main.dart';
+import 'utilities.dart';
 
 void main() {
-  group('Hero Class Set-Get', () {
+  group('Main Classes Unit-Tests', () {
+    test('Substitutions', (){
+      //Do the name-substitution here already
+      String _testText = '#username ist cool. #ErSie ist #eineine #wahrerwahre #HeldHeldin!'
+          .replaceAll('#username', testHeld.name);
+      //This makes us independent of a future change in the default for hero-gender
+      String _extectedW = _testText.replaceAll('#ErSie', 'Sie').replaceAll('#HeldHeldin', 'Heldin')
+          .replaceAll('#eineine', 'eine').replaceAll('#wahrerwahre', 'wahre');
+      String _extectedM = _testText.replaceAll('#ErSie', 'Er').replaceAll('#HeldHeldin', 'Held')
+          .replaceAll('#eineine', 'ein').replaceAll('#wahrerwahre', 'wahrer');
+      String _substitutedText = substitutions.applyAllSubstitutions(_testText);
+      //Check if the name has been substituted correctly
+      testHeld.geschlecht=='w'?expect(_substitutedText,_extectedW):expect(_substitutedText,_extectedM);
+    });
+
     test('Initialize with defaults', () {
       final _testHeld = new Held.initial();
       expect(_testHeld.iBild, _testHeld.defaults['iBild']);

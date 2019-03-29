@@ -27,13 +27,15 @@ class MainPage extends StatefulWidget {
   final Held hero;
   final GeneralData generalData;
   final Function heroCallback;
+  final Substitution substitution;
 
-  const MainPage({Key key, this.hero, this.heroCallback, this.generalData}) : super(key: key);
+  const MainPage({this.substitution, this.hero, this.heroCallback, this.generalData});
 
   @override
   MainPageState createState() => new MainPageState(
       hero: hero,
       generalData: generalData,
+      substitution: substitution,
       heroCallback: heroCallback);
 }
 
@@ -43,9 +45,10 @@ class MainPageState extends State<MainPage> {
   GeneralData generalData;
   double _imageHeight = 200.0;
   double screenHeight, screenWidth;
+  Substitution substitution;
   Rect rect;
 
-  MainPageState({this.hero, this.heroCallback, this.generalData});
+  MainPageState({this. substitution, this.hero, this.heroCallback, this.generalData});
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -73,6 +76,7 @@ class MainPageState extends State<MainPage> {
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
                 License(screenHeight: screenHeight),
                 UserButton(screenHeight:screenHeight,
+                    substitution: substitution,
                     screenWidth: screenWidth,
                     generalData: generalData,
                     updateHero:updateHero,
@@ -116,9 +120,10 @@ class UserButton extends StatelessWidget {
   final Held hero;
   final GeneralData generalData;
   final double screenHeight, screenWidth;
+  final Substitution substitution;
 
   UserButton({this.screenHeight, this.screenWidth, this.updateHero,
-    this.generalData, this.hero, this.updateRipple});
+    this.generalData, this.substitution, this.hero, this.updateRipple});
 
   @override
   Widget build(BuildContext context) {
@@ -131,6 +136,7 @@ class UserButton extends StatelessWidget {
           generalData: generalData,
           updateHero: updateHero,
           screenWidth: screenWidth,
+          substitution: substitution,
           screenHeight: screenHeight,
             updateRipple: updateRipple
         )
@@ -223,10 +229,11 @@ class AnimatedButton extends StatefulWidget {
   final Function updateHero, updateRipple;
   final Held hero;
   final GeneralData generalData;
+  final Substitution substitution;
   final double screenWidth, screenHeight;
 
   const AnimatedButton({this.updateHero, this.hero, this.generalData,
-  this.screenWidth, this.screenHeight, this.updateRipple});
+  this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
 
   @override
   AnimatedButtonState createState() => new AnimatedButtonState(
@@ -234,6 +241,7 @@ class AnimatedButton extends StatefulWidget {
       updateHero: updateHero,
       screenHeight: screenHeight,
       screenWidth: screenWidth,
+      substitution: substitution,
       generalData: generalData,
       updateRipple: updateRipple);
 }
@@ -242,6 +250,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   AnimationController _animationController;
   Function updateHero, updateRipple;
   GeneralData generalData;
+  Substitution substitution;
   Held hero;
   double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
@@ -249,7 +258,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   final double _hiddenSize = 70.0;
 
   AnimatedButtonState({this.updateHero, this.hero, this.generalData,
-  this.screenWidth, this.screenHeight, this.updateRipple});
+  this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
 
   @override
   void initState() {
@@ -329,6 +338,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
         context,
         MaterialPageRoute(builder: (context) => UserPage(
           hero: hero,
+          substitution: substitution,
           heroCallback: updateHero))
     );}
     else if(nextPage == 'erlebnisse'){
@@ -336,6 +346,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
           context,
           MaterialPageRoute(builder: (context) => Erlebnisse(
               hero: hero,
+              substitution: substitution,
               generalData: generalData,))
       );}
   }

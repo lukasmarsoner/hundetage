@@ -4,7 +4,6 @@ import 'main_screen.dart';
 import 'firebase_utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
 void main() async{
   //GeneralData generalData = await initializeGeneralData();
   GeneralData generalData = await loadGeneralData(Firestore());
@@ -35,10 +34,11 @@ class _MyAppState extends State<MyApp>{
 
   @override
   Widget build(BuildContext context){
+    Substitution substitution = Substitution(hero: hero,generalData: generalData);
     return MaterialApp(
       title: 'Hundetage',
       home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback,
-          generalData: generalData)),
+          generalData: generalData, substitution:substitution)),
     );
   }
 }
@@ -66,6 +66,14 @@ class Held{
     'maxImages': 7,
     'erlebnisse': <String>[]};
 
+  // Default values for testing
+  Map<String,dynamic> _testing = {
+    'name': 'Mara',
+    'geschlecht': 'w',
+    'iBild': 0,
+    'maxImages': 7,
+    'erlebnisse': <String>['besteFreunde']};
+
   Held(this._name,this._geschlecht,this._iBild,this._maxImages,this._erlebnisse);
 
   // Initialize new User with defaults
@@ -75,6 +83,15 @@ class Held{
     _iBild = _defaults['iBild'];
     _maxImages = _defaults['maxImages'];
     _erlebnisse = _defaults['erlebnisse'];
+  }
+
+  //Used for testing widgets
+  Held.test(){
+    _name = _testing['name'];
+    _geschlecht = _testing['geschlecht'];
+    _iBild = _testing['iBild'];
+    _maxImages = _testing['maxImages'];
+    _erlebnisse = _testing['erlebnisse'];
   }
 
   // Setters with sanity-checks
@@ -131,4 +148,34 @@ class GeneralData{
   Map<String,Map<String,String>> erlebnisse;
 
   GeneralData({this.gendering,this.erlebnisse});
+}
+
+//From here we handle gendering and name substitutions
+class Substitution{
+  final GeneralData generalData;
+  final Held hero;
+
+  Substitution({this.hero, this.generalData});
+
+  //Substitute gendered Versions of Words
+  _applyGenderSubstitutions(String textIn){
+    List<String> _keys = generalData.gendering.keys.toList();
+    for(int i=0;i<_keys.length;i++){
+      String _substring = generalData.gendering[_keys[i]][hero.geschlecht];
+      textIn = textIn.replaceAll('#'+_keys[i], _substring);
+    }
+    return textIn;
+  }
+
+  //Substitute username in text - in the future more might happen here...
+  _applyNameSubstitutions(String textIn){
+    textIn = textIn.replaceAll('#username', hero.name);
+    return textIn;
+  }
+
+  applyAllSubstitutions(String textIn){
+    textIn = _applyGenderSubstitutions(textIn);
+    textIn = _applyNameSubstitutions(textIn);
+    return textIn;
+  }
 }

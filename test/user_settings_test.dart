@@ -5,11 +5,8 @@ import 'package:hundetage/main.dart';
 import 'utilities.dart';
 
 void main() {
-  // Stuff we need for testing
-  final Held _testHeld = new Held.initial();
-
   testWidgets('Test user image selector', (WidgetTester _tester) async {
-    UserImageRow _widget = UserImageRow(hero: _testHeld,heroCallback: ({Held newHero})=>null);
+    UserImageRow _widget = UserImageRow(hero: testHeld,heroCallback: ({Held newHero})=>null);
     await _tester.pumpWidget(
         StaticTestWidget(returnWidget: _widget)
     );
@@ -54,7 +51,7 @@ void main() {
 
   testWidgets('Test user name setting', (WidgetTester _tester) async {
     UserNameField _widget = UserNameField(
-        hero: _testHeld, heroCallback: ({Held newHero}) => null);
+        hero: testHeld, heroCallback: ({Held newHero}) => null);
     await _tester.pumpWidget(
         StaticTestWidget(returnWidget: _widget)
     );
@@ -71,7 +68,7 @@ void main() {
 
   testWidgets('Test gender settings', (WidgetTester _tester) async {
     GenderSelector _widget = GenderSelector(
-        hero: _testHeld, heroCallback: ({Held newHero}) => null);
+        hero: testHeld, heroCallback: ({Held newHero}) => null);
     await _tester.pumpWidget(
         StaticTestWidget(returnWidget: _widget)
     );

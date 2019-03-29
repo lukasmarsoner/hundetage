@@ -1,31 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hundetage/main_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:hundetage/main.dart';
 import 'utilities.dart';
 
 void main() {
-  // Stuff we need for testing
-  final Held _testHeld = new Held.initial();
-
   // Test top panels of main menu
   testWidgets('Test main-screen', (WidgetTester _tester) async {
     await _tester.pumpWidget(
-        StaticTestWidget(returnWidget: ProfileRow(hero: _testHeld, imageHeight: 10.0))
+        StaticTestWidget(returnWidget: ProfileRow(hero: testHeld, imageHeight: 200.0))
     );
 
     //See if the main screen looks as it should
-    final _findUsername = find.text(_testHeld.name);
-    final String _beruf = _testHeld.berufe[_testHeld.iBild][_testHeld.geschlecht];
+    final _findUsername = find.text(testHeld.name);
+    final String _beruf = testHeld.berufe[testHeld.iBild][testHeld.geschlecht];
     final _findJob = find.text(_beruf);
+    final _userImage = find.byType(CircleAvatar);
 
+    expect(_userImage, findsNWidgets(2));
     expect(_findUsername, findsOneWidget);
     expect(_findJob, findsOneWidget);
   });
 
   // Test menu
   testWidgets('Test menu', (WidgetTester _tester) async {
-    AnimatedButton _widget = AnimatedButton(hero: _testHeld,updateHero: ()=>null);
+    AnimatedButton _widget = AnimatedButton(hero: testHeld,updateHero: ()=>null);
     await _tester.pumpWidget(
         StaticTestWidget(returnWidget: _widget)
     );
@@ -71,8 +69,7 @@ void main() {
   });
 
   testWidgets('Test License', (WidgetTester _tester) async {
-    final Held _testHeld = new Held.initial();
-    MainPage _widget = MainPage(hero: _testHeld,heroCallback: ()=>null);
+    MainPage _widget = MainPage(hero: testHeld,heroCallback: ()=>null);
       await _tester.pumpWidget(
           StaticTestWidget(returnWidget: _widget));
 

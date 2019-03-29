@@ -77,8 +77,9 @@ class ProfileRowErlebnisse extends StatelessWidget {
 class Erlebnisse extends StatelessWidget{
   final Held hero;
   final GeneralData generalData;
+  final Substitution substitution;
 
-  Erlebnisse({this.hero, this.generalData});
+  Erlebnisse({this.hero, this.substitution, this.generalData});
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +92,7 @@ class Erlebnisse extends StatelessWidget{
           width: screenWidth,
           child: new Stack(
               children: <Widget>[
-                _buildTiledSelection(context, generalData.erlebnisse),
+                buildTiledSelection(context, generalData.erlebnisse, substitution),
                 TopPanelErlebnisse(imageHeight: _imageHeight, hero: hero),
                 ProfileRowErlebnisse(imageHeight: _imageHeight, hero: hero)]
           ),
@@ -100,18 +101,19 @@ class Erlebnisse extends StatelessWidget{
   }
 
   //Builds the tiled list for Erlebnisse selection
-  Widget _buildTiledSelection(BuildContext context, Map<String,Map<String,String>> erlebnisse) {
+  Widget buildTiledSelection(BuildContext context, Map<String,Map<String,String>> erlebnisse,
+      Substitution substitution) {
     final double _screenHeight = MediaQuery.of(context).size.height;
-    List<String> _erlebt = erlebnisse.keys.toList();
+    List<String> _erlebt = hero.erlebnisse;
     return GridView.count(
       crossAxisCount: 2,
       padding: EdgeInsets.only(top: _screenHeight / 3, left: 10.0),
-      children: _erlebt.map((key) => _buildTile(context, erlebnisse[key])).toList(),
+      children: _erlebt.map((key) => _buildTile(context, erlebnisse[key], substitution)).toList(),
     );
   }
 
-  Widget _buildTile(BuildContext context, Map<String,String> data) {
-    final record = Erlebniss.fromMap(data);
+  Widget _buildTile(BuildContext context, Map<String,String> data, substitution) {
+    final record = Erlebniss.fromMap(data: data, substitution: substitution);
     return GridTile(
       child: Card(
         child: MaterialButton(
@@ -144,14 +146,14 @@ class Erlebnisse extends StatelessWidget{
   }
 }
 
-
 class Erlebniss {
   final String text;
   Image image;
+  Substitution substitution;
 
-  Erlebniss.fromMap(Map<String, String> map)
-      : assert(map['text'] != null),
-        assert(map['image'] != null),
-        text = map['text'],
-        image = Image.network(map['image'], fit: BoxFit.cover);
+  Erlebniss.fromMap({Map<String, String> data, Substitution substitution})
+      : assert(data['text'] != null),
+        assert(data['image'] != null),
+        text = substitution.applyAllSubstitutions(data['text']),
+        image = Image.network(data['image'], fit: BoxFit.cover);
 }

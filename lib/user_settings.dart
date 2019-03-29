@@ -7,23 +7,26 @@ import 'dart:math' as math;
 class UserPage extends StatefulWidget {
   final Held hero;
   final Function heroCallback;
+  final Substitution substitution;
 
-  const UserPage({Key key, this.hero, this.heroCallback}) : super(key: key);
+  const UserPage({this.substitution, this.hero, this.heroCallback});
 
   @override
   UserPageState createState() => new UserPageState(
       hero: hero,
+      substitution: substitution,
       heroCallback: heroCallback);
 }
 
 class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   Held hero;
   Function heroCallback;
+  Substitution substitution;
   List pageKeys;
   GlobalKey userKey;
   double screenHeight, screenWidth;
 
-  UserPageState({this.hero, this.heroCallback});
+  UserPageState({this.hero, this.substitution, this.heroCallback});
 
   @override
   Widget build(BuildContext context) {

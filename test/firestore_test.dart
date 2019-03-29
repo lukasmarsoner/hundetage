@@ -24,17 +24,10 @@ void main() {
     //The data returnd from firebase is Map<dynamic,dynamic>, so the versions handed
     //to the mock firebase should be of that same type. As tests seem to fail that
     //way, we use the next-best thing
-      Map<String,Map<String,String>> _genderingTestData = {
-        'eineine':{'m': 'ein', 'w': 'eine'},
-        'HeldHeldin':{'m': 'Held', 'w': 'Heldin'},
-        'ersie':{'m': 'er', 'w': 'sie'}};
-      Map<String,Map<String,String>> _erlebnisseTestData = {
-        'besteFreunde':{'text': 'Some test Text', 'image': 'https://example.com/image.png'},
-        'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
-      Map<String,dynamic> _genderingMockData = {
-        'eineine':{'m': 'ein', 'w': 'eine'},
-        'HeldHeldin':{'m': 'Held', 'w': 'Heldin'},
-        'ersie':{'m': 'er', 'w': 'sie'}};
+      Map<String,dynamic> _genderingMockData = {'ErSie':{'m':'Er','w':'Sie'},
+        'eineine':{'m':'ein','w':'eine'},
+        'HeldHeldin':{'m':'Held','w':'Heldin'},
+        'wahrerwahre':{'m':'wahrer','w':'wahre'}};
       Map<String,dynamic> _erlebnisseMockData = {
         'besteFreunde':{'text': 'Some test Text', 'image': 'https://example.com/image.png'},
         'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
@@ -52,8 +45,8 @@ void main() {
       GeneralData _generalData = await loadGeneralData(mockFirestore);
       
       //See if initialization worked correctly
-      expect(_generalData.gendering, _genderingTestData);
-      expect(_generalData.erlebnisse, _erlebnisseTestData);
+      expect(_generalData.gendering, genderingTestData);
+      expect(_generalData.erlebnisse, erlebnisseTestData);
     });
 
     testWidgets('Test Adventure Selection', (WidgetTester _tester) async {
@@ -77,6 +70,8 @@ void main() {
         //Check if one grid-tile was added
         var _findTile = find.byType(GridTile);
         expect(_findTile, findsOneWidget);
+        final _image = find.byType(Image);
+        expect(_image, findsOneWidget);
       });
     });
   });

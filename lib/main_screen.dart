@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hundetage/login.dart';
 import 'user_settings.dart';
 import 'dart:math' as math;
 import 'erlebnisse.dart';
 import 'main.dart';
+import 'authentication.dart';
 
 //Cuts the square box on the top of the screen diagonally
 class _DiagonalClipper extends CustomClipper<Path> {
@@ -291,7 +293,8 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
               ExpandedBackground(hero: hero, animationController: _animationController,
               hiddenSize: _hiddenSize, expandedSize: _expandedSize,),
               OptionButton(icon: Icons.cloud_queue, angle: 0.0,
-                  animationController: _animationController, onIconClick: () => _onIconClick),
+                  animationController: _animationController,
+                  onIconClick: () => _goToNextPage(nextPage: 'login')),
               OptionButton(icon: Icons.account_circle, angle: -math.pi / 4,
                     animationController: _animationController,
                     onIconClick: () => _goToNextPage(nextPage: 'user')),
@@ -349,12 +352,11 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
               substitution: substitution,
               generalData: generalData,))
       );}
-  }
-
-  //This is just a dummy function now - need to add actual functionality
-  _onIconClick() {
-    updateHero(newHero: hero);
-    close();
+    else if(nextPage == 'login'){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginSignUpPage(auth: new Auth(),))
+    );}
   }
 }
 

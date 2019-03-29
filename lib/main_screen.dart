@@ -68,10 +68,10 @@ class MainPageState extends State<MainPage> {
             width: screenWidth,
             child: new Stack(
               children: <Widget>[
+                AbenteuerAuswahl(screenHeight: screenHeight, firestore: firestore),
                 TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
                 License(screenHeight: screenHeight),
-                AbenteuerAuswahl(screenHeight: screenHeight, firestore: firestore),
                 UserButton(screenHeight:screenHeight,
                     screenWidth: screenWidth,
                     generalData: generalData,

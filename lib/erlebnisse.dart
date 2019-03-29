@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'main_screen.dart';
 import 'main.dart';
 
 //Cuts the square box on the top of the screen diagonally
@@ -92,9 +91,9 @@ class Erlebnisse extends StatelessWidget{
           width: screenWidth,
           child: new Stack(
               children: <Widget>[
+                _buildTiledSelection(context, generalData.erlebnisse),
                 TopPanelErlebnisse(imageHeight: _imageHeight, hero: hero),
-                ProfileRowErlebnisse(imageHeight: _imageHeight, hero: hero),
-                _buildTiledSelection(context, generalData.erlebnisse)]
+                ProfileRowErlebnisse(imageHeight: _imageHeight, hero: hero)]
           ),
       )
     );
@@ -115,12 +114,36 @@ class Erlebnisse extends StatelessWidget{
     final record = Erlebniss.fromMap(data);
     return GridTile(
       child: Card(
-        child: MaterialButton(onPressed: () => print('here'),
-            child: record.image),
-      ),
+        child: MaterialButton(
+            child: record.image,
+            onPressed: () => _showErlebniss(context:context, image: record.image, text: record.text))
+        ),
+      );
+  }
+
+  _showErlebniss({BuildContext context, Image image, String text}) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+              contentPadding: EdgeInsets.all(30.0),
+              children: <Widget>[
+                image,
+                Container(
+                    padding: EdgeInsets.only(top: 20.0),
+                    child: Text(text,
+                        style: new TextStyle(
+                            fontSize: 18.0,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w300)))
+              ]
+          );
+        }
     );
   }
 }
+
 
 class Erlebniss {
   final String text;

@@ -23,11 +23,13 @@ void main() {
       expect(_testHeld.iBild, _testHeld.defaults['iBild']);
       expect(_testHeld.name, _testHeld.defaults['name']);
       expect(_testHeld.geschlecht, _testHeld.defaults['geschlecht']);
-      expect(_testHeld.maxImages, _testHeld.defaults['maxImages']);
       expect(_testHeld.erlebnisse, _testHeld.defaults['erlebnisse']);
-      expect(_testHeld.berufe.length,_testHeld.maxImages+1);
+      //The +2 comes from:
+      //0-indexing
+      //Using -1 for a placeholder
+      expect(_testHeld.berufe.length,_testHeld.maxImages+2);
       //Check that descriptions are set for al heros
-      for(int i=0;i<_testHeld.berufe.length;i++){
+      for(int i=0;i<_testHeld.berufe.length-1;i++){
         expect(_testHeld.berufe[i].keys.length,2);
         expect(_testHeld.berufe[i]['w'],isNotEmpty);
         expect(_testHeld.berufe[i]['m'],isNotEmpty);
@@ -39,13 +41,11 @@ void main() {
       _testHeld.iBild=3;
       _testHeld.name='test';
       _testHeld.geschlecht='w';
-      _testHeld.maxImages=10;
       _testHeld.addErlebniss='test';
 
       expect(_testHeld.iBild, 3);
       expect(_testHeld.name, 'test');
       expect(_testHeld.geschlecht, 'w');
-      expect(_testHeld.maxImages, 10);
       expect(_testHeld.erlebnisse, ['test']);
 
       _testHeld.addErlebniss='';
@@ -66,13 +66,6 @@ void main() {
       expect(_error, 'Exception: Invalid sex!');
       try{_testHeld.geschlecht=null;} on Exception catch(error){_error = error.toString();}
       expect(_error, 'Exception: Invalid sex!');
-
-      try{_testHeld.maxImages=-1;} on Exception catch(error){_error = error.toString();}
-      expect(_error, 'Exception: Invalid number of images!');
-      try{_testHeld.maxImages=null;} on Exception catch(error){_error = error.toString();}
-      expect(_error, 'Exception: Invalid number of images!');
-      try{_testHeld.maxImages=2;} on Exception catch(error){_error = error.toString();}
-      expect(_error, 'Exception: Invalid number of images!');
     });
 
   });

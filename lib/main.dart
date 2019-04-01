@@ -23,13 +23,13 @@ class MyApp extends StatefulWidget{
   final Firestore firestore;
   final Held hero;
 
-  MyApp({this.generalData, this.authenticator, this.substitution,
-    this.hero, this.firestore});
+  MyApp({@required this.generalData, @required this.authenticator,
+    @required this.substitution, @required this.hero, @required this.firestore});
 
   @override
   _MyAppState createState(){
     return new _MyAppState(hero: hero, generalData: generalData,
-    authenticator:authenticator, substitution: substitution,
+    authenticator: authenticator, substitution: substitution,
     firestore: firestore);
   }
 }
@@ -43,8 +43,9 @@ class _MyAppState extends State<MyApp>{
   bool signedIn;
   GeneralData generalData;
 
-  _MyAppState({this.hero, this.generalData, this.substitution,
-    this.authenticator, this.firestore});
+  _MyAppState({@required this.hero, @required this.generalData,
+    @required this.substitution, @required this.authenticator,
+    @required this.firestore});
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
@@ -120,8 +121,6 @@ class Held{
     'geschlecht': 'w',
     'iBild': 0,
     'erlebnisse': <String>['besteFreunde']};
-
-  Held(this._name,this._geschlecht,this._iBild,this._erlebnisse);
 
   // Initialize new User with defaults
   Held.initial(){
@@ -211,7 +210,7 @@ class Adventure{
   int version;
   Map<int,Map<String,dynamic>> story;
 
-  Adventure({this.name,this.version,this.story});
+  Adventure({@required this.name, @required this.version, @required this.story});
 
   factory Adventure.fromJson(Map<String, dynamic> _jsonData){
     return Adventure(
@@ -230,7 +229,7 @@ class GeneralData{
   Map<String,Map<String,String>> gendering;
   Map<String,Map<String,String>> erlebnisse;
 
-  GeneralData({this.gendering,this.erlebnisse});
+  GeneralData({@required this.gendering, @required this.erlebnisse});
 }
 
 //From here we handle gendering and name substitutions
@@ -238,7 +237,7 @@ class Substitution{
   final GeneralData generalData;
   final Held hero;
 
-  Substitution({this.hero, this.generalData});
+  Substitution({@required this.hero, @required this.generalData});
 
   //Substitute gendered Versions of Words
   _applyGenderSubstitutions(String textIn){

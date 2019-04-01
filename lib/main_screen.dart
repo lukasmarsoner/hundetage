@@ -35,13 +35,14 @@ class MainPage extends StatefulWidget {
   final Authenticator authenticator;
   final Substitution substitution;
 
-  const MainPage({this.substitution, this.authenticator, this.hero,
-    this.signInStatusChange, this.signedIn, this.heroCallback,
-    this.generalData, this.firestore});
+  const MainPage({@required this.substitution, @required this.authenticator,
+    @required this.hero, @required this.signInStatusChange, @required this.signedIn,
+    @required this.heroCallback, @required this.generalData, @required this.firestore});
 
   @override
   MainPageState createState() => new MainPageState(
       hero: hero,
+      authenticator: authenticator,
       generalData: generalData,
       substitution: substitution,
       firestore: firestore,
@@ -63,8 +64,9 @@ class MainPageState extends State<MainPage> {
   Substitution substitution;
   Rect rect;
 
-  MainPageState({this. substitution, this.authenticator, this.hero, this.signedIn,
-    this.signInStatusChange, this.heroCallback, this.generalData, this.firestore});
+  MainPageState({@required this.substitution, @required this.authenticator,
+    @required this.hero, @required this.signedIn, @required this.signInStatusChange,
+    @required this.heroCallback, @required this.generalData, @required this.firestore});
 
   void logInLogOut(){
     signedIn?signedIn = false:signedIn = true;
@@ -94,7 +96,7 @@ class MainPageState extends State<MainPage> {
                 AbenteuerAuswahl(screenHeight: screenHeight, firestore: firestore),
                 TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
-                License(screenHeight: screenHeight),
+                License(screenHeight: screenHeight, screenWidth: screenWidth),
                 UserButton(screenHeight:screenHeight,
                     substitution: substitution,
                     authenticator: authenticator,
@@ -117,7 +119,7 @@ class MainPageState extends State<MainPage> {
 class License extends StatelessWidget{
   final screenHeight, screenWidth;
 
-  License({this.screenHeight, this.screenWidth});
+  License({@required this.screenHeight, @required this.screenWidth});
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +142,7 @@ class License extends StatelessWidget{
 
 //Button for main menu
 class UserButton extends StatelessWidget {
-  final Function updateHero, updateRipple;
+  final Function updateHero;
   final Held hero;
   final Firestore firestore;
   final Authenticator authenticator;
@@ -150,9 +152,10 @@ class UserButton extends StatelessWidget {
   final double screenHeight, screenWidth;
   final Substitution substitution;
 
-  UserButton({this.screenHeight, this.screenWidth, this.updateHero, this.authenticator,
-    this.logInLogOut, this.generalData, this.substitution, this.signedIn,
-    this.hero, this.updateRipple, this.firestore});
+  UserButton({@required this.screenHeight, @required this.screenWidth,
+    @required this.updateHero, @required this.authenticator,
+    @required this.logInLogOut, @required this.generalData, @required this.substitution,
+    @required this.signedIn, @required this.hero, @required this.firestore});
 
   @override
   Widget build(BuildContext context) {
@@ -170,8 +173,7 @@ class UserButton extends StatelessWidget {
           screenWidth: screenWidth,
           firestore: firestore,
           substitution: substitution,
-          screenHeight: screenHeight,
-            updateRipple: updateRipple
+          screenHeight: screenHeight
         )
     );
   }
@@ -182,7 +184,7 @@ class TopPanel extends StatelessWidget {
   final double imageHeight;
   final Held hero;
 
-  TopPanel({this.imageHeight, this.hero});
+  TopPanel({@required this.imageHeight, @required this.hero});
   @override
   Widget build(BuildContext context) {
     return new Positioned.fill(
@@ -203,7 +205,7 @@ class ProfileRow extends StatelessWidget {
   final Held hero;
   final double imageHeight;
 
-  ProfileRow({this.imageHeight, this.hero});
+  ProfileRow({@required this.imageHeight, @required this.hero});
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +262,7 @@ class ProfileRow extends StatelessWidget {
 
 //Animated button for main menu
 class AnimatedButton extends StatefulWidget {
-  final Function updateHero, updateRipple;
+  final Function updateHero;
   final Held hero;
   final GeneralData generalData;
   final Substitution substitution;
@@ -270,9 +272,11 @@ class AnimatedButton extends StatefulWidget {
   final Authenticator authenticator;
   final double screenWidth, screenHeight;
 
-  const AnimatedButton({this.updateHero, this.hero, this.generalData,
-    this.authenticator, this.logInLogOut, this.signedIn, this.firestore,
-    this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
+  const AnimatedButton({@required this.updateHero, @required this.hero,
+    @required this.generalData, @required this.authenticator,
+    @required this.logInLogOut, @required this.signedIn, @required this.firestore,
+    @required this.screenWidth, @required this.substitution,
+    @required this.screenHeight});
 
   @override
   AnimatedButtonState createState() => new AnimatedButtonState(
@@ -285,13 +289,12 @@ class AnimatedButton extends StatefulWidget {
       generalData: generalData,
       signedIn: signedIn,
       logInLogOut: logInLogOut,
-      authenticator: authenticator,
-      updateRipple: updateRipple);
+      authenticator: authenticator);
 }
 
 class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProviderStateMixin  {
   AnimationController _animationController;
-  Function updateHero, updateRipple;
+  Function updateHero;
   GeneralData generalData;
   Firestore firestore;
   Substitution substitution;
@@ -304,9 +307,11 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   final double _expandedSize = 240.0;
   final double _hiddenSize = 70.0;
 
-  AnimatedButtonState({this.updateHero, this.hero, this.generalData,
-    this.authenticator, this.signedIn, this.logInLogOut, this.firestore,
-    this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
+  AnimatedButtonState({@required this.updateHero, @required this.hero,
+    @required this.generalData, @required this.authenticator,
+    @required this.signedIn, @required this.logInLogOut, @required this.firestore,
+    @required this.screenWidth, @required this.substitution,
+    @required this.screenHeight});
 
   @override
   void initState() {
@@ -416,7 +421,8 @@ class OptionButton extends StatelessWidget {
   final double angle;
   final IconData icon;
 
-  OptionButton({this.animationController, this.onIconClick, this.angle, this.icon});
+  OptionButton({@required this.animationController, @required this.onIconClick,
+    @required this.angle, @required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -460,7 +466,8 @@ class ExpandedBackground extends StatelessWidget {
   //Parameters that determine menu size
   final double hiddenSize, expandedSize;
 
-  ExpandedBackground({this.hero, this.animationController, this.hiddenSize, this.expandedSize});
+  ExpandedBackground({@required this.hero, @required this.animationController,
+    @required this.hiddenSize, @required this.expandedSize});
 
   @override
   Widget build(BuildContext context) {
@@ -486,8 +493,8 @@ class MenuButton extends StatelessWidget {
   final double hiddenSize;
   final Held hero;
 
-  MenuButton({this.animationController, this.hiddenSize, this.onButtonTap,
-    this.hero});
+  MenuButton({@required this.animationController, @required this.hiddenSize,
+    @required this.onButtonTap, @required this.hero});
 
   @override
   Widget build(BuildContext context) {
@@ -526,7 +533,7 @@ class AbenteuerAuswahl extends StatelessWidget{
   final double screenHeight;
   final Firestore firestore;
 
-  AbenteuerAuswahl({this.screenHeight, this.firestore});
+  AbenteuerAuswahl({@required this.screenHeight, @required this.firestore});
 
   @override
   Widget build(BuildContext context) {

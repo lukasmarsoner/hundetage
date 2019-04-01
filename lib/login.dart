@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'main.dart';
+import 'package:hundetage/utilities/firebase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginSignUpPage extends StatefulWidget {
@@ -11,8 +12,9 @@ class LoginSignUpPage extends StatefulWidget {
   final Held hero;
   final Firestore firestore;
 
-  LoginSignUpPage({this.authenticator, this.logInLogOut, this.signedIn,
-    this.hero, this.updateHero, this.firestore});
+  LoginSignUpPage({@required this.authenticator, @required this.logInLogOut,
+    @required this.signedIn, @required this.hero, @required this.updateHero,
+    @required this.firestore});
 
   @override
   State<StatefulWidget> createState() =>
@@ -34,8 +36,9 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   String _email, _password, _errorMessage;
   FormMode _formMode = FormMode.LOGIN;
 
-  _LoginSignUpPageState({this.signedIn,this.logInLogOut,this.hero,
-    this.authenticator, this.updateHero, this.firestore});
+  _LoginSignUpPageState({@required this.signedIn,@required this.logInLogOut,
+    @required this.hero, @required this.authenticator, @required this.updateHero,
+    @required this.firestore});
 
   final _formKey = new GlobalKey<FormState>();
 
@@ -105,6 +108,20 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     });
   }
 
+  void _deleteUserData(){
+    //TODO: add a pop-up explaining what has happened to the user in this case
+    authenticator.deleteUser().then((_success){_success
+        ?deleteFirestoreUserData(firestore: firestore, authenticator: authenticator)
+        :_changeFormToLogin();
+    });
+  }
+
+  void _resetPassword(){
+    if(_validateAndSave()){
+      authenticator.sendPasswordReset(_email);
+    }
+  }
+
   // Perform login or sign-up
   void _validateAndSubmit() async {
     setState(() {
@@ -172,7 +189,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
-          title: new Text("Bestätige deinen Account"),
+          title: new Text("Bitte bestätige deinen Account"),
           content: new Text("Eine Bestätigungsmail wurde verschickt"),
           actions: <Widget>[
             new FlatButton(
@@ -239,6 +256,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
               _showPrimaryButton(),
               _showSecondaryButton(),
               _showErrorMessage(),
+              _showTertiaryButton()
             ],
           ),
         ));
@@ -302,7 +320,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   Widget _showSecondaryButton() {
     Text _buttonText = Text('');
     if(_formMode != FormMode.SIGNUP){
-      _buttonText = new Text('Neu registrieren',
+      _buttonText = new Text('Registrieren',
           style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));}
     else{
       _buttonText = new Text('Anmelden',
@@ -310,6 +328,16 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     return new FlatButton(
       child: _buttonText,
       onPressed:_formMode==FormMode.SIGNUP?_changeFormToLogin:_changeFormToSignUp
+    );
+  }
+
+  Widget _showTertiaryButton() {
+    double _iconSize = 40.0;
+    IconData _buttonIcon;
+    signedIn?_buttonIcon = Icons.delete:_buttonIcon = Icons.cached;
+    return new IconButton(
+        icon: Icon(_buttonIcon, size: _iconSize),
+        onPressed:signedIn?_deleteUserData:_resetPassword
     );
   }
 

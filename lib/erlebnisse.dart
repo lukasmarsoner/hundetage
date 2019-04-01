@@ -22,7 +22,7 @@ class TopPanelErlebnisse extends StatelessWidget {
   final double imageHeight;
   final Held hero;
 
-  TopPanelErlebnisse({this.imageHeight, this.hero});
+  TopPanelErlebnisse({@required this.imageHeight, @required this.hero});
   @override
   Widget build(BuildContext context) {
     return new Positioned.fill(
@@ -43,7 +43,7 @@ class ProfileRowErlebnisse extends StatelessWidget {
   final Held hero;
   final double imageHeight;
 
-  ProfileRowErlebnisse({this.imageHeight, this.hero});
+  ProfileRowErlebnisse({@required this.imageHeight, @required this.hero});
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +80,8 @@ class Erlebnisse extends StatelessWidget{
   final GeneralData generalData;
   final Substitution substitution;
 
-  Erlebnisse({this.hero, this.substitution, this.generalData});
+  Erlebnisse({@required this.hero, @required this.substitution,
+    @required this.generalData});
 
   @override
   Widget build(BuildContext context) {

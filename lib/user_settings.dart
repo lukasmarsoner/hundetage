@@ -9,7 +9,8 @@ class UserPage extends StatefulWidget {
   final Function heroCallback;
   final Substitution substitution;
 
-  const UserPage({this.substitution, this.hero, this.heroCallback});
+  const UserPage({@required this.substitution, @required this.hero,
+    @required this.heroCallback});
 
   @override
   UserPageState createState() => new UserPageState(
@@ -26,7 +27,8 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   GlobalKey userKey;
   double screenHeight, screenWidth;
 
-  UserPageState({this.hero, this.substitution, this.heroCallback});
+  UserPageState({@required this.hero, @required this.substitution,
+    @required this.heroCallback});
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +76,7 @@ class UserImageRow extends StatefulWidget{
   final Held hero;
   final Function heroCallback;
 
-  UserImageRow({this.hero, this.heroCallback});
+  UserImageRow({@required this.hero, @required this.heroCallback});
 
   @override
   UserImageRowState createState() => new UserImageRowState(hero: hero, heroCallback: heroCallback);
@@ -84,7 +86,7 @@ class UserImageRowState extends State<UserImageRow> {
   Held hero;
   Function heroCallback;
 
-  UserImageRowState({this.hero,this.heroCallback});
+  UserImageRowState({@required this.hero, @required this.heroCallback});
 
   updateHero({Held newHero}){
     setState(() {
@@ -170,7 +172,7 @@ class GenderSelector extends StatefulWidget {
   final Held hero;
   final Function heroCallback;
 
-  GenderSelector({this.hero, this.heroCallback});
+  GenderSelector({@required this.hero, @required this.heroCallback});
 
   @override
   GenderSelectorState createState() => new GenderSelectorState(hero: hero, heroCallback: heroCallback);
@@ -266,8 +268,9 @@ class RotatedIcon extends AnimatedWidget
   final Map<String,double> _iconSize = {'m': 40,'w':50};
 
 
-  RotatedIcon({this.geschlecht, this.height, this.listenable,
-    this.rotAngle, this.changeGender, this.hero}):super(listenable: listenable);
+  RotatedIcon({@required this.geschlecht, @required this.height,
+    @required this.listenable, @required this.rotAngle, @required this.changeGender,
+    @required this.hero}):super(listenable: listenable);
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +298,7 @@ class UserNameField extends StatefulWidget{
   final Held hero;
   final Function heroCallback;
 
-  UserNameField({this.hero, this.heroCallback});
+  UserNameField({@required this.hero, @required this.heroCallback});
 
   @override
   UserNameFieldState createState() => new UserNameFieldState(hero: hero, heroCallback: heroCallback);
@@ -306,7 +309,7 @@ class UserNameFieldState extends State<UserNameField>{
   Function heroCallback;
   TextEditingController _controller;
 
-  UserNameFieldState({this.hero, this.heroCallback});
+  UserNameFieldState({@required this.hero, @required this.heroCallback});
 
   @override
   void initState() {

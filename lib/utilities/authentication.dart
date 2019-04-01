@@ -10,7 +10,11 @@ abstract class BaseAuth {
 
   Future<String> getUsername();
 
+  Future<bool> deleteUser();
+
   Future<void> sendEmailVerification();
+
+  Future<void> sendPasswordReset(String email);
 
   Future<void> signOut();
 
@@ -23,7 +27,18 @@ class Authenticator implements BaseAuth {
   Future<String> signIn(String email, String password) async {
     FirebaseUser _user = await _firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password);
-    return _user.uid;
+    //Make sure people have verified their accounts
+    bool _verified = await isEmailVerified();
+    if(_verified){
+      return _user.uid;
+    }
+    else{
+      return null;
+    }
+  }
+
+  Future<void> sendPasswordReset(String email) async{
+    _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 
   Future<String> signUp(String email, String password) async {
@@ -47,9 +62,13 @@ class Authenticator implements BaseAuth {
     if(_user == null){return null;}else{return _user.uid;}
   }
 
-  void deleteUser() async {
-    FirebaseUser _user = await _firebaseAuth.currentUser();
-    _user.delete();
+  //Deleting requires the user to have logged-in only recenty
+  //We catch the error here and log the user out, should he/she not
+  //have signed-in recently. If the user is not - we sign him/her out
+  Future<bool> deleteUser() async {
+    FirebaseUser _user = await getCurrentUser();
+    _user.delete().then((error){return true;}).catchError(signOut);
+    return false;
   }
 
   Future<void> signOut() async {

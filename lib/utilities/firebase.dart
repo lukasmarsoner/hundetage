@@ -61,3 +61,13 @@ Held hero}) async {
   DocumentReference _documentReference = _collectionReference.document(uid);
   _documentReference.setData(hero.values);
 }
+
+//Deletes entry from firebase
+void deleteFirestoreUserData({Firestore firestore, Authenticator authenticator}) async {
+  String uid = await authenticator.getUid();
+
+  CollectionReference _collectionReference = firestore.collection('user_data');
+
+  DocumentReference _documentReference = _collectionReference.document(uid);
+  _documentReference.delete();
+}

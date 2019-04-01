@@ -1,54 +1,103 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'main_screen.dart';
-import 'firebase_utilities.dart';
+import 'package:hundetage/utilities/firebase.dart';
+import 'package:hundetage/utilities/authentication.dart';
+import 'utilities/json.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async{
-  //GeneralData generalData = await initializeGeneralData();
-  GeneralData generalData = await loadGeneralData(Firestore());
-  runApp(MyApp(generalData: generalData));
+  Firestore firestore = Firestore();
+  Held hero = new Held.initial();
+  GeneralData generalData = await loadGeneralData(firestore);
+  Authenticator authenticator = new Authenticator();
+  Substitution substitution = Substitution(hero: hero,generalData: generalData);
+  runApp(MyApp(generalData: generalData, authenticator: authenticator,
+    hero: hero, substitution: substitution, firestore: firestore));
 }
 
 class MyApp extends StatefulWidget{
   final GeneralData generalData;
+  final Authenticator authenticator;
+  final Substitution substitution;
+  final Firestore firestore;
+  final Held hero;
 
-  MyApp({this.generalData});
+  MyApp({this.generalData, this.authenticator, this.substitution,
+    this.hero, this.firestore});
 
   @override
   _MyAppState createState(){
-    return new _MyAppState(hero: new Held.initial(), generalData: generalData);
+    return new _MyAppState(hero: hero, generalData: generalData,
+    authenticator:authenticator, substitution: substitution,
+    firestore: firestore);
   }
 }
 
 //All global should be store and kept-updated here
 class _MyAppState extends State<MyApp>{
   Held hero;
+  Authenticator authenticator;
+  Substitution substitution;
+  Firestore firestore;
+  bool signedIn;
   GeneralData generalData;
 
-  _MyAppState({this.hero, this.generalData});
+  _MyAppState({this.hero, this.generalData, this.substitution,
+    this.authenticator, this.firestore});
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
+    signedIn
+        ?updateCreateFirestoreUserData(firestore: firestore,
+        authenticator: authenticator, hero: hero)
+        :writeLocalUserData(hero);
+  }
+
+  void signInStatusChange(){
+    setState(() {
+      signedIn?signedIn = false:signedIn = true;
+    });
+  }
+
+  //Check if user is currently logged-in
+  Future<bool> checkLoginStatus() async{
+    if(await authenticator.getUsername()==null){return false;}else{return true;}
+  }
+
+  //Check if we are already logged-in
+  @override
+  void initState() {
+    if(signedIn==null){
+      //We set it here because the future takes longer to evaluate than the
+      //screen takes to build
+      signedIn = false;
+      checkLoginStatus().then((_loggedIn){_loggedIn?signedIn=false:signedIn=true;});
+    }
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context){
-    Substitution substitution = Substitution(hero: hero,generalData: generalData);
     return MaterialApp(
       title: 'Hundetage',
       home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback,
-          generalData: generalData, substitution:substitution)),
+          authenticator: authenticator, signInStatusChange: signInStatusChange, signedIn: signedIn,
+          generalData: generalData, substitution:substitution, firestore: firestore)),
     );
   }
 }
 
 class Held{
   // Properties of users
+  //This is being set here. As user images are stored in the assets it will
+  //never change in the live app
+  int maxImages = 7;
   String _name, _geschlecht;
-  int _iBild, _maxImages;
+  int _iBild;
   List<String> _erlebnisse;
   Map<int,Map<String,String>> _berufe = {
+    -1: {'m': '', 'w': ''},
     0: {'m': 'Ein gewiefter Abenteurer', 'w': 'Eine gewiefte Abenteurerin'},
     1: {'m': 'Der stärkste Hund im Land', 'w': 'Die stärkste Hündin im Land'},
     2: {'m': 'Hat schon alles gesehen', 'w': 'Hat schon alles gesehen'},
@@ -60,10 +109,9 @@ class Held{
 
   // Default values for user
   Map<String,dynamic> _defaults = {
-    'name': 'Mara',
+    'name': '????????',
     'geschlecht': 'w',
-    'iBild': 0,
-    'maxImages': 7,
+    'iBild': -1,
     'erlebnisse': <String>[]};
 
   // Default values for testing
@@ -71,17 +119,15 @@ class Held{
     'name': 'Mara',
     'geschlecht': 'w',
     'iBild': 0,
-    'maxImages': 7,
     'erlebnisse': <String>['besteFreunde']};
 
-  Held(this._name,this._geschlecht,this._iBild,this._maxImages,this._erlebnisse);
+  Held(this._name,this._geschlecht,this._iBild,this._erlebnisse);
 
   // Initialize new User with defaults
   Held.initial(){
     _name = _defaults['name'];
     _geschlecht = _defaults['geschlecht'];
     _iBild = _defaults['iBild'];
-    _maxImages = _defaults['maxImages'];
     _erlebnisse = _defaults['erlebnisse'];
   }
 
@@ -90,8 +136,42 @@ class Held{
     _name = _testing['name'];
     _geschlecht = _testing['geschlecht'];
     _iBild = _testing['iBild'];
-    _maxImages = _testing['maxImages'];
     _erlebnisse = _testing['erlebnisse'];
+  }
+
+  //Generate Hero from map
+  Held.fromMap(Map<String,dynamic> _map){
+    _name = _map['name'];
+    _geschlecht = _map['geschlecht'];
+    _iBild = _map['iBild'];
+    _erlebnisse = _map['erlebnisse'];
+  }
+
+  //Loads hero-data either from firebase or local file
+  //returns a default hero if nothing is found
+  load({bool signedIn, Authenticator authenticator, Firestore firestore}) {
+    Held user;
+    //If we are signed-in we load user data from firebase
+    if(signedIn){
+      loadFirestoreUserData(firestore: firestore, authenticator: authenticator)
+          .then((_hero){
+            //We should never be logged-in here without having data in firebase
+            //but in case anything goes wrong - this will give us a backup
+            //We should add a pop-up here
+            if(_hero==null)
+            {user = _hero;}
+            else{
+              user = Held.initial();
+              updateCreateFirestoreUserData(firestore: firestore,
+                  authenticator: authenticator, hero: user);
+            }
+          });
+    }
+    else{
+      //This also takes care of defaulting to initial values if no file is found
+      loadLocalUserData().then((_hero){user = _hero;});
+    }
+    return user;
   }
 
   // Setters with sanity-checks
@@ -104,9 +184,6 @@ class Held{
   set iBild(int valIn){
     (valIn != null && valIn >=0 && valIn <= maxImages)?_iBild = valIn:throw new Exception('Invalid imange index!');
   }
-  set maxImages(int valIn){
-    (valIn!=null && valIn>iBild && valIn!=0)?_maxImages=valIn:throw new Exception('Invalid number of images!');
-  }
   set addErlebniss(String valIn){
     if(valIn != null && valIn != '' && !_erlebnisse.contains(valIn)){_erlebnisse.add(valIn);}
   }
@@ -114,12 +191,18 @@ class Held{
   // Getters
   String get name => _name;
   int get iBild => _iBild;
-  int get maxImages => _maxImages;
   String get geschlecht => _geschlecht;
   List<String> get erlebnisse => _erlebnisse;
   Map<int,Map<String,String>> get berufe => _berufe;
   // This getter is only for testing
   Map<String,dynamic> get defaults => _defaults;
+  Map<String,dynamic> get values => {
+    'name':_name,
+    'geschlecht': _geschlecht,
+    'iBild': _iBild,
+    'erlebnisse': _erlebnisse,
+    'berufe': _berufe
+  };
 }
 
 class Adventure{

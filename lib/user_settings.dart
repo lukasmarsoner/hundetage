@@ -48,16 +48,16 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
                   //User image - wrapped to allow for hero transition from main page
                   Container(
                       width: screenWidth,
-                      height: screenHeight/2.2,
+                      height: screenHeight/2.3,
                       child: UserImageRow(hero: hero,heroCallback: heroCallback)),
                   //Username
                   Container(
-                      padding: EdgeInsets.only(top: screenHeight/30),
+                      padding: EdgeInsets.only(top: 10.0),
                       width: screenWidth/2,
                       child: UserNameField(hero:hero, heroCallback: heroCallback)),
                   //User gender
                   Container(
-                    padding: EdgeInsets.only(top: screenHeight/15),
+                    padding: EdgeInsets.only(top: screenHeight/10),
                     child:GenderSelector(hero: hero, heroCallback: heroCallback),
                   ),
             ]
@@ -150,7 +150,8 @@ class UserImageRowState extends State<UserImageRow> {
                                   minRadius: _circleSize * 0.95,
                                   maxRadius: _circleSize * 0.95,
                                   backgroundImage: new AssetImage(
-                                      'images/user_images/hund_${hero.iBild}.jpg')
+                                      hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                                          :'images/user_images/fragezeichen.jpg')
                               )
                               )
                           )

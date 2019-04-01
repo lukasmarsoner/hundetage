@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'main.dart';
+import 'package:hundetage/main.dart';
+import 'package:hundetage/utilities/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 //Loads data needed by all adventures from firestore
@@ -30,4 +31,33 @@ Future<GeneralData> loadGeneralData(Firestore firestore) async {
   Map<String,Map<String,String>> _erlebnisse = fromDynamic(_erlebnisseSnapshot.data);
 
   return new GeneralData(gendering: _gendering, erlebnisse: _erlebnisse);
+}
+
+//Loads user data from firestore
+Future<Held> loadFirestoreUserData({Firestore firestore, Authenticator authenticator}) async {
+  String uid = await authenticator.getUid();
+
+  CollectionReference _collectionReference = firestore.collection('user_data');
+
+  DocumentReference _documentReference = _collectionReference.document(uid);
+  DocumentSnapshot _documentSnapshot = await _documentReference.get();
+
+  if(_documentSnapshot == null)
+  {return null;}
+  else{
+  Map<String,String> _userData = _documentSnapshot.data;
+  return new Held.fromMap(_userData);
+  }
+}
+
+//Updates user data in firestore
+//If the file does not exist - create a new entry
+void updateCreateFirestoreUserData({Firestore firestore, Authenticator authenticator,
+Held hero}) async {
+  String uid = await authenticator.getUid();
+
+  CollectionReference _collectionReference = firestore.collection('user_data');
+
+  DocumentReference _documentReference = _collectionReference.document(uid);
+  _documentReference.setData(hero.values);
 }

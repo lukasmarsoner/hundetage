@@ -66,7 +66,8 @@ class ProfileRowErlebnisse extends StatelessWidget {
                         child: InkWell(
                             child: Center(child: new CircleAvatar(
                                 backgroundImage: new AssetImage(
-                                    'images/user_images/hund_${hero.iBild}.jpg'),
+                                    hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                                        :'images/user_images/fragezeichen.jpg'),
                                 minRadius: 60.0,
                                 maxRadius: 60.0))))))
           ],

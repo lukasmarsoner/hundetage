@@ -12,6 +12,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   cloud_firestore: ^0.9.7
   firebase_storage: ^2.1.0+1
+  path_provider: ^0.5.0+1
   firebase_auth: ^0.6.2+1
 
 dev_dependencies:
@@ -29,6 +30,7 @@ flutter:
     - images/symbol_w_b.png
     - images/icon.png
     - images/user_screen_top_image.png
+    - images/user_images/fragezeichen.jpg
     - images/user_images/hund_0.jpg
     - images/user_images/hund_1.jpg
     - images/user_images/hund_2.jpg

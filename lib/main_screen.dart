@@ -6,7 +6,7 @@ import 'user_settings.dart';
 import 'dart:math' as math;
 import 'erlebnisse.dart';
 import 'main.dart';
-import 'authentication.dart';
+import 'package:hundetage/utilities/authentication.dart';
 
 //Cuts the square box on the top of the screen diagonally
 class _DiagonalClipper extends CustomClipper<Path> {
@@ -29,15 +29,24 @@ class MainPage extends StatefulWidget {
   final Held hero;
   final GeneralData generalData;
   final Function heroCallback;
+  final VoidCallback signInStatusChange;
+  final bool signedIn;
+  final Firestore firestore;
+  final Authenticator authenticator;
   final Substitution substitution;
 
-  const MainPage({this.substitution, this.hero, this.heroCallback, this.generalData});
+  const MainPage({this.substitution, this.authenticator, this.hero,
+    this.signInStatusChange, this.signedIn, this.heroCallback,
+    this.generalData, this.firestore});
 
   @override
   MainPageState createState() => new MainPageState(
       hero: hero,
       generalData: generalData,
       substitution: substitution,
+      firestore: firestore,
+      signInStatusChange: signInStatusChange,
+      signedIn: signedIn,
       heroCallback: heroCallback);
 }
 
@@ -45,12 +54,22 @@ class MainPageState extends State<MainPage> {
   Held hero;
   Function heroCallback;
   GeneralData generalData;
+  VoidCallback signInStatusChange;
+  bool signedIn;
+  Firestore firestore;
   double _imageHeight = 200.0;
+  Authenticator authenticator;
   double screenHeight, screenWidth;
   Substitution substitution;
   Rect rect;
 
-  MainPageState({this. substitution, this.hero, this.heroCallback, this.generalData});
+  MainPageState({this. substitution, this.authenticator, this.hero, this.signedIn,
+    this.signInStatusChange, this.heroCallback, this.generalData, this.firestore});
+
+  void logInLogOut(){
+    signedIn?signedIn = false:signedIn = true;
+    signInStatusChange();
+  }
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -64,7 +83,6 @@ class MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth  = MediaQuery.of(context).size.width;
-    Firestore firestore = new Firestore();
     return Stack(children: <Widget>[
       new Scaffold(
       //Add new screen elements here
@@ -79,7 +97,11 @@ class MainPageState extends State<MainPage> {
                 License(screenHeight: screenHeight),
                 UserButton(screenHeight:screenHeight,
                     substitution: substitution,
+                    authenticator: authenticator,
                     screenWidth: screenWidth,
+                    firestore: firestore,
+                    logInLogOut: logInLogOut,
+                    signedIn: signedIn,
                     generalData: generalData,
                     updateHero:updateHero,
                     hero:hero)],
@@ -109,7 +131,7 @@ class License extends StatelessWidget{
             onPressed:() => showLicensePage(
                 context: context,
                 applicationName: 'Hundetage',
-                applicationVersion: '1.0',
+                applicationVersion: '0.6',
                 applicationIcon: Image.asset('images/icon.png')))
     );
     return license;
@@ -120,12 +142,17 @@ class License extends StatelessWidget{
 class UserButton extends StatelessWidget {
   final Function updateHero, updateRipple;
   final Held hero;
+  final Firestore firestore;
+  final Authenticator authenticator;
   final GeneralData generalData;
+  final VoidCallback logInLogOut;
+  final bool signedIn;
   final double screenHeight, screenWidth;
   final Substitution substitution;
 
-  UserButton({this.screenHeight, this.screenWidth, this.updateHero,
-    this.generalData, this.substitution, this.hero, this.updateRipple});
+  UserButton({this.screenHeight, this.screenWidth, this.updateHero, this.authenticator,
+    this.logInLogOut, this.generalData, this.substitution, this.signedIn,
+    this.hero, this.updateRipple, this.firestore});
 
   @override
   Widget build(BuildContext context) {
@@ -135,9 +162,13 @@ class UserButton extends StatelessWidget {
         right: -75.0,
         child: new AnimatedButton(
           hero: hero,
+          authenticator: authenticator,
           generalData: generalData,
           updateHero: updateHero,
+          signedIn: signedIn,
+          logInLogOut: logInLogOut,
           screenWidth: screenWidth,
+          firestore: firestore,
           substitution: substitution,
           screenHeight: screenHeight,
             updateRipple: updateRipple
@@ -193,7 +224,8 @@ class ProfileRow extends StatelessWidget {
                       child: InkWell(
                           child: Center(child: new CircleAvatar(
                               backgroundImage: new AssetImage(
-                                  'images/user_images/hund_${hero.iBild}.jpg'),
+                                  hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                                      :'images/user_images/fragezeichen.jpg'),
                               minRadius: 60.0,
                               maxRadius: 60.0)))))),
             //Add some padding and then put in user name and description
@@ -232,10 +264,15 @@ class AnimatedButton extends StatefulWidget {
   final Held hero;
   final GeneralData generalData;
   final Substitution substitution;
+  final VoidCallback logInLogOut;
+  final bool signedIn;
+  final Firestore firestore;
+  final Authenticator authenticator;
   final double screenWidth, screenHeight;
 
   const AnimatedButton({this.updateHero, this.hero, this.generalData,
-  this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
+    this.authenticator, this.logInLogOut, this.signedIn, this.firestore,
+    this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
 
   @override
   AnimatedButtonState createState() => new AnimatedButtonState(
@@ -243,8 +280,12 @@ class AnimatedButton extends StatefulWidget {
       updateHero: updateHero,
       screenHeight: screenHeight,
       screenWidth: screenWidth,
+      firestore: firestore,
       substitution: substitution,
       generalData: generalData,
+      signedIn: signedIn,
+      logInLogOut: logInLogOut,
+      authenticator: authenticator,
       updateRipple: updateRipple);
 }
 
@@ -252,7 +293,11 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   AnimationController _animationController;
   Function updateHero, updateRipple;
   GeneralData generalData;
+  Firestore firestore;
   Substitution substitution;
+  Authenticator authenticator;
+  VoidCallback logInLogOut;
+  bool signedIn;
   Held hero;
   double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
@@ -260,7 +305,8 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   final double _hiddenSize = 70.0;
 
   AnimatedButtonState({this.updateHero, this.hero, this.generalData,
-  this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
+    this.authenticator, this.signedIn, this.logInLogOut, this.firestore,
+    this.screenWidth, this.substitution, this.screenHeight, this.updateRipple});
 
   @override
   void initState() {
@@ -292,7 +338,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
             children: <Widget>[
               ExpandedBackground(hero: hero, animationController: _animationController,
               hiddenSize: _hiddenSize, expandedSize: _expandedSize,),
-              OptionButton(icon: Icons.cloud_queue, angle: 0.0,
+              OptionButton(icon:signedIn?Icons.cloud:Icons.cloud_queue, angle: 0.0,
                   animationController: _animationController,
                   onIconClick: () => _goToNextPage(nextPage: 'login')),
               OptionButton(icon: Icons.account_circle, angle: -math.pi / 4,
@@ -355,7 +401,9 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
     else if(nextPage == 'login'){
       Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => LoginSignUpPage(auth: new Auth(),))
+          MaterialPageRoute(builder: (context) => LoginSignUpPage(
+            authenticator: authenticator, logInLogOut: logInLogOut, signedIn: signedIn,
+              updateHero: updateHero, hero: hero, firestore: firestore))
     );}
   }
 }

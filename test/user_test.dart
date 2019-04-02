@@ -24,6 +24,8 @@ void main() {
       expect(_testHeld.name, _testHeld.defaults['name']);
       expect(_testHeld.geschlecht, _testHeld.defaults['geschlecht']);
       expect(_testHeld.erlebnisse, _testHeld.defaults['erlebnisse']);
+      expect(_testHeld.screens, _testHeld.defaults['screens']);
+      expect(_testHeld.iScreen, _testHeld.defaults['iScreen']);
       //The +2 comes from:
       //0-indexing
       //Using -1 for a placeholder
@@ -42,14 +44,20 @@ void main() {
       _testHeld.name='test';
       _testHeld.geschlecht='w';
       _testHeld.addErlebniss='test';
+      _testHeld.addScreen=4;
+      _testHeld.iScreen=4;
 
       expect(_testHeld.iBild, 3);
       expect(_testHeld.name, 'test');
       expect(_testHeld.geschlecht, 'w');
       expect(_testHeld.erlebnisse, ['test']);
+      expect(_testHeld.iScreen, 4);
+      expect(_testHeld.screens, [4]);
 
       _testHeld.addErlebniss='';
       expect(_testHeld.erlebnisse,['test']);
+      _testHeld.addScreen=4;
+      expect(_testHeld.screens,[4]);
 
       String _error;
       try{_testHeld.iBild=-1;} on Exception catch(error){_error = error.toString();}

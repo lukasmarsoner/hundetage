@@ -52,26 +52,30 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     return false;
   }
 
-  void _loadAndUpdateHero() {
+  void _loadAndUpdateHero() async{
     _changeFormToSignOut();
     logInLogOut();
-    setState(() {
-      signedIn = true;
+    Held _newHero = await hero.load(authenticator:authenticator, signedIn: true, firestore: firestore);
+    if(_newHero==null){_newHero=hero;}
+    setState((){
       //If we are currently logged-in we should log-out the user and set the hero
       //to it's initial values
       //If not - we get the data from the load-function
       //If we don't have anything we use default values
       //All this happens in the load function of the Held-class
-      hero=hero.load(authenticator:authenticator, signedIn: true, firestore: firestore);
-      updateHero(hero);
+      hero = _newHero;
+      updateHero(newHero: hero);
+      signedIn = true;
     });
   }
+
 
   //Sign user out
   _signOut() {
     setState(() {
       logInLogOut();
       _changeFormToLogin();
+      updateHero(newHero: Held.initial());
     });
   }
 
@@ -110,9 +114,16 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   void _deleteUserData(){
     //TODO: add a pop-up explaining what has happened to the user in this case
-    authenticator.deleteUser().then((_success){_success
-        ?deleteFirestoreUserData(firestore: firestore, authenticator: authenticator)
-        :_changeFormToLogin();
+    setState(() {
+      _isLoading = true;
+    });
+    authenticator.deleteUser().then((_success){if(_success)
+        {deleteFirestoreUserData(firestore: firestore, authenticator: authenticator);
+        _showDeletionDialog();}
+        else{_changeFormToLogin();_showDeletionLogoutDialog();}
+    });
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -120,6 +131,10 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     if(_validateAndSave()){
       authenticator.sendPasswordReset(_email);
     }
+  }
+
+  void _createUserdataInFirebase(String uid){
+    updateCreateFirestoreUserData(firestore: firestore, uid: uid, hero: hero);
   }
 
   // Perform login or sign-up
@@ -132,24 +147,20 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
       String userId = "";
       try {
         if (_formMode == FormMode.LOGIN) {
+          print('here');
+          print(authenticator);
           userId = await authenticator.signIn(_email, _password);
-          print('Held $userId wird eingeloggt...');
         } else {
           userId = await authenticator.signUp(_email, _password);
           authenticator.sendEmailVerification();
+          _createUserdataInFirebase(userId);
           _showVerifyEmailSentDialog();
-          print('Registriere neuen Helden $userId...');
         }
-        setState(() {
-          _isLoading = false;
-        });
-
         if (userId.length > 0 && userId != null && _formMode == FormMode.LOGIN) {
           _loadAndUpdateHero();
         }
 
       } catch (e) {
-        print('Error: $e');
         setState(() {
           _isLoading = false;
           if (_isIos) {
@@ -158,6 +169,9 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
             _errorMessage = e.message;
         });
       }
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -180,7 +194,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     if (_isLoading) {
       return Center(child: CircularProgressIndicator());
     } return Container(height: 0.0, width: 0.0,);
-
   }
 
   void _showVerifyEmailSentDialog() {
@@ -205,7 +218,55 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     );
   }
 
+  void _showDeletionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Account gelöscht"),
+          content: new Text("Dein Account wurde erfogreich gelöscht."),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Schließen"),
+              onPressed: () {
+                _changeFormToLogin();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeletionLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Bitte logge dich erneut ein"),
+          content: new Text("Dein letzter Login ist zu lange her."
+              "Bitte logge dich erneut ein um deinen Account zu löschen"),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Schließen"),
+              onPressed: () {
+                _changeFormToLogin();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _showUser(){
+    //Only show current user if we are logged-in
+    Held _localHero;
+    signedIn?_localHero=hero:_localHero=Held.initial();
     return new Container(
       child: Column(
         children: <Widget>[
@@ -215,12 +276,12 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                   child: CircleAvatar(
                       minRadius: _circleSize,
                       maxRadius: _circleSize,
-                      backgroundColor: hero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
+                      backgroundColor:_localHero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
                       child: Center(child: new CircleAvatar(
                           minRadius: _circleSize * 0.95,
                           maxRadius: _circleSize * 0.95,
                           backgroundImage: new AssetImage(
-                              hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                              _localHero.iBild!=-1?'images/user_images/hund_${_localHero.iBild}.jpg'
                                   :'images/user_images/fragezeichen.jpg')
                       )
                       )
@@ -230,7 +291,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
           new Container(
             padding: EdgeInsets.only(top:40.0),
               child: new Text(
-                hero.name,
+                _localHero.name,
                 style: new TextStyle(
                     fontSize: 28.0,
                     color: Colors.black,
@@ -343,15 +404,21 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showPrimaryButton() {
     Text _buttonText = Text('');
-    if(_formMode == FormMode.SIGNUP){
-      _buttonText = new Text('Neu registrieren',
-          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));}
-    else if(_formMode == FormMode.LOGIN){
-      _buttonText = new Text('Anmelden',
-          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));}
-    else{
+    if(signedIn){
+      _changeFormToSignOut();
       _buttonText = new Text('Abmelden',
-          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));}
+          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));
+    }
+    else {
+      if (_formMode == FormMode.SIGNUP) {
+        _buttonText = new Text('Neu registrieren',
+            style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));
+      }
+      else {
+        _buttonText = new Text('Anmelden',
+            style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));
+      }
+    }
     return new Padding(
         padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, 0.0),
         child: SizedBox(

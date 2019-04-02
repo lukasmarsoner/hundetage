@@ -45,7 +45,9 @@ Future<Held> loadFirestoreUserData({Firestore firestore, Authenticator authentic
   if(_documentSnapshot == null)
   {return null;}
   else{
-  Map<String,String> _userData = _documentSnapshot.data;
+  Map<String,dynamic> _userData = _documentSnapshot.data;
+  _userData['erlebnisse'] = List<String>.from(_userData['erlebnisse']);
+  _userData['screens'] = List<int>.from(_userData['screens']);
   return new Held.fromMap(_userData);
   }
 }
@@ -53,12 +55,13 @@ Future<Held> loadFirestoreUserData({Firestore firestore, Authenticator authentic
 //Updates user data in firestore
 //If the file does not exist - create a new entry
 void updateCreateFirestoreUserData({Firestore firestore, Authenticator authenticator,
-Held hero}) async {
-  String uid = await authenticator.getUid();
+Held hero, String uid}) async {
+  if(uid==null){uid = await authenticator.getUid();}
 
   CollectionReference _collectionReference = firestore.collection('user_data');
 
   DocumentReference _documentReference = _collectionReference.document(uid);
+
   _documentReference.setData(hero.values);
 }
 

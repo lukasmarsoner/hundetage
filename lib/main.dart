@@ -95,8 +95,9 @@ class Held{
   //never change in the live app
   int maxImages = 7;
   String _name, _geschlecht;
-  int _iBild;
+  int _iBild, _iScreen;
   List<String> _erlebnisse;
+  List<int> _screens;
   Map<int,Map<String,String>> _berufe = {
     -1: {'m': '', 'w': ''},
     0: {'m': 'Ein gewiefter Abenteurer', 'w': 'Eine gewiefte Abenteurerin'},
@@ -113,6 +114,8 @@ class Held{
     'name': '????????',
     'geschlecht': 'w',
     'iBild': -1,
+    'iScreen': 0,
+    'screens': <int>[],
     'erlebnisse': <String>[]};
 
   // Default values for testing
@@ -120,6 +123,8 @@ class Held{
     'name': 'Mara',
     'geschlecht': 'w',
     'iBild': 0,
+    'iScreen': 3,
+    'screens': <int>[0,1,2,3],
     'erlebnisse': <String>['besteFreunde']};
 
   // Initialize new User with defaults
@@ -128,6 +133,8 @@ class Held{
     _geschlecht = _defaults['geschlecht'];
     _iBild = _defaults['iBild'];
     _erlebnisse = _defaults['erlebnisse'];
+    _screens = _defaults['screens'];
+    _iScreen = _defaults['iScreen'];
   }
 
   //Used for testing widgets
@@ -136,6 +143,8 @@ class Held{
     _geschlecht = _testing['geschlecht'];
     _iBild = _testing['iBild'];
     _erlebnisse = _testing['erlebnisse'];
+    _screens = _testing['screens'];
+    _iScreen = _testing['iScreen'];
   }
 
   //Generate Hero from map
@@ -144,33 +153,24 @@ class Held{
     _geschlecht = _map['geschlecht'];
     _iBild = _map['iBild'];
     _erlebnisse = _map['erlebnisse'];
+    _screens = _map['screens'];
+    _iScreen = _map['iScreen'];
   }
 
   //Loads hero-data either from firebase or local file
   //returns a default hero if nothing is found
-  load({bool signedIn, Authenticator authenticator, Firestore firestore}) {
-    Held user;
+  Future<Held> load({bool signedIn, Authenticator authenticator, Firestore firestore}) async{
     //If we are signed-in we load user data from firebase
+    Held _hero;
     if(signedIn){
-      loadFirestoreUserData(firestore: firestore, authenticator: authenticator)
-          .then((_hero){
-            //We should never be logged-in here without having data in firebase
-            //but in case anything goes wrong - this will give us a backup
-            //We should add a pop-up here
-            if(_hero==null)
-            {user = _hero;}
-            else{
-              user = Held.initial();
-              updateCreateFirestoreUserData(firestore: firestore,
-                  authenticator: authenticator, hero: user);
-            }
-          });
+      _hero = await loadFirestoreUserData(firestore: firestore, authenticator: authenticator);
+      if(_hero==null){return null;}else{return _hero;}
     }
     else{
       //This also takes care of defaulting to initial values if no file is found
-      loadLocalUserData().then((_hero){user = _hero;});
+      _hero = await loadLocalUserData();
+      if(_hero==null){return null;}else{return _hero;}
     }
-    return user;
   }
 
   // Setters with sanity-checks
@@ -186,21 +186,30 @@ class Held{
   set addErlebniss(String valIn){
     if(valIn != null && valIn != '' && !_erlebnisse.contains(valIn)){_erlebnisse.add(valIn);}
   }
+  set iScreen(int valIn){
+    if(valIn != null && valIn >=0 && _screens.contains(valIn)){_iScreen = valIn;}
+  }
+  set addScreen(int valIn){
+    if(valIn != null && valIn >=0 && !_screens.contains(valIn)){_screens.add(valIn);}
+  }
 
   // Getters
   String get name => _name;
   int get iBild => _iBild;
+  int get iScreen => _iScreen;
   String get geschlecht => _geschlecht;
   List<String> get erlebnisse => _erlebnisse;
+  List<int> get screens => _screens;
   Map<int,Map<String,String>> get berufe => _berufe;
   // This getter is only for testing
   Map<String,dynamic> get defaults => _defaults;
   Map<String,dynamic> get values => {
-    'name':_name,
-    'geschlecht': _geschlecht,
-    'iBild': _iBild,
-    'erlebnisse': _erlebnisse,
-    'berufe': _berufe
+    'name': name,
+    'geschlecht': geschlecht,
+    'iBild': iBild,
+    'erlebnisse': erlebnisse,
+    'iScreen': iScreen,
+    'screens': screens
   };
 }
 

@@ -32,6 +32,8 @@ Future<Held> loadLocalUserData() async {
   if(await fileExists(file)){
   String contents = await file.readAsString();
   Map<String, dynamic> _heroMap = json.decode(contents);
+  _heroMap['erlebnisse'] = List<String>.from(_heroMap['erlebnisse']);
+  _heroMap['screens'] = List<int>.from(_heroMap['screens']);
 
   return Held.fromMap(_heroMap);
   }

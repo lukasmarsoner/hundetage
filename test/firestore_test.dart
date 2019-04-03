@@ -96,8 +96,8 @@ void main() {
     // Test menu
     testWidgets('Test menu', (WidgetTester _tester) async {
       AnimatedButton _widget = AnimatedButton(hero: testHeld,updateHero: ()=>null,
-          substitution: substitutions, signedIn: false, screenWidth: 100.0, screenHeight: 100.0,
-          logInLogOut: ()=>null, generalData: generalData, firestore: mockFirestore,
+          substitution: substitutions, screenWidth: 100.0, screenHeight: 100.0,
+          generalData: generalData, firestore: mockFirestore,
           authenticator: authenticator);
       await _tester.pumpWidget(
           StaticTestWidget(returnWidget: _widget)
@@ -145,7 +145,7 @@ void main() {
 
     testWidgets('Test License', (WidgetTester _tester) async {
       MainPage _widget = MainPage(hero: testHeld,heroCallback: ()=>null,
-          substitution: substitutions, signedIn: false, signInStatusChange: ()=>null,
+          substitution: substitutions,
           generalData: generalData, firestore: mockFirestore, authenticator: authenticator);
       await _tester.pumpWidget(
           StaticTestWidget(returnWidget: _widget));

@@ -29,15 +29,13 @@ class MainPage extends StatefulWidget {
   final Held hero;
   final GeneralData generalData;
   final Function heroCallback;
-  final VoidCallback signInStatusChange;
-  final bool signedIn;
   final Firestore firestore;
   final Authenticator authenticator;
   final Substitution substitution;
 
   const MainPage({@required this.substitution, @required this.authenticator,
-    @required this.hero, @required this.signInStatusChange, @required this.signedIn,
-    @required this.heroCallback, @required this.generalData, @required this.firestore});
+    @required this.hero, @required this.heroCallback,
+    @required this.generalData, @required this.firestore});
 
   @override
   MainPageState createState() => new MainPageState(
@@ -46,8 +44,6 @@ class MainPage extends StatefulWidget {
       generalData: generalData,
       substitution: substitution,
       firestore: firestore,
-      signInStatusChange: signInStatusChange,
-      signedIn: signedIn,
       heroCallback: heroCallback);
 }
 
@@ -55,8 +51,6 @@ class MainPageState extends State<MainPage> {
   Held hero;
   Function heroCallback;
   GeneralData generalData;
-  VoidCallback signInStatusChange;
-  bool signedIn;
   Firestore firestore;
   double _imageHeight = 200.0;
   Authenticator authenticator;
@@ -65,13 +59,8 @@ class MainPageState extends State<MainPage> {
   Rect rect;
 
   MainPageState({@required this.substitution, @required this.authenticator,
-    @required this.hero, @required this.signedIn, @required this.signInStatusChange,
-    @required this.heroCallback, @required this.generalData, @required this.firestore});
-
-  void logInLogOut(){
-    signedIn?signedIn = false:signedIn = true;
-    signInStatusChange();
-  }
+    @required this.hero, @required this.heroCallback,
+    @required this.generalData, @required this.firestore});
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -102,8 +91,6 @@ class MainPageState extends State<MainPage> {
                     authenticator: authenticator,
                     screenWidth: screenWidth,
                     firestore: firestore,
-                    logInLogOut: logInLogOut,
-                    signedIn: signedIn,
                     generalData: generalData,
                     updateHero:updateHero,
                     hero:hero)],
@@ -147,15 +134,13 @@ class UserButton extends StatelessWidget {
   final Firestore firestore;
   final Authenticator authenticator;
   final GeneralData generalData;
-  final VoidCallback logInLogOut;
-  final bool signedIn;
   final double screenHeight, screenWidth;
   final Substitution substitution;
 
   UserButton({@required this.screenHeight, @required this.screenWidth,
     @required this.updateHero, @required this.authenticator,
-    @required this.logInLogOut, @required this.generalData, @required this.substitution,
-    @required this.signedIn, @required this.hero, @required this.firestore});
+    @required this.generalData, @required this.substitution,
+    @required this.hero, @required this.firestore});
 
   @override
   Widget build(BuildContext context) {
@@ -168,8 +153,6 @@ class UserButton extends StatelessWidget {
           authenticator: authenticator,
           generalData: generalData,
           updateHero: updateHero,
-          signedIn: signedIn,
-          logInLogOut: logInLogOut,
           screenWidth: screenWidth,
           firestore: firestore,
           substitution: substitution,
@@ -266,16 +249,13 @@ class AnimatedButton extends StatefulWidget {
   final Held hero;
   final GeneralData generalData;
   final Substitution substitution;
-  final VoidCallback logInLogOut;
-  final bool signedIn;
   final Firestore firestore;
   final Authenticator authenticator;
   final double screenWidth, screenHeight;
 
   const AnimatedButton({@required this.updateHero, @required this.hero,
     @required this.generalData, @required this.authenticator,
-    @required this.logInLogOut, @required this.signedIn, @required this.firestore,
-    @required this.screenWidth, @required this.substitution,
+    @required this.firestore, @required this.screenWidth, @required this.substitution,
     @required this.screenHeight});
 
   @override
@@ -287,8 +267,6 @@ class AnimatedButton extends StatefulWidget {
       firestore: firestore,
       substitution: substitution,
       generalData: generalData,
-      signedIn: signedIn,
-      logInLogOut: logInLogOut,
       authenticator: authenticator);
 }
 
@@ -299,8 +277,6 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   Firestore firestore;
   Substitution substitution;
   Authenticator authenticator;
-  VoidCallback logInLogOut;
-  bool signedIn;
   Held hero;
   double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
@@ -309,9 +285,8 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
 
   AnimatedButtonState({@required this.updateHero, @required this.hero,
     @required this.generalData, @required this.authenticator,
-    @required this.signedIn, @required this.logInLogOut, @required this.firestore,
-    @required this.screenWidth, @required this.substitution,
-    @required this.screenHeight});
+    @required this.firestore, @required this.screenWidth,
+    @required this.substitution, @required this.screenHeight});
 
   @override
   void initState() {
@@ -343,7 +318,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
             children: <Widget>[
               ExpandedBackground(hero: hero, animationController: _animationController,
               hiddenSize: _hiddenSize, expandedSize: _expandedSize,),
-              OptionButton(icon:signedIn?Icons.cloud:Icons.cloud_queue, angle: 0.0,
+              OptionButton(icon:hero.signedIn?Icons.cloud_done:Icons.cloud_queue, angle: 0.0,
                   animationController: _animationController,
                   onIconClick: () => _goToNextPage(nextPage: 'login')),
               OptionButton(icon: Icons.account_circle, angle: -math.pi / 4,
@@ -407,7 +382,7 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
       Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoginSignUpPage(
-            authenticator: authenticator, logInLogOut: logInLogOut, signedIn: signedIn,
+            authenticator: authenticator,
               updateHero: updateHero, hero: hero, firestore: firestore))
     );}
   }

@@ -40,7 +40,6 @@ class _MyAppState extends State<MyApp>{
   Authenticator authenticator;
   Substitution substitution;
   Firestore firestore;
-  bool signedIn;
   GeneralData generalData;
 
   _MyAppState({@required this.hero, @required this.generalData,
@@ -49,16 +48,10 @@ class _MyAppState extends State<MyApp>{
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
-    signedIn
+    hero.signedIn
         ?updateCreateFirestoreUserData(firestore: firestore,
         authenticator: authenticator, hero: hero)
         :writeLocalUserData(hero);
-  }
-
-  void signInStatusChange(){
-    setState(() {
-      signedIn?signedIn = false:signedIn = true;
-    });
   }
 
   //Check if user is currently logged-in
@@ -69,11 +62,11 @@ class _MyAppState extends State<MyApp>{
   //Check if we are already logged-in
   @override
   void initState() {
-    if(signedIn==null){
+    if(hero.signedIn==null){
       //We set it here because the future takes longer to evaluate than the
       //screen takes to build
-      signedIn = false;
-      checkLoginStatus().then((_loggedIn){_loggedIn?signedIn=false:signedIn=true;});
+      hero.signedIn = false;
+      checkLoginStatus().then((_loggedIn){_loggedIn?hero.signedIn=false:hero.signedIn=true;});
     }
     super.initState();
   }
@@ -83,7 +76,7 @@ class _MyAppState extends State<MyApp>{
     return MaterialApp(
       title: 'Hundetage',
       home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback,
-          authenticator: authenticator, signInStatusChange: signInStatusChange, signedIn: signedIn,
+          authenticator: authenticator,
           generalData: generalData, substitution:substitution, firestore: firestore)),
     );
   }
@@ -93,11 +86,12 @@ class Held{
   // Properties of users
   //This is being set here. As user images are stored in the assets it will
   //never change in the live app
-  int maxImages = 7;
+  int _maxImages = 7;
   String _name, _geschlecht;
   int _iBild, _iScreen;
   List<String> _erlebnisse;
   List<int> _screens;
+  bool signedIn;
   Map<int,Map<String,String>> _berufe = {
     -1: {'m': '', 'w': ''},
     0: {'m': 'Ein gewiefter Abenteurer', 'w': 'Eine gewiefte Abenteurerin'},
@@ -115,6 +109,7 @@ class Held{
     'geschlecht': 'w',
     'iBild': -1,
     'iScreen': 0,
+    'signedIn': false,
     'screens': <int>[],
     'erlebnisse': <String>[]};
 
@@ -124,6 +119,7 @@ class Held{
     'geschlecht': 'w',
     'iBild': 0,
     'iScreen': 3,
+    'signedIn': false,
     'screens': <int>[0,1,2,3],
     'erlebnisse': <String>['besteFreunde']};
 
@@ -135,6 +131,7 @@ class Held{
     _erlebnisse = _defaults['erlebnisse'];
     _screens = _defaults['screens'];
     _iScreen = _defaults['iScreen'];
+    signedIn = _defaults['signedIn'];
   }
 
   //Used for testing widgets
@@ -145,6 +142,7 @@ class Held{
     _erlebnisse = _testing['erlebnisse'];
     _screens = _testing['screens'];
     _iScreen = _testing['iScreen'];
+    signedIn = _testing['signedIn'];
   }
 
   //Generate Hero from map
@@ -194,6 +192,7 @@ class Held{
   }
 
   // Getters
+  int get maxImages => _maxImages;
   String get name => _name;
   int get iBild => _iBild;
   int get iScreen => _iScreen;

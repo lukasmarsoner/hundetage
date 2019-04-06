@@ -11,7 +11,7 @@ class StaticTestWidget extends StatelessWidget{
   Widget build(BuildContext context) {
     return MaterialApp(
         home: Scaffold(
-            body:returnWidget));
+        body: returnWidget));
   }
 }
 

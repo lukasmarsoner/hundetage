@@ -5,46 +5,26 @@ import 'package:hundetage/utilities/firebase.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'utilities/json.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async{
-  Firestore firestore = Firestore();
-  Held hero = new Held.initial();
-  GeneralData generalData = await loadGeneralData(firestore);
-  Authenticator authenticator = new Authenticator();
-  Substitution substitution = Substitution(hero: hero,generalData: generalData);
-  runApp(MyApp(generalData: generalData, authenticator: authenticator,
-    hero: hero, substitution: substitution, firestore: firestore));
+  runApp(MyApp());
 }
 
 class MyApp extends StatefulWidget{
-  final GeneralData generalData;
-  final Authenticator authenticator;
-  final Substitution substitution;
-  final Firestore firestore;
-  final Held hero;
-
-  MyApp({@required this.generalData, @required this.authenticator,
-    @required this.substitution, @required this.hero, @required this.firestore});
 
   @override
-  _MyAppState createState(){
-    return new _MyAppState(hero: hero, generalData: generalData,
-    authenticator: authenticator, substitution: substitution,
-    firestore: firestore);
-  }
+  _MyAppState createState() => new _MyAppState();
 }
 
 //All global should be store and kept-updated here
 class _MyAppState extends State<MyApp>{
   Held hero;
+  bool _isLoading;
   Authenticator authenticator;
   Substitution substitution;
-  Firestore firestore;
   GeneralData generalData;
-
-  _MyAppState({@required this.hero, @required this.generalData,
-    @required this.substitution, @required this.authenticator,
-    @required this.firestore});
+  Firestore firestore;
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
@@ -59,25 +39,47 @@ class _MyAppState extends State<MyApp>{
     if(await authenticator.getUsername()==null){return false;}else{return true;}
   }
 
-  //Check if we are already logged-in
-  @override
-  void initState() {
-    if(hero.signedIn==null){
-      //We set it here because the future takes longer to evaluate than the
-      //screen takes to build
-      hero.signedIn = false;
-      checkLoginStatus().then((_loggedIn){_loggedIn?hero.signedIn=false:hero.signedIn=true;});
-    }
-    super.initState();
+  Future<void> _loadAndInitializeMain() async {
+    firestore = Firestore();
+    authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
+    substitution = Substitution(hero: hero,generalData: generalData);
+    hero = Held.initial();
+    bool _signedIn = await checkLoginStatus();
+    hero = await hero.load(authenticator:authenticator, signedIn: _signedIn, firestore: firestore);
+    if(hero==null){hero = Held.initial();}
+    generalData = await loadGeneralData(firestore);
+    //Check if we are already logged-in
+    hero.signedIn = _signedIn;
+    setState(() {
+      hero = hero;
+      generalData = generalData;
+      firestore = firestore;
+      authenticator = authenticator;
+      substitution = substitution;
+    });
+  }
+
+  void _pageAndLoadingScreen(){
+    setState(()=>_isLoading = true);
+    _loadAndInitializeMain();
+    setState(()=>_isLoading = false);
+  }
+
+  Widget _showCircularProgress(){
+    return _isLoading
+    ?Center(child: CircularProgressIndicator())
+    :Container(height: 0.0, width: 0.0,);
   }
 
   @override
   Widget build(BuildContext context){
+    _pageAndLoadingScreen();
     return MaterialApp(
       title: 'Hundetage',
-      home: Scaffold(body: MainPage(hero: hero, heroCallback: heroCallback,
-          authenticator: authenticator,
-          generalData: generalData, substitution:substitution, firestore: firestore)),
+      home: Scaffold(body: new Stack(children: <Widget>[MainPage(hero: hero,
+          heroCallback: heroCallback, authenticator: authenticator,
+          generalData: generalData, substitution:substitution, firestore: firestore),
+          _showCircularProgress()])),
     );
   }
 }
@@ -164,8 +166,8 @@ class Held{
       _hero = await loadFirestoreUserData(firestore: firestore, authenticator: authenticator);
       if(_hero==null){return null;}else{return _hero;}
     }
+    //if not we lookf for a local file
     else{
-      //This also takes care of defaulting to initial values if no file is found
       _hero = await loadLocalUserData();
       if(_hero==null){return null;}else{return _hero;}
     }
@@ -227,7 +229,6 @@ class Adventure{
         story: _jsonData['story']
     );
   }
-
 }
 
 class GeneralData{

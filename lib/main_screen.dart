@@ -54,7 +54,6 @@ class MainPageState extends State<MainPage> {
   Firestore firestore;
   double _imageHeight = 200.0;
   Authenticator authenticator;
-  double screenHeight, screenWidth;
   Substitution substitution;
   Rect rect;
 
@@ -72,50 +71,38 @@ class MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    screenHeight = MediaQuery.of(context).size.height;
-    screenWidth  = MediaQuery.of(context).size.width;
+
     return Stack(children: <Widget>[
       new Scaffold(
       //Add new screen elements here
-        body: new Container(
-            height: screenHeight,
-            width: screenWidth,
-            child: new Stack(
+        body: new Stack(
               children: <Widget>[
-                AbenteuerAuswahl(screenHeight: screenHeight, firestore: firestore),
+                AbenteuerAuswahl(imageHeight: _imageHeight, firestore: firestore),
                 TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
-                License(screenHeight: screenHeight, screenWidth: screenWidth),
-                UserButton(screenHeight:screenHeight,
+                License(),
+                UserButton(
                     substitution: substitution,
                     authenticator: authenticator,
-                    screenWidth: screenWidth,
                     firestore: firestore,
                     generalData: generalData,
                     updateHero:updateHero,
                     hero:hero)],
-            )
+            ),
         )
-      ),
-    ]
-    );
+    ]);
   }
 }
 
 //Builds the license information button for the app
 class License extends StatelessWidget{
-  final screenHeight, screenWidth;
-
-  License({@required this.screenHeight, @required this.screenWidth});
-
   @override
   Widget build(BuildContext context) {
-    double _fromTop = screenHeight - 65.0;
     Positioned license = new Positioned(
-        top: _fromTop,
-        left: 5.0,
+        left: 0.0,
+        bottom: 0.0,
         child: new IconButton(
-            iconSize: 40.0,
+            iconSize: 50.0,
             icon: new Icon(Icons.assignment),
             onPressed:() => showLicensePage(
                 context: context,
@@ -134,29 +121,24 @@ class UserButton extends StatelessWidget {
   final Firestore firestore;
   final Authenticator authenticator;
   final GeneralData generalData;
-  final double screenHeight, screenWidth;
   final Substitution substitution;
 
-  UserButton({@required this.screenHeight, @required this.screenWidth,
-    @required this.updateHero, @required this.authenticator,
+  UserButton({@required this.updateHero, @required this.authenticator,
     @required this.generalData, @required this.substitution,
     @required this.hero, @required this.firestore});
 
   @override
   Widget build(BuildContext context) {
-    double _fromTop = screenHeight - 165.0;
     return new Positioned(
-        top: _fromTop,
+        bottom: -75.0,
         right: -75.0,
         child: new AnimatedButton(
           hero: hero,
           authenticator: authenticator,
           generalData: generalData,
           updateHero: updateHero,
-          screenWidth: screenWidth,
           firestore: firestore,
           substitution: substitution,
-          screenHeight: screenHeight
         )
     );
   }
@@ -223,14 +205,14 @@ class ProfileRow extends StatelessWidget {
                   new Text(
                     hero.name,
                     style: new TextStyle(
-                        fontSize: 28.0,
+                        fontSize: 20.0,
                         color: hero.geschlecht=='m'?Colors.white:Colors.black,
                         fontWeight: FontWeight.w500),
                   ),
                   new Text(
                     hero.berufe[hero.iBild][hero.geschlecht],
                     style: new TextStyle(
-                        fontSize: 14.0,
+                        fontSize: 16.0,
                         fontStyle: FontStyle.italic,
                         color: hero.geschlecht=='m'?Colors.white:Colors.black,
                         fontWeight: FontWeight.w300),
@@ -251,19 +233,15 @@ class AnimatedButton extends StatefulWidget {
   final Substitution substitution;
   final Firestore firestore;
   final Authenticator authenticator;
-  final double screenWidth, screenHeight;
 
   const AnimatedButton({@required this.updateHero, @required this.hero,
     @required this.generalData, @required this.authenticator,
-    @required this.firestore, @required this.screenWidth, @required this.substitution,
-    @required this.screenHeight});
+    @required this.firestore, @required this.substitution});
 
   @override
   AnimatedButtonState createState() => new AnimatedButtonState(
       hero: hero,
       updateHero: updateHero,
-      screenHeight: screenHeight,
-      screenWidth: screenWidth,
       firestore: firestore,
       substitution: substitution,
       generalData: generalData,
@@ -278,15 +256,13 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
   Substitution substitution;
   Authenticator authenticator;
   Held hero;
-  double screenWidth, screenHeight;
   //Define parameters for button size and menu size here
   final double _expandedSize = 240.0;
   final double _hiddenSize = 70.0;
 
   AnimatedButtonState({@required this.updateHero, @required this.hero,
     @required this.generalData, @required this.authenticator,
-    @required this.firestore, @required this.screenWidth,
-    @required this.substitution, @required this.screenHeight});
+    @required this.firestore, @required this.substitution});
 
   @override
   void initState() {
@@ -382,8 +358,8 @@ class AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvide
       Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoginSignUpPage(
-            authenticator: authenticator,
-              updateHero: updateHero, hero: hero, firestore: firestore))
+            authenticator: authenticator, updateHero: updateHero, hero: hero,
+              firestore: firestore))
     );}
   }
 }
@@ -505,28 +481,29 @@ class MenuButton extends StatelessWidget {
 
 //Adventure-Selection Stream builder
 class AbenteuerAuswahl extends StatelessWidget{
-  final double screenHeight;
   final Firestore firestore;
+  final double imageHeight;
 
-  AbenteuerAuswahl({@required this.screenHeight, @required this.firestore});
+  AbenteuerAuswahl({@required this.imageHeight, @required this.firestore});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: firestore.collection('abenteuer').snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return LinearProgressIndicator();
-        return _buildTiledSelection(context, snapshot.data.documents);
-        },
+    return Container(padding: EdgeInsets.only(top: imageHeight-50.0),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: firestore.collection('abenteuer').snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return LinearProgressIndicator();
+            return _buildTiledSelection(context, snapshot.data.documents);
+            },
+        )
     );
   }
 
   //Builds the tiled list for adventure selection
   Widget _buildTiledSelection(BuildContext context, List<DocumentSnapshot> snapshot) {
-    final double _screenHeight = MediaQuery.of(context).size.height;
     return GridView.count(
       crossAxisCount: 2,
-      padding: EdgeInsets.only(top: _screenHeight / 3, left: 10.0),
+      padding: EdgeInsets.only(top: 80.0, left: 10.0),
       children: snapshot.map((data) => _buildTile(context, data)).toList(),
     );
   }

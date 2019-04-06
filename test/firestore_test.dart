@@ -7,16 +7,27 @@ import 'utilities.dart';
 import 'package:hundetage/main_screen.dart';
 import 'package:image_test_utils/image_test_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hundetage/utilities/authentication.dart';
+import 'package:hundetage/login.dart';
 
 void main() {
   group('Firebase unit tests', () {
     //Mock class-instances needed in all tests involving classes initialized from Firebase
     final Firestore mockFirestore = MockFirestore();
+    final MockFireUser mockFireUser = MockFireUser();
+    final MockAuthenticator mockFireAuth = MockAuthenticator();
+
     final CollectionReference mockCollectionReference = MockCollectionReference();
-    final DocumentSnapshot mockDocumentSnapshotA = MockDocumentSnapshot();
-    final DocumentSnapshot mockDocumentSnapshotB = MockDocumentSnapshot();
-    final DocumentReference mockDocumentReferenceA = MockDocumentReference();
-    final DocumentReference mockDocumentReferenceB = MockDocumentReference();
+
+    final DocumentSnapshot mockDocumentSnapshotGendering = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotErlebnisse = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotUser = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotAbenteuer = MockDocumentSnapshot();
+
+    final DocumentReference mockDocumentReferenceGendering = MockDocumentReference();
+    final DocumentReference mockDocumentReferenceErlebnisse = MockDocumentReference();
+    final DocumentReference mockDocumentReferenceUser = MockDocumentReference();
     final QuerySnapshot mockQuerySnapshot = MockQuerySnapshot();
 
     //Data used for testing - we will return this in our mocked request to Firebase
@@ -30,16 +41,42 @@ void main() {
     Map<String,dynamic> _erlebnisseMockData = {
       'besteFreunde':{'text': 'Some test Text', 'image': 'https://example.com/image.png'},
       'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
+    Map<String, dynamic> _adventure1 = {
+      'name': 'Reja', 'version': 0.6, 'image': 'https...'};
 
     //Mock the collection
     when(mockFirestore.collection('general_data')).thenReturn(mockCollectionReference);
     //Mock both documents
-    when(mockCollectionReference.document('gendering')).thenReturn(mockDocumentReferenceA);
-    when(mockDocumentReferenceA.get()).thenAnswer((_) async => mockDocumentSnapshotA);
-    when(mockDocumentSnapshotA.data).thenReturn(_genderingMockData);
-    when(mockCollectionReference.document('erlebnisse')).thenReturn(mockDocumentReferenceB);
-    when(mockDocumentReferenceB.get()).thenAnswer((_) async => mockDocumentSnapshotB);
-    when(mockDocumentSnapshotB.data).thenReturn(_erlebnisseMockData);
+    when(mockCollectionReference.document('gendering')).thenReturn(mockDocumentReferenceGendering);
+    when(mockDocumentReferenceGendering.get()).thenAnswer((_) async => mockDocumentSnapshotGendering);
+    when(mockDocumentSnapshotGendering.data).thenReturn(_genderingMockData);
+
+    when(mockCollectionReference.document('erlebnisse')).thenReturn(mockDocumentReferenceErlebnisse);
+    when(mockDocumentReferenceErlebnisse.get()).thenAnswer((_) async => mockDocumentSnapshotErlebnisse);
+    when(mockDocumentSnapshotErlebnisse.data).thenReturn(_erlebnisseMockData);
+
+    when(mockFirestore.collection('user_data')).thenReturn(mockCollectionReference);
+    when(mockCollectionReference.document('hQtzTZdHkQde3dUxyZQ3EkzxYYn1')).thenReturn(mockDocumentReferenceUser);
+    when(mockDocumentReferenceUser.get()).thenAnswer((_) async => mockDocumentSnapshotUser);
+    when(mockDocumentSnapshotUser.data).thenReturn(testHeld.values);
+
+    when(mockFirestore.collection('abenteuer')).thenReturn(mockCollectionReference);
+    when(mockCollectionReference.snapshots()).thenAnswer((_) => Stream.fromIterable([mockQuerySnapshot]));
+    when(mockQuerySnapshot.documents).thenReturn([mockDocumentSnapshotAbenteuer]);
+    when(mockDocumentSnapshotAbenteuer.data).thenReturn(_adventure1);
+
+    when(mockFireUser.uid).thenReturn('hQtzTZdHkQde3dUxyZQ3EkzxYYn1');
+    when(mockFireUser.isEmailVerified).thenReturn(true);
+    when(mockFireUser.displayName).thenReturn('Mara');
+    
+    when(mockFireAuth.sendPasswordResetEmail(email: 'test@test.de')).thenReturn(null);
+    when(mockFireAuth.createUserWithEmailAndPassword(email: 'test@test.de', password: 'test'))
+        .thenAnswer((_) async => mockFireUser);
+    when(mockFireAuth.signInWithEmailAndPassword(email: 'test@test.de', password: 'test'))
+        .thenAnswer((_) async => mockFireUser);
+    when(mockFireAuth.currentUser())
+        .thenAnswer((_) async => mockFireUser);
+    when(mockFireAuth.signOut()).thenReturn(null);
 
     test('Test GeneralData Class', () async{
       //Initialize the class
@@ -52,20 +89,8 @@ void main() {
 
     testWidgets('Test Adventure Selection', (WidgetTester _tester) async {
       provideMockedNetworkImages(() async {
-        Map<String, dynamic> _adventure1 = {
-          'name': 'Reja', 'version': 0.6, 'image': 'https...'};
 
-        //Mock the collection
-        when(mockFirestore.collection('abenteuer')).thenReturn(
-            mockCollectionReference);
-        //Mock the stream
-        when(mockCollectionReference.snapshots())
-            .thenAnswer((_) => Stream.fromIterable([mockQuerySnapshot]));
-        when(mockQuerySnapshot.documents).thenReturn([mockDocumentSnapshotA]);
-        when(mockDocumentSnapshotA.data).thenReturn(_adventure1);
-
-        AbenteuerAuswahl _widget = AbenteuerAuswahl(firestore: mockFirestore,
-        screenHeight: 100.0);
+        AbenteuerAuswahl _widget = AbenteuerAuswahl(firestore: mockFirestore, imageHeight: 200.0);
         await _tester.pumpWidget(StaticTestWidget(returnWidget: _widget));
         await _tester.pumpAndSettle();
 
@@ -96,8 +121,7 @@ void main() {
     // Test menu
     testWidgets('Test menu', (WidgetTester _tester) async {
       AnimatedButton _widget = AnimatedButton(hero: testHeld,updateHero: ()=>null,
-          substitution: substitutions, screenWidth: 100.0, screenHeight: 100.0,
-          generalData: generalData, firestore: mockFirestore,
+          substitution: substitutions, generalData: generalData, firestore: mockFirestore,
           authenticator: authenticator);
       await _tester.pumpWidget(
           StaticTestWidget(returnWidget: _widget)
@@ -163,6 +187,43 @@ void main() {
       var _findAppText = find.text('Hundetage');
       expect(_findAppText, findsOneWidget);
     });
+
+    test('Load User from Firebase', () async{
+      //Initialize the class
+      Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
+
+      //Make sure we don't just get the same values we put in
+      Held _tmpHeld = Held.initial();
+      _tmpHeld = await _tmpHeld.load(signedIn: true, firestore: mockFirestore, authenticator: _testAuth);
+      expect(_tmpHeld.values, testHeld.values);
+    });
+
+    testWidgets('Test login screen', (WidgetTester _tester) async {
+        Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
+        StaticTestWidget _widget = StaticTestWidget(returnWidget: LoginSignUpPage(
+            authenticator: _testAuth, hero: testHeld,//, screenHeight: 800.0, screenWidth: 80.0,
+            updateHero: () => null, firestore: mockFirestore));
+
+        await _tester.pumpWidget(_widget);
+
+        //As always: see if things look like they should
+        final _findImage = find.byType(CircleAvatar);
+        expect(_findImage, findsNWidgets(2));
+        final _findUsername = find.byKey(Key('username'));
+        expect(_findUsername, findsOneWidget);
+        final _findEmail = find.byKey(Key('email'));
+        expect(_findEmail, findsOneWidget);
+        final _findPassword = find.byKey(Key('password'));
+        expect(_findPassword, findsOneWidget);
+        final _findPrimButton = find.byKey(Key('primaryButton'));
+        expect(_findPrimButton, findsOneWidget);
+        final _findSecondButton = find.byKey(Key('secondaryButton'));
+        expect(_findSecondButton, findsOneWidget);
+        final _findResDeleteButton = find.byKey(Key('resetDelete'));
+        expect(_findResDeleteButton, findsOneWidget);
+
+    });
+    //Group ends here
   });
 }
 
@@ -172,3 +233,6 @@ class MockFirestore extends Mock implements Firestore {}
 class MockCollectionReference extends Mock implements CollectionReference {}
 class MockDocumentSnapshot extends Mock implements DocumentSnapshot {}
 class MockQuerySnapshot extends Mock implements QuerySnapshot {}
+
+class MockAuthenticator extends Mock implements FirebaseAuth {}
+class MockFireUser extends Mock implements FirebaseUser {}

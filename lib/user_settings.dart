@@ -25,47 +25,29 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   Substitution substitution;
   List pageKeys;
   GlobalKey userKey;
-  double screenHeight, screenWidth;
 
   UserPageState({@required this.hero, @required this.substitution,
     @required this.heroCallback});
 
   @override
   Widget build(BuildContext context) {
-    screenHeight = MediaQuery.of(context).size.height;
-    screenWidth  = MediaQuery.of(context).size.width;
     //When we hit the back button we want to either go back to the main screen
     //or the previous one - depending on if the page view is visible or not
     return MaterialApp(home:
-        Scaffold(
-        //Avoid shifting the text field over other things in the stack when it has focus
-        resizeToAvoidBottomPadding: false,
-      //Add new screen elements here
-        body: new Container(
-            height: screenHeight,
-            width: screenWidth,
-            child: new Column(
+        Scaffold(body: new ListView(
+            shrinkWrap: true,
               //make sure to build the Image selection (Page View) on top of everything else
                 children: <Widget>[
                   //User image - wrapped to allow for hero transition from main page
-                  Container(
-                      width: screenWidth,
-                      height: screenHeight/2.3,
-                      child: UserImageRow(hero: hero,heroCallback: heroCallback)),
+                  UserImageRow(hero: hero,heroCallback: heroCallback),
                   //Username
-                  Container(
-                      padding: EdgeInsets.only(top: 10.0),
-                      width: screenWidth/2,
-                      child: UserNameField(hero:hero, heroCallback: heroCallback)),
+                  UserNameField(hero:hero, heroCallback: heroCallback),
                   //User gender
-                  Container(
-                    padding: EdgeInsets.only(top: screenHeight/10),
-                    child:GenderSelector(hero: hero, heroCallback: heroCallback),
+                  GenderSelector(hero: hero, heroCallback: heroCallback,
                   ),
             ]
          )
         )
-      )
     );
   }
 
@@ -97,7 +79,6 @@ class UserImageRowState extends State<UserImageRow> {
 
   @override
   Widget build(BuildContext context) {
-    double _screenWidth  = MediaQuery.of(context).size.width;
     //Handler for paging through the user images
     _clickHandler(bool left) {
       if (left) {
@@ -110,10 +91,8 @@ class UserImageRowState extends State<UserImageRow> {
       }
     }
 
-    double _circleSize = _screenWidth / 3;
-    double _arrowSize = _screenWidth / 10;
-    double _selectionSize = _circleSize * 2 + _arrowSize * 3;
-    double _leftPadding = (_screenWidth - _selectionSize) / 2;
+    double _circleSize = 100.0;
+    double _arrowSize = 30.0;
 
     Widget _rightButton = new IconButton(
         iconSize: _arrowSize,
@@ -124,38 +103,37 @@ class UserImageRowState extends State<UserImageRow> {
         icon: Opacity(opacity: 0.4, child: new Icon(Icons.arrow_back_ios)),
         onPressed: () => _clickHandler(true));
 
-    return Container(
-        padding: EdgeInsets.only(left: _leftPadding),
-        width: _selectionSize,
-        child: Row(children: <Widget>[
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
           _leftButton,
-          GestureDetector(
-              onHorizontalDragEnd: (DragEndDetails details) {
-                double dx = details.velocity.pixelsPerSecond.dx;
-                if (dx > 0.0 && dx > 10.0) {
-                  _clickHandler(true);
-                }
-                else if (dx < 0.0 && dx.abs() > 10.0) {
-                  _clickHandler(false);
-                }
-              },
-              child: new Hero(
-                  tag: 'userImage',
-                  child: new Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                          child: CircleAvatar(
-                              minRadius: _circleSize,
-                              maxRadius: _circleSize,
-                              backgroundColor: hero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
-                              child: Center(child: new CircleAvatar(
-                                  minRadius: _circleSize * 0.95,
-                                  maxRadius: _circleSize * 0.95,
-                                  backgroundImage: new AssetImage(
-                                      hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
-                                          :'images/user_images/fragezeichen.jpg')
-                              )
-                              )
+              GestureDetector(
+                  onHorizontalDragEnd: (DragEndDetails details) {
+                    double dx = details.velocity.pixelsPerSecond.dx;
+                    if (dx > 0.0 && dx > 10.0) {
+                      _clickHandler(true);
+                    }
+                    else if (dx < 0.0 && dx.abs() > 10.0) {
+                      _clickHandler(false);
+                    }
+                    },
+                  child: new Hero(
+                      tag: 'userImage',
+                      child: new Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                              child: CircleAvatar(
+                                  minRadius: _circleSize,
+                                  maxRadius: _circleSize,
+                                  backgroundColor: hero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
+                                  child: Center(child: new CircleAvatar(
+                                      minRadius: _circleSize * 0.95,
+                                      maxRadius: _circleSize * 0.95,
+                                      backgroundImage: new AssetImage(
+                                          hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                                              :'images/user_images/fragezeichen.jpg')
+                                  )
+                                  )
                           )
                       )
                   )
@@ -163,7 +141,6 @@ class UserImageRowState extends State<UserImageRow> {
           ),
           _rightButton
         ]
-      )
     );
   }
 }
@@ -229,25 +206,25 @@ class GenderSelectorState extends State<GenderSelector>
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth  = MediaQuery.of(context).size.width;
-    double circleWidth = screenWidth / 2.0;
+    double circleWidth = 200.0;
     Widget maleIcon = RotatedIcon(geschlecht: 'm', height: circleWidth, hero: hero,
         listenable: _animationController, rotAngle: _rotAngle, changeGender: changeGender);
     Widget femaleIcon = RotatedIcon(geschlecht: 'w', height: circleWidth, hero: hero,
         listenable: _animationController, rotAngle: _rotAngle, changeGender: changeGender);
     return Container(
-        width: circleWidth,
-        height: circleWidth,
+        padding: EdgeInsets.only(top: 60.0),
+        width: circleWidth+60,
+        height: circleWidth+60,
         child: Stack(
             children: [
-              Container(
+              Center(child: Container(
                   width: circleWidth,
                   decoration: BoxDecoration(
                     boxShadow: <BoxShadow>[BoxShadow(spreadRadius: 4)],
                       shape: BoxShape.circle,
                       color: hero.geschlecht=='m'?Colors.blueAccent:Colors.redAccent
                   )
-              ),
+              )),
               Center(child:maleIcon),
               Center(child:femaleIcon)
             ]
@@ -326,21 +303,26 @@ class UserNameFieldState extends State<UserNameField>{
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      //This should make it more comfortable to write names
-      textCapitalization: TextCapitalization.words,
-      decoration: new InputDecoration(
-          labelText: 'Name',
-          enabledBorder: new OutlineInputBorder(
-            borderSide: BorderSide(width: 3.0)
-          )
-      ),
-      maxLength: 15,
-      style: TextStyle(fontSize: 28.0,
-          fontWeight: FontWeight.w500),
-      maxLengthEnforced: true,
-      controller: _controller,
-      onChanged: (name) => updateUser(name),
-    );
+    return Center(
+        child: Container(
+          padding: EdgeInsets.only(top: 60.0),
+          width: 200.0,
+          child: TextField(
+        //This should make it more comfortable to write names
+          textCapitalization: TextCapitalization.words,
+          decoration: new InputDecoration(
+              labelText: 'Name',
+              enabledBorder: new OutlineInputBorder(
+                  borderSide: BorderSide(width: 3.0)
+              )
+          ),
+          maxLength: 15,
+          style: TextStyle(fontSize: 20.0,
+              fontWeight: FontWeight.w500),
+          maxLengthEnforced: true,
+          controller: _controller,
+          onChanged: (name) => updateUser(name),
+        )
+    ));
   }
 }

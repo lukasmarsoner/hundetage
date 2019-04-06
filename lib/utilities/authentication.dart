@@ -1,31 +1,13 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 
-abstract class BaseAuth {
-  Future<String> signIn(String email, String password);
+class Authenticator {
+  final FirebaseAuth firebaseAuth;
 
-  Future<String> signUp(String email, String password);
-
-  Future<FirebaseUser> getCurrentUser();
-
-  Future<String> getUsername();
-
-  Future<bool> deleteUser();
-
-  Future<void> sendEmailVerification();
-
-  Future<void> sendPasswordReset(String email);
-
-  Future<void> signOut();
-
-  Future<bool> isEmailVerified();
-}
-
-class Authenticator implements BaseAuth {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  Authenticator({this.firebaseAuth});
 
   Future<String> signIn(String email, String password) async {
-    FirebaseUser _user = await _firebaseAuth.signInWithEmailAndPassword(
+    FirebaseUser _user = await firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password);
     //Make sure people have verified their accounts
     bool _verified = await isEmailVerified();
@@ -38,17 +20,17 @@ class Authenticator implements BaseAuth {
   }
 
   Future<void> sendPasswordReset(String email) async{
-    _firebaseAuth.sendPasswordResetEmail(email: email);
+    firebaseAuth.sendPasswordResetEmail(email: email);
   }
 
   Future<String> signUp(String email, String password) async {
-    FirebaseUser _user = await _firebaseAuth.createUserWithEmailAndPassword(
+    FirebaseUser _user = await firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     return _user.uid;
   }
 
   Future<FirebaseUser> getCurrentUser() async {
-    FirebaseUser _user = await _firebaseAuth.currentUser();
+    FirebaseUser _user = await firebaseAuth.currentUser();
     return _user;
   }
 
@@ -72,16 +54,16 @@ class Authenticator implements BaseAuth {
   }
 
   Future<void> signOut() async {
-    return _firebaseAuth.signOut();
+    return firebaseAuth.signOut();
   }
 
   Future<void> sendEmailVerification() async {
-    FirebaseUser _user = await _firebaseAuth.currentUser();
+    FirebaseUser _user = await firebaseAuth.currentUser();
     _user.sendEmailVerification();
   }
 
   Future<bool> isEmailVerified() async {
-    FirebaseUser _user = await _firebaseAuth.currentUser();
+    FirebaseUser _user = await firebaseAuth.currentUser();
     return _user.isEmailVerified;
   }
 

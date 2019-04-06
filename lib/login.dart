@@ -4,35 +4,34 @@ import 'main.dart';
 import 'package:hundetage/utilities/firebase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class LoginSignUpPage extends StatefulWidget {
+class LoginSignUpPage extends StatefulWidget{
   final Function updateHero;
   final Authenticator authenticator;
   final Held hero;
   final Firestore firestore;
 
-  LoginSignUpPage({@required this.authenticator,
-    @required this.hero, @required this.updateHero,
-    @required this.firestore});
+  LoginSignUpPage({@required this.updateHero, @required this.authenticator,
+  @required this.hero, @required this.firestore});
 
   @override
-  State<StatefulWidget> createState() =>
-      new _LoginSignUpPageState(authenticator: authenticator,
-          updateHero: updateHero, hero: hero, firestore: firestore);
+  LoginSignUpPageState createState() => new LoginSignUpPageState(
+      authenticator: authenticator, updateHero: updateHero, hero: hero,
+      firestore: firestore);
 }
 
 enum FormMode { LOGIN, SIGNUP, SIGNOUT }
 
-class _LoginSignUpPageState extends State<LoginSignUpPage> {
+class LoginSignUpPageState extends State<LoginSignUpPage> {
   bool _isIos, _isLoading;
   Function updateHero;
   Authenticator authenticator;
-  double _circleSize, _screenWidth, _screenHeight;
+  double _circleSize;
   Held hero;
   Firestore firestore;
   String _email, _password, _errorMessage;
   FormMode _formMode = FormMode.LOGIN;
 
-  _LoginSignUpPageState({@required this.hero, @required this.authenticator,
+  LoginSignUpPageState({@required this.hero, @required this.authenticator,
     @required this.updateHero, @required this.firestore});
 
   final _formKey = new GlobalKey<FormState>();
@@ -67,8 +66,10 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   //Sign user out
   _signOut() {
     setState(() {
+      authenticator.signOut();
+      hero.signedIn = false;
+      updateHero(newHero:hero);
       _changeFormToLogin();
-      updateHero(newHero: Held.initial());
     });
   }
 
@@ -169,9 +170,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    _screenWidth  = MediaQuery.of(context).size.width;
-    _screenHeight  = MediaQuery.of(context).size.height;
-    _circleSize = _screenWidth / 3;
+    _circleSize = 80.0;
 
     _isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return new Scaffold(
@@ -184,9 +183,9 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showCircularProgress(){
-    if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
-    } return Container(height: 0.0, width: 0.0,);
+    return _isLoading
+        ?Center(child: CircularProgressIndicator())
+        :Container(height: 0.0, width: 0.0,);
   }
 
   void _showVerifyEmailSentDialog() {
@@ -314,41 +313,43 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showUser(){
-    return new Container(
-      child: Column(
-        children: <Widget>[
-          new Hero(
-          tag: 'userImage',
-          child: new Material(
-              color: Colors.transparent,
-              child: InkWell(
-                  child: CircleAvatar(
-                      minRadius: _circleSize,
-                      maxRadius: _circleSize,
-                      backgroundColor:hero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
-                      child: Center(child: new CircleAvatar(
-                          minRadius: _circleSize * 0.95,
-                          maxRadius: _circleSize * 0.95,
-                          backgroundImage: new AssetImage(
-                              hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
-                                  :'images/user_images/fragezeichen.jpg')
-                      )
-                      )
-                  )
-              )
-          )),
-          new Container(
-            padding: EdgeInsets.only(top:40.0),
-              child: new Text(
-                hero.name,
-                style: new TextStyle(
-                    fontSize: 28.0,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w300),
-              )
-          )
-        ],
-      )
+    return new Hero(
+                tag: 'userImage',
+                child: new Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                        child: CircleAvatar(
+                            minRadius: _circleSize,
+                            maxRadius: _circleSize,
+                            backgroundColor:hero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
+                            child: Center(child: new CircleAvatar(
+                                minRadius: _circleSize * 0.95,
+                                maxRadius: _circleSize * 0.95,
+                                backgroundImage: new AssetImage(
+                                    hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                                        :'images/user_images/fragezeichen.jpg')
+                            )
+                            )
+                        )
+                    ),
+                )
+    );
+  }
+
+  Widget _showUsername() {
+    return Center(
+        child: new Container(
+        padding: EdgeInsets.only(top: 40.0),
+        key: Key('username'),
+        child: new
+        Text(
+          hero.name,
+          style: new TextStyle(
+              fontSize: 20.0,
+              color: Colors.black,
+              fontWeight: FontWeight.w500),
+        )
+        )
     );
   }
 
@@ -361,13 +362,14 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         ));
   }
 
-  //Showes eigther login fields or a message that the user is already logged-in
+  //Showes either login fields or a message that the user is already logged-in
   ListView _showInputLoginMessage(){
     if(hero.signedIn){
       return new ListView(
         shrinkWrap: true,
         children: <Widget>[
           _showUser(),
+          _showUsername(),
           _showLogedInMessage(),
           _showPrimaryButton(),
           _showErrorMessage(),
@@ -380,6 +382,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         shrinkWrap: true,
         children: <Widget>[
           _showUser(),
+          _showUsername(),
           _showEmailInput(),
           _showPasswordInput(),
           _showPrimaryButton(),
@@ -396,7 +399,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
       return new Text(
         _errorMessage,
         style: TextStyle(
-            fontSize: 13.0,
+            fontSize: 20.0,
             color: hero.geschlecht == 'm' ? Colors.blueAccent : Colors.redAccent,
             height: 1.0,
             fontWeight: FontWeight.w300),
@@ -409,9 +412,10 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showEmailInput() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0.0, 30.0, 0.0, 0.0),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(0.0, 75.0, 0.0, 0.0),
       child: new TextFormField(
+        key: Key('email'),
         maxLines: 1,
         keyboardType: TextInputType.emailAddress,
         autofocus: false,
@@ -427,9 +431,10 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showPasswordInput() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
       child: new TextFormField(
+        key: Key('password'),
         maxLines: 1,
         obscureText: true,
         autofocus: false,
@@ -446,14 +451,13 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showLogedInMessage() {
     return new Container(
-        padding: EdgeInsets.only(left: _screenWidth/4-40.0,top: 50.0),
-        alignment: Alignment(0.0, 0.0),
+        alignment: Alignment.bottomCenter,
         child: Row(children: <Widget>[
         Icon(Icons.cloud_done),
         Container(
           padding: EdgeInsets.all(10.0),
           child: Text('Du bist jetzt eingelogged',
-              style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300)))
+              style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300)))
       ],)
     );
   }
@@ -462,22 +466,24 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     Text _buttonText = Text('');
     if(_formMode != FormMode.SIGNUP){
       _buttonText = new Text('Registrieren',
-          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));}
+          style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));}
     else{
       _buttonText = new Text('Anmelden',
-          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));}
+          style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));}
     return new FlatButton(
+      key: Key('secondaryButton'),
       child: _buttonText,
       onPressed:_formMode==FormMode.SIGNUP?_changeFormToLogin:_changeFormToSignUp
     );
   }
 
   Widget _showResetDeleteButton() {
-    double topPadding = hero.signedIn?_screenHeight/10:0.0;
+    double topPadding = hero.signedIn?45.0:0.0;
     double _iconSize = 40.0;
     IconData _buttonIcon;
     hero.signedIn?_buttonIcon = Icons.delete:_buttonIcon = Icons.cached;
     return new IconButton(
+        key: Key('resetDelete'),
         padding: EdgeInsets.only(top:topPadding),
         icon: Icon(_buttonIcon, size: _iconSize),
         onPressed:hero.signedIn?_showDeleteUserDialog:_showResetMailDialog
@@ -485,20 +491,20 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showPrimaryButton() {
-    double topPadding = hero.signedIn?_screenHeight/10:45.0;
+    double topPadding = 75.0;
     Text _buttonText = Text('');
     if(hero.signedIn){
       _buttonText = new Text('Abmelden',
-          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));
+          style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));
     }
     else {
       if (_formMode == FormMode.SIGNUP) {
         _buttonText = new Text('Neu registrieren',
-            style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));
+            style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));
       }
       else {
         _buttonText = new Text('Anmelden',
-            style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300));
+            style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));
       }
     }
     return new Padding(
@@ -506,6 +512,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         child: SizedBox(
           height: 40.0,
           child: new RaisedButton(
+            key: Key('primaryButton'),
             elevation: 5.0,
             shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
             color: hero.geschlecht == 'm' ? Colors.blueAccent : Colors.redAccent,

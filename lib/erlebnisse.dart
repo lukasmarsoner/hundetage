@@ -47,14 +47,11 @@ class ProfileRowErlebnisse extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth  = MediaQuery.of(context).size.width;
-    return new Padding(
-        padding: new EdgeInsets.only(left: screenWidth - (imageHeight),
-            top: imageHeight / 2.3),
-        child: new Row(
+    return new Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Container(
-              padding: EdgeInsets.only(right: screenWidth-imageHeight/2),
+              padding: EdgeInsets.only(right: 10.0, top: imageHeight / 2.3),
               child: new Text('Erlebnisse',
                   style: new TextStyle(
                       fontSize: 20.0,
@@ -62,7 +59,9 @@ class ProfileRowErlebnisse extends StatelessWidget {
                       fontWeight: FontWeight.w500)),
             ),
             //Here we set the avatar image - the image is taken from hero
-            new Container(child: new CircleAvatar(
+            new Container(
+                padding: EdgeInsets.only(right: 10.0, top: imageHeight / 2.3),
+                child: new CircleAvatar(
                 minRadius: 64.0,
                 maxRadius: 64.0,
                 backgroundColor: Colors.black,
@@ -84,7 +83,7 @@ class ProfileRowErlebnisse extends StatelessWidget {
                 )
             ))
           ],
-        ));
+        );
   }
 }
 

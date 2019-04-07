@@ -34,8 +34,6 @@ void main() {
       expect(_gridView, findsOneWidget);
       final _positioned = find.byType(Positioned);
       expect(_positioned, findsOneWidget);
-      final _padding = find.byType(Padding);
-      expect(_padding, findsNWidgets(3));
       final _tile = find.byType(GridTile);
       expect(_tile, findsOneWidget);
       final _image = find.byType(Image);

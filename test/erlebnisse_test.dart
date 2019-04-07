@@ -40,6 +40,8 @@ void main() {
       expect(_tile, findsOneWidget);
       final _image = find.byType(Image);
       expect(_image, findsOneWidget);
+      final _text = find.text('Erlebnisse');
+      expect(_text, findsOneWidget);
 
       await _tester.tap(_tile);
       await _tester.pumpAndSettle();

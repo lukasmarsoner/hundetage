@@ -33,8 +33,9 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   Widget build(BuildContext context) {
     //When we hit the back button we want to either go back to the main screen
     //or the previous one - depending on if the page view is visible or not
-    return MaterialApp(home:
-        Scaffold(body: new ListView(
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(body: new ListView(
             shrinkWrap: true,
               //make sure to build the Image selection (Page View) on top of everything else
                 children: <Widget>[

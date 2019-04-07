@@ -49,12 +49,20 @@ class ProfileRowErlebnisse extends StatelessWidget {
   Widget build(BuildContext context) {
     double screenWidth  = MediaQuery.of(context).size.width;
     return new Padding(
-        padding: new EdgeInsets.only(left: screenWidth - (imageHeight/2+16.0*3),
+        padding: new EdgeInsets.only(left: screenWidth - (imageHeight),
             top: imageHeight / 2.3),
         child: new Row(
           children: [
+            Container(
+              padding: EdgeInsets.only(right: screenWidth-imageHeight/2),
+              child: new Text('Erlebnisse',
+                  style: new TextStyle(
+                      fontSize: 20.0,
+                      color: hero.geschlecht=='m'?Colors.white:Colors.black,
+                      fontWeight: FontWeight.w500)),
+            ),
             //Here we set the avatar image - the image is taken from hero
-            new CircleAvatar(
+            new Container(child: new CircleAvatar(
                 minRadius: 64.0,
                 maxRadius: 64.0,
                 backgroundColor: Colors.black,
@@ -64,12 +72,17 @@ class ProfileRowErlebnisse extends StatelessWidget {
                     child: new Material(
                         color: Colors.transparent,
                         child: InkWell(
-                            child: Center(child: new CircleAvatar(
-                                backgroundImage: new AssetImage(
-                                    hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
-                                        :'images/user_images/fragezeichen.jpg'),
-                                minRadius: 60.0,
-                                maxRadius: 60.0))))))
+                            child: Center(
+                                child: new CircleAvatar(
+                                    backgroundImage: new AssetImage(
+                                        hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                                            :'images/user_images/fragezeichen.jpg'),
+                                    minRadius: 60.0,
+                                    maxRadius: 60.0))
+                        )
+                    )
+                )
+            ))
           ],
         ));
   }

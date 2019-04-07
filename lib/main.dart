@@ -119,7 +119,8 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
 
   @override
   Widget build(BuildContext context){
-    return MaterialApp(home: Scaffold(body:_showCircularProgress()));}
+    return MaterialApp(debugShowCheckedModeBanner: false,
+        home: Scaffold(body:_showCircularProgress()));}
 }
 
 class MyApp extends StatefulWidget{
@@ -159,6 +160,7 @@ class _MyAppState extends State<MyApp>{
   @override
   Widget build(BuildContext context){
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Hundetage',
       home: Scaffold(body: MainPage(hero: hero,
           heroCallback: heroCallback, authenticator: authenticator,

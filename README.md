@@ -6,7 +6,5 @@ Hundetage is an App for interactive good night stories. It follows the adventure
 # English:
 Hundetage ist eine App für interaktive Gute-Nacht-Geschichten. In ihr folgen die Leser den Abenteuern einer/eines noch namenlosen Held/Heldin und ihrer/seinem besten Freund, den störrischen, aber liebenswerten Kater Moritz.
 
-![alt text](images/readme/mara_1.jpg)
-![alt text](images/readme/mara_2.jpg)
-![alt text](images/readme/teemu_1.jpg)
-![alt text](images/readme/teemu_2.jpg)
+<img src="images/readme/readme_4.jpg" width="200"/>&nbsp;<img src="images/readme/readme_3.jpg" width="200"/><br> 
+<img src="images/readme/readme_1.jpg" width="200"/>&nbsp;<img src="images/readme/readme_2.jpg" width="200"/>

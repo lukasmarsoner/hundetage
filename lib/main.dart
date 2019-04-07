@@ -16,27 +16,72 @@ class SplashScreen extends StatefulWidget{
   SplashScreenState createState() => new SplashScreenState();
 }
 
-class SplashScreenState extends State<SplashScreen>{
+class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin{
   Held hero;
+  Animation<int> _characterCount;
+  AnimationController _animationController;
   bool _isLoading = true;
   Authenticator authenticator;
   Substitution substitution;
   GeneralData generalData;
   Firestore firestore;
 
+  int _stringIndex;
+  static const List<String> _textStrings = const <String>[
+    'Daten werden geladen...',
+  ];
+
+  String get _currentString => _textStrings[_stringIndex % _textStrings.length];
+
   //Check if user is currently logged-in
   Future<bool> checkLoginStatus() async{
-    if(await authenticator.getUsername()==null){return false;}else{return true;}
+    if(await authenticator.getCurrentUser()==null){return false;}else{return true;}
+  }
+
+  Future<void> _animateText() async {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    setState(() {
+      _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
+      _characterCount = new StepTween(begin: 0, end: _currentString.length)
+          .animate(
+          new CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+    });
+    await _animationController.forward();
+    _animationController.dispose();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Widget _loadingScreen(){
-    return Center(
-        child:Stack(
-        children: <Widget>[
-          Image.asset('images/icon.png'),
-          CircularProgressIndicator()
-        ]
-        )
+    return Column(
+            mainAxisAlignment:MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Image.asset('images/icon.png', width: 200.0, height: 200.0),
+              Container(
+                  padding: EdgeInsets.only(top: 10.0),
+                  child: _characterCount == null ? null : new AnimatedBuilder(
+                    key: Key('loadingText'),
+                      animation: _characterCount,
+                      builder: (BuildContext context, Widget child) {
+                      String text = _currentString.substring(0, _characterCount.value);
+                      return new Text(text, style: new TextStyle(
+                          fontSize: 20.0,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500),
+                      );
+                    })
+              ),
+              Container(padding: EdgeInsets.only(top: 10.0),
+                  child: CircularProgressIndicator())
+            ]
     );
   }
 
@@ -61,6 +106,7 @@ class SplashScreenState extends State<SplashScreen>{
   @override
   void initState() {
     super.initState();
+    _animateText();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
@@ -73,7 +119,7 @@ class SplashScreenState extends State<SplashScreen>{
 
   @override
   Widget build(BuildContext context){
-    return MaterialApp(home: _showCircularProgress());}
+    return MaterialApp(home: Scaffold(body:_showCircularProgress()));}
 }
 
 class MyApp extends StatefulWidget{

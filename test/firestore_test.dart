@@ -194,6 +194,9 @@ void main() {
       final _findImage = find.byType(Image);
       expect(_findImage, findsOneWidget);
       await _tester.pump();
+      final _findText = find.byKey(Key('loadingText'));
+      expect(_findText, findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     test('Load User from Firebase', () async{

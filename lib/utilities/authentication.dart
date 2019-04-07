@@ -34,11 +34,6 @@ class Authenticator {
     return _user;
   }
 
-  Future<String> getUsername() async {
-    FirebaseUser _user = await getCurrentUser();
-    if(_user == null){return null;}else{return _user.displayName;}
-  }
-
   Future<String> getUid() async {
     FirebaseUser _user = await getCurrentUser();
     if(_user == null){return null;}else{return _user.uid;}

@@ -130,6 +130,7 @@ class Erlebnisse extends StatelessWidget{
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
+              key: Key('PopUp'),
               contentPadding: EdgeInsets.all(30.0),
               children: <Widget>[
                 image,

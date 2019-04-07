@@ -1,8 +1,28 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hundetage/main.dart';
 import 'utilities.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:hundetage/utilities/json.dart';
 
 void main() {
+  //Mocks calls to the application directory
+  setUpAll(() async {
+    // Create a temporary directory to work with
+    final directory = await Directory.systemTemp.createTemp();
+
+    // Mock out the MethodChannel for the path_provider plugin
+    const MethodChannel('plugins.flutter.io/path_provider')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      // If you're getting the apps documents directory, return the path to the
+      // temp directory on the test environment instead.
+      if (methodCall.method == 'getApplicationDocumentsDirectory') {
+        return directory.path;
+      }
+      return null;
+    });
+  });
+
   group('Main Classes Unit-Tests', () {
     test('Substitutions', (){
       //Do the name-substitution here already
@@ -74,6 +94,13 @@ void main() {
       expect(_error, 'Exception: Invalid sex!');
       try{_testHeld.geschlecht=null;} on Exception catch(error){_error = error.toString();}
       expect(_error, 'Exception: Invalid sex!');
+    });
+
+    test('Load from JSON', () async {
+      //Write user data to file
+      writeLocalUserData(testHeld);
+      Held _tmpHeld = await loadLocalUserData();
+      expect(_tmpHeld.values, testHeld.values);
     });
 
   });

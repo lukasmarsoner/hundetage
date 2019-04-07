@@ -251,6 +251,8 @@ void main() {
         final _findWarningMail = find.text('E-Mail Adresse darf nicht leer sein');
         final _findWarningPassword = find.text('Passwort darf nicht leer sein');
         expect(_findWarningMail,findsOneWidget);
+        expect(_findWarningPassword,findsOneWidget);
+
     });
     //Group ends here
   });

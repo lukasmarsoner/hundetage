@@ -40,6 +40,11 @@ void main() {
       expect(_tile, findsOneWidget);
       final _image = find.byType(Image);
       expect(_image, findsOneWidget);
+
+      await _tester.tap(_tile);
+      await _tester.pumpAndSettle();
+      final _message = find.byKey(Key('PopUp'));
+      expect(_message, findsOneWidget);
     });
     });
   });

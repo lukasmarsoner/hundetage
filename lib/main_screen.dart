@@ -71,7 +71,6 @@ class MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Stack(children: <Widget>[
       new Scaffold(
       //Add new screen elements here

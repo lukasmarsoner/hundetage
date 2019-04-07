@@ -221,12 +221,14 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
           "All dein Fortschritt geht dadurch verlohren."),
           actions: <Widget>[
             new RaisedButton(
+              key: Key('zurück'),
               child: new Text("Zurück", style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             new FlatButton(
+              key: Key('Löschen'),
               child: new Text("Löschen"),
               onPressed: () {
                 _deleteUserData();
@@ -249,6 +251,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
           content: new Text("Möchtest du dein Passwort zurücksetzen?"),
           actions: <Widget>[
             new RaisedButton(
+              key: Key('zurücksetzen'),
               child: new Text("Zurücksetzen", style: TextStyle(color: Colors.white)),
               onPressed: () {
                 _resetPassword();
@@ -256,6 +259,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
               },
             ),
             new FlatButton(
+              key: Key('Schließen'),
               child: new Text("Schließen"),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -339,7 +343,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   Widget _showUsername() {
     return Center(
         child: new Container(
-        padding: EdgeInsets.only(top: 40.0),
+        padding: EdgeInsets.only(top: 20.0),
         key: Key('username'),
         child: new
         Text(
@@ -451,14 +455,17 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showLogedInMessage() {
     return new Container(
-        alignment: Alignment.bottomCenter,
-        child: Row(children: <Widget>[
-        Icon(Icons.cloud_done),
-        Container(
-          padding: EdgeInsets.all(10.0),
-          child: Text('Du bist jetzt eingelogged',
-              style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300)))
-      ],)
+        padding: EdgeInsets.only(top: 50.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(Icons.cloud_done),
+            Container(
+                padding: EdgeInsets.all(10.0),
+                child: Text('Du bist jetzt eingelogged',
+                    style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300)))
+          ]
+        )
     );
   }
 
@@ -478,7 +485,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showResetDeleteButton() {
-    double topPadding = hero.signedIn?45.0:0.0;
+    double topPadding = hero.signedIn?30.0:0.0;
     double _iconSize = 40.0;
     IconData _buttonIcon;
     hero.signedIn?_buttonIcon = Icons.delete:_buttonIcon = Icons.cached;
@@ -491,7 +498,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showPrimaryButton() {
-    double topPadding = 75.0;
     Text _buttonText = Text('');
     if(hero.signedIn){
       _buttonText = new Text('Abmelden',
@@ -508,7 +514,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       }
     }
     return new Padding(
-        padding: EdgeInsets.fromLTRB(0.0, topPadding, 0.0, 0.0),
+        padding: EdgeInsets.only(top: 50.0),
         child: SizedBox(
           height: 40.0,
           child: new RaisedButton(

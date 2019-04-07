@@ -8,23 +8,99 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async{
-  runApp(MyApp());
+  runApp(SplashScreen());
+}
+
+class SplashScreen extends StatefulWidget{
+  @override
+  SplashScreenState createState() => new SplashScreenState();
+}
+
+class SplashScreenState extends State<SplashScreen>{
+  Held hero;
+  bool _isLoading = true;
+  Authenticator authenticator;
+  Substitution substitution;
+  GeneralData generalData;
+  Firestore firestore;
+
+  //Check if user is currently logged-in
+  Future<bool> checkLoginStatus() async{
+    if(await authenticator.getUsername()==null){return false;}else{return true;}
+  }
+
+  Widget _loadingScreen(){
+    return Center(
+        child:Stack(
+        children: <Widget>[
+          Image.asset('images/icon.png'),
+          CircularProgressIndicator()
+        ]
+        )
+    );
+  }
+
+  Future<void> _loadData() async{
+    firestore = Firestore();
+    authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
+    generalData = await loadGeneralData(firestore);
+    bool _signedIn = await checkLoginStatus();
+    hero = Held.initial();
+    hero = await hero.load(authenticator: authenticator,
+        signedIn: _signedIn,
+        firestore: firestore);
+    if (hero == null) {
+      hero = Held.initial();
+    }
+    //Check if we are already logged-in
+    hero.signedIn = _signedIn;
+    substitution = Substitution(hero: hero, generalData: generalData);
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  Widget _showCircularProgress(){
+    return _isLoading
+        ?Center(child: _loadingScreen())
+        :MyApp(hero: hero, authenticator: authenticator,
+        generalData: generalData, substitution: substitution, firestore: firestore);
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return MaterialApp(home: _showCircularProgress());}
 }
 
 class MyApp extends StatefulWidget{
+  final Held hero;
+  final Authenticator authenticator;
+  final Substitution substitution;
+  final GeneralData generalData;
+  final Firestore firestore;
+
+  MyApp({@required this.hero, @required this.authenticator, @required this.generalData,
+  @required this.substitution, @required this.firestore});
 
   @override
-  _MyAppState createState() => new _MyAppState();
+  _MyAppState createState() => new _MyAppState(hero: hero, substitution: substitution,
+  generalData: generalData, firestore: firestore, authenticator: authenticator);
 }
 
 //All global should be store and kept-updated here
 class _MyAppState extends State<MyApp>{
   Held hero;
-  bool _isLoading;
   Authenticator authenticator;
   Substitution substitution;
   GeneralData generalData;
   Firestore firestore;
+
+  _MyAppState({@required this.hero, @required this.authenticator,
+  @required this.generalData, @required this.firestore, @required this.substitution});
 
   void heroCallback({Held newHero}){
     setState(() {hero = newHero;});
@@ -34,52 +110,13 @@ class _MyAppState extends State<MyApp>{
         :writeLocalUserData(hero);
   }
 
-  //Check if user is currently logged-in
-  Future<bool> checkLoginStatus() async{
-    if(await authenticator.getUsername()==null){return false;}else{return true;}
-  }
-
-  Future<void> _loadAndInitializeMain() async {
-    firestore = Firestore();
-    authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
-    substitution = Substitution(hero: hero,generalData: generalData);
-    hero = Held.initial();
-    bool _signedIn = await checkLoginStatus();
-    hero = await hero.load(authenticator:authenticator, signedIn: _signedIn, firestore: firestore);
-    if(hero==null){hero = Held.initial();}
-    generalData = await loadGeneralData(firestore);
-    //Check if we are already logged-in
-    hero.signedIn = _signedIn;
-    setState(() {
-      hero = hero;
-      generalData = generalData;
-      firestore = firestore;
-      authenticator = authenticator;
-      substitution = substitution;
-    });
-  }
-
-  void _pageAndLoadingScreen(){
-    setState(()=>_isLoading = true);
-    _loadAndInitializeMain();
-    setState(()=>_isLoading = false);
-  }
-
-  Widget _showCircularProgress(){
-    return _isLoading
-    ?Center(child: CircularProgressIndicator())
-    :Container(height: 0.0, width: 0.0,);
-  }
-
   @override
   Widget build(BuildContext context){
-    _pageAndLoadingScreen();
     return MaterialApp(
       title: 'Hundetage',
-      home: Scaffold(body: new Stack(children: <Widget>[MainPage(hero: hero,
+      home: Scaffold(body: MainPage(hero: hero,
           heroCallback: heroCallback, authenticator: authenticator,
-          generalData: generalData, substitution:substitution, firestore: firestore),
-          _showCircularProgress()])),
+          generalData: generalData, substitution:substitution, firestore: firestore)),
     );
   }
 }

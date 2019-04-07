@@ -188,6 +188,14 @@ void main() {
       expect(_findAppText, findsOneWidget);
     });
 
+    testWidgets('Test login screen', (WidgetTester _tester) async {
+      SplashScreen _widget = new SplashScreen();
+      await _tester.pumpWidget(_widget);
+      final _findImage = find.byType(Image);
+      expect(_findImage, findsOneWidget);
+      await _tester.pump();
+    });
+
     test('Load User from Firebase', () async{
       //Initialize the class
       Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
@@ -202,7 +210,7 @@ void main() {
         Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
         StaticTestWidget _widget = StaticTestWidget(returnWidget: LoginSignUpPage(
             authenticator: _testAuth, hero: testHeld,//, screenHeight: 800.0, screenWidth: 80.0,
-            updateHero: () => null, firestore: mockFirestore));
+            updateHero: ({Held newHero}) => null, firestore: mockFirestore));
 
         await _tester.pumpWidget(_widget);
 
@@ -222,6 +230,27 @@ void main() {
         final _findResDeleteButton = find.byKey(Key('resetDelete'));
         expect(_findResDeleteButton, findsOneWidget);
 
+        await _tester.enterText(_findEmail, 'test@test.de');
+        await _tester.enterText(_findPassword, 'test');
+        await _tester.tap(_findPrimButton);
+
+        await _tester.pumpAndSettle();
+        //See if the username was loaded corrects
+        expect(find.text('Mara'),findsOneWidget);
+        expect(_findPrimButton,findsOneWidget);
+        await _tester.tap(_findPrimButton);
+
+        await _tester.tap(_findResDeleteButton);
+        await _tester.pumpAndSettle();
+        await _tester.tap(find.byKey(Key('zurück')));
+        await _tester.pumpAndSettle();
+        await _tester.tap(_findResDeleteButton);
+        await _tester.pumpAndSettle();
+        await _tester.tap(find.byKey(Key('zurücksetzen')));
+        await _tester.pumpAndSettle();
+        final _findWarningMail = find.text('E-Mail Adresse darf nicht leer sein');
+        final _findWarningPassword = find.text('Passwort darf nicht leer sein');
+        expect(_findWarningMail,findsOneWidget);
     });
     //Group ends here
   });

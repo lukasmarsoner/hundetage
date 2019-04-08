@@ -9,6 +9,7 @@ import 'package:image_test_utils/image_test_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hundetage/utilities/authentication.dart';
+import 'package:hundetage/adventures.dart';
 import 'package:hundetage/login.dart';
 
 void main() {
@@ -19,16 +20,19 @@ void main() {
     final MockAuthenticator mockFireAuth = MockAuthenticator();
 
     final CollectionReference mockCollectionReference = MockCollectionReference();
+    final CollectionReference mockStoryCollectionReference = MockCollectionReference();
 
     final DocumentSnapshot mockDocumentSnapshotGendering = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotErlebnisse = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotUser = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotAbenteuer = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotGeschichte = MockDocumentSnapshot();
 
     final DocumentReference mockDocumentReferenceGendering = MockDocumentReference();
     final DocumentReference mockDocumentReferenceErlebnisse = MockDocumentReference();
     final DocumentReference mockDocumentReferenceUser = MockDocumentReference();
     final QuerySnapshot mockQuerySnapshot = MockQuerySnapshot();
+    final QuerySnapshot mockStoryQuerySnapshot = MockQuerySnapshot();
 
     //Data used for testing - we will return this in our mocked request to Firebase
     //The data returnd from firebase is Map<dynamic,dynamic>, so the versions handed
@@ -43,6 +47,10 @@ void main() {
       'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
     Map<String, dynamic> _adventure1 = {
       'name': 'Reja', 'version': 0.6, 'image': 'https...'};
+    Map<String, dynamic> _geschichte1 = {
+      'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
+      'forwards': {'0':1,'1':5},'image': 'avatar', 'text': 'test',
+      'options': {'0':'test0','1':'test1'}};
 
     //Mock the collection
     when(mockFirestore.collection('general_data')).thenReturn(mockCollectionReference);
@@ -64,6 +72,12 @@ void main() {
     when(mockCollectionReference.snapshots()).thenAnswer((_) => Stream.fromIterable([mockQuerySnapshot]));
     when(mockQuerySnapshot.documents).thenReturn([mockDocumentSnapshotAbenteuer]);
     when(mockDocumentSnapshotAbenteuer.data).thenReturn(_adventure1);
+
+    when(mockFirestore.collection('Roja')).thenReturn(mockStoryCollectionReference);
+    when(mockStoryCollectionReference.snapshots()).thenAnswer((_) => Stream.fromIterable([mockStoryQuerySnapshot]));
+    when(mockStoryCollectionReference.getDocuments()).thenAnswer((_) async => mockStoryQuerySnapshot);
+    when(mockStoryQuerySnapshot.documents).thenReturn([mockDocumentSnapshotGeschichte]);
+    when(mockDocumentSnapshotGeschichte.data).thenReturn(_geschichte1);
 
     when(mockFireUser.uid).thenReturn('hQtzTZdHkQde3dUxyZQ3EkzxYYn1');
     when(mockFireUser.isEmailVerified).thenReturn(true);
@@ -205,6 +219,7 @@ void main() {
 
       //Make sure we don't just get the same values we put in
       Held _tmpHeld = Held.initial();
+
       _tmpHeld = await _tmpHeld.load(signedIn: true, firestore: mockFirestore, authenticator: _testAuth);
       expect(_tmpHeld.values, testHeld.values);
     });
@@ -212,7 +227,7 @@ void main() {
     testWidgets('Test login screen', (WidgetTester _tester) async {
         Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
         StaticTestWidget _widget = StaticTestWidget(returnWidget: LoginSignUpPage(
-            authenticator: _testAuth, hero: testHeld,//, screenHeight: 800.0, screenWidth: 80.0,
+            authenticator: _testAuth, hero: testHeld,
             updateHero: ({Held newHero}) => null, firestore: mockFirestore));
 
         await _tester.pumpWidget(_widget);
@@ -255,8 +270,37 @@ void main() {
         final _findWarningPassword = find.text('Passwort darf nicht leer sein');
         expect(_findWarningMail,findsOneWidget);
         expect(_findWarningPassword,findsOneWidget);
-
     });
+
+    testWidgets('Test loading page', (WidgetTester _tester) async {
+      StoryLoadingScreen _widget = StoryLoadingScreen(updateHero: (_) => null,
+          hero: testHeld, firestore: mockFirestore, storyname: 'Roja',
+          geschichte: testGeschichte);
+
+      await _tester.pumpWidget(_widget);
+      expect(find.byKey(Key('loadingText')), findsOneWidget);
+      expect(find.byType(Image), findsOneWidget);
+      expect(_widget.storyname,'Roja');
+      expect(_widget.geschichte.storyname, 'Roja');
+      });
+
+    test('Test loading story data', () async{
+      Geschichte _geschichte = Geschichte(hero: testHeld, storyname: 'Roja');
+      _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
+
+      Map<String, dynamic> _checkGeschichte = {
+        'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
+        'forwards': {'0':1,'1':5},'image': 'avatar', 'text': 'test',
+        'options': {'0':'test0','1':'test1'}};
+
+      List<String> _keys = _geschichte.screens[0].keys.toList();
+
+      //Check if all data was returned correctly and the story is initialized as it should
+      for(int i=0;i<_keys.length;i++){
+        expect(_geschichte.screens[0][_keys[i]], _checkGeschichte[_keys[i]]);
+      }
+    });
+
     //Group ends here
   });
 }

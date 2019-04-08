@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
 import 'package:hundetage/utilities/authentication.dart';
+import 'package:hundetage/adventures.dart';
 
 class StaticTestWidget extends StatelessWidget{
   final Widget returnWidget;
@@ -24,6 +25,7 @@ Map<String,Map<String,String>> erlebnisseTestData = {
   'besteFreunde':{'text': 'Some test Text', 'image': 'https://example.com/image.png'},
   'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
 final testHeld = new Held.test();
+final testGeschichte = new Geschichte(hero: testHeld, storyname: 'Roja');
 final generalData = new GeneralData(erlebnisse: erlebnisseTestData,gendering: genderingTestData);
 final substitutions = new Substitution(hero: testHeld, generalData: generalData);
 final authenticator = new Authenticator();

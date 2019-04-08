@@ -40,7 +40,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
 
   Future<void> _animateText() async {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     setState(() {

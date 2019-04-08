@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:hundetage/main.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hundetage/adventures.dart';
 
 //Loads data needed by all adventures from firestore
 Future<GeneralData> loadGeneralData(Firestore firestore) async {
@@ -50,6 +51,18 @@ Future<Held> loadFirestoreUserData({Firestore firestore, Authenticator authentic
   _userData['screens'] = List<int>.from(_userData['screens']);
   return new Held.fromMap(_userData);
   }
+}
+
+//Loads story data from firestore
+Future<Geschichte> loadGeschichte({Firestore firestore, Geschichte geschichte}) async {
+  CollectionReference _collectionReference = firestore.collection(geschichte.storyname);
+  QuerySnapshot _documentSnapshop = await _collectionReference.getDocuments();
+  List<DocumentSnapshot> _documentList = _documentSnapshop.documents;
+
+  List<Map<String,dynamic>> _screenlist = _documentList.map((_screen) => _screen.data).toList();
+  geschichte.setStory(_screenlist);
+
+  return geschichte;
 }
 
 //Updates user data in firestore

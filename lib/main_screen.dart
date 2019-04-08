@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'erlebnisse.dart';
 import 'main.dart';
 import 'package:hundetage/utilities/authentication.dart';
+import 'package:hundetage/adventures.dart';
 
 //Cuts the square box on the top of the screen diagonally
 class _DiagonalClipper extends CustomClipper<Path> {
@@ -76,7 +77,8 @@ class MainPageState extends State<MainPage> {
       //Add new screen elements here
         body: new Stack(
               children: <Widget>[
-                AbenteuerAuswahl(imageHeight: _imageHeight, firestore: firestore),
+                AbenteuerAuswahl(imageHeight: _imageHeight, firestore: firestore,
+                    hero: hero, updateHero: updateHero, substitution: substitution),
                 TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
                 License(),
@@ -211,7 +213,7 @@ class ProfileRow extends StatelessWidget {
                   new Text(
                     hero.berufe[hero.iBild][hero.geschlecht],
                     style: new TextStyle(
-                        fontSize: 16.0,
+                        fontSize: 13.0,
                         fontStyle: FontStyle.italic,
                         color: hero.geschlecht=='m'?Colors.white:Colors.black,
                         fontWeight: FontWeight.w300),
@@ -482,8 +484,12 @@ class MenuButton extends StatelessWidget {
 class AbenteuerAuswahl extends StatelessWidget{
   final Firestore firestore;
   final double imageHeight;
+  final Held hero;
+  final Function updateHero;
+  final Substitution substitution;
 
-  AbenteuerAuswahl({@required this.imageHeight, @required this.firestore});
+  AbenteuerAuswahl({@required this.imageHeight, @required this.firestore,
+  @required this.hero, @required this.updateHero, @required this.substitution});
 
   @override
   Widget build(BuildContext context) {
@@ -492,29 +498,47 @@ class AbenteuerAuswahl extends StatelessWidget{
           stream: firestore.collection('abenteuer').snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return LinearProgressIndicator();
-            return _buildTiledSelection(context, snapshot.data.documents);
+            return _buildTiledSelection(context: context, snapshot: snapshot.data.documents,
+                hero: hero, substitution: substitution, updateHero: updateHero, firestore: firestore);
             },
         )
     );
   }
 
   //Builds the tiled list for adventure selection
-  Widget _buildTiledSelection(BuildContext context, List<DocumentSnapshot> snapshot) {
+  Widget _buildTiledSelection({BuildContext context, List<DocumentSnapshot> snapshot,
+      Held hero, Substitution substitution, Function updateHero, Firestore firestore}) {
     return GridView.count(
       crossAxisCount: 2,
       padding: EdgeInsets.only(top: 80.0, left: 10.0),
-      children: snapshot.map((data) => _buildTile(context, data)).toList(),
+      children: snapshot.map((data) => _buildTile(context: context, data: data,
+      hero: hero, firestore: firestore, updateHero: updateHero, substitution: substitution)).toList(),
     );
   }
 
-  Widget _buildTile(BuildContext context, DocumentSnapshot data) {
+  Widget _buildTile({BuildContext context, DocumentSnapshot data, Held hero,
+    Firestore firestore, Function updateHero, Substitution substitution}) {
     final record = Adventure.fromSnapshot(data);
     return GridTile(
         child: Card(
-        child: MaterialButton(onPressed: () => print(record.name),
+          child: MaterialButton(onPressed: () => _gotoAdventureScreen(
+            context: context, data: data, hero: hero, firestore: firestore,
+            updateHero: updateHero, substitution: substitution, storyname: record.name),
               child: record.image),
               ),
         );
+  }
+
+  _gotoAdventureScreen({BuildContext context, DocumentSnapshot data, Held hero,
+    Firestore firestore, Function updateHero, Substitution substitution,
+    String storyname}){
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => StoryLoadingScreen(
+          hero: hero, updateHero: updateHero, firestore: firestore,
+          storyname: storyname, substitution: substitution,
+        geschichte: Geschichte(hero: hero, storyname: storyname)))
+    );
   }
 }
 

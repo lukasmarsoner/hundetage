@@ -104,7 +104,8 @@ void main() {
     testWidgets('Test Adventure Selection', (WidgetTester _tester) async {
       provideMockedNetworkImages(() async {
 
-        AbenteuerAuswahl _widget = AbenteuerAuswahl(firestore: mockFirestore, imageHeight: 200.0);
+        AbenteuerAuswahl _widget = AbenteuerAuswahl(firestore: mockFirestore, imageHeight: 200.0,
+        updateHero: (_) => null, substitution: substitutions, hero: testHeld);
         await _tester.pumpWidget(StaticTestWidget(returnWidget: _widget));
         await _tester.pumpAndSettle();
 
@@ -113,6 +114,7 @@ void main() {
         expect(_findTile, findsOneWidget);
         final _image = find.byType(Image);
         expect(_image, findsOneWidget);
+        _tester.tap(_findTile);
       });
     });
 
@@ -275,7 +277,7 @@ void main() {
     testWidgets('Test loading page', (WidgetTester _tester) async {
       StoryLoadingScreen _widget = StoryLoadingScreen(updateHero: (_) => null,
           hero: testHeld, firestore: mockFirestore, storyname: 'Roja',
-          geschichte: testGeschichte);
+          geschichte: testGeschichte, substitution: substitutions,);
 
       await _tester.pumpWidget(_widget);
       expect(find.byKey(Key('loadingText')), findsOneWidget);
@@ -299,6 +301,15 @@ void main() {
       for(int i=0;i<_keys.length;i++){
         expect(_geschichte.screens[0][_keys[i]], _checkGeschichte[_keys[i]]);
       }
+    });
+
+    testWidgets('Test Adventure', (WidgetTester _tester) async {
+      GeschichteMainScreen _widget = GeschichteMainScreen(updateHero: (_) => null,
+        hero: testHeld, geschichte: testGeschichte, substitution: substitutions);
+
+      await _tester.pumpWidget(_widget);
+      expect(find.byType(CircleAvatar), findsNWidgets(2));
+
     });
 
     //Group ends here

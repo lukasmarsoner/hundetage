@@ -3,17 +3,88 @@ import 'package:hundetage/main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hundetage/utilities/firebase.dart';
 
+//Cuts the square box on the top of the screen diagonally
+class _DiagonalAdventureClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = new Path();
+    path.lineTo(0.0, size.height - 20.0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(size.width, 0.0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+}
+
+//Builds empty panel on top of the screen
+class TopAdventurePanel extends StatelessWidget {
+  final double imageHeight;
+  final Held hero;
+
+  TopAdventurePanel({@required this.imageHeight, @required this.hero});
+  @override
+  Widget build(BuildContext context) {
+    return new Positioned.fill(
+      bottom: null,
+      child: new ClipPath(
+          clipper: new _DiagonalAdventureClipper(),
+          child: Container(
+              height: imageHeight,
+              width: MediaQuery.of(context).size.width,
+              color: hero.geschlecht == 'm'? Colors.blueAccent : Colors.redAccent)
+      ),
+    );
+  }
+}
+
+//Builds the user image and name to show in top panel
+class ProfileAdventureRow extends StatelessWidget {
+  final Held hero;
+  final double imageHeight;
+
+  ProfileAdventureRow({@required this.imageHeight, @required this.hero});
+
+  @override
+  Widget build(BuildContext context) {
+    return new Padding(
+        padding: new EdgeInsets.only(left: 16.0, top: 30.0),
+        child: new Row(
+          children: [
+            //Here we set the avatar image - the image is taken from hero
+            new CircleAvatar(
+                minRadius: 64.0,
+                maxRadius: 64.0,
+                backgroundColor: Colors.black,
+                //Used to transition the image to other screens
+                child: new Hero(
+                    tag: 'userImage',
+                    child: new Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                            child: Center(child: new CircleAvatar(
+                                backgroundImage: new AssetImage(
+                                    hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
+                                        :'images/user_images/fragezeichen.jpg'),
+                                minRadius: 60.0,
+                                maxRadius: 60.0))))))]));
+  }
+}
+
 class GeschichteMainScreen extends StatefulWidget{
   final Function updateHero;
   final Held hero;
   final Geschichte geschichte;
+  final Substitution substitution;
 
   GeschichteMainScreen({@required this.updateHero, @required this.hero,
-  @required this.geschichte});
+  @required this.geschichte, @required this.substitution});
 
   @override
   GeschichteMainScreenState createState() => GeschichteMainScreenState(updateHero: updateHero,
-  hero: hero, geschichte: geschichte);
+  hero: hero, geschichte: geschichte, substitution: substitution);
 }
 
 class GeschichteMainScreenState extends State<GeschichteMainScreen> with TickerProviderStateMixin{
@@ -21,18 +92,22 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen> with TickerP
   Animation<int> _characterCount;
   Function updateHero;
   Geschichte geschichte;
+  Substitution substitution;
   Held hero;
 
   GeschichteMainScreenState({@required this.updateHero, @required this.hero,
-  @required this.geschichte});
+  @required this.geschichte, @required this.substitution});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-            body: Container(
-
+            body: new Stack(
+              children: <Widget>[
+                TopAdventurePanel(imageHeight: 100.0, hero: hero),
+                ProfileAdventureRow(imageHeight: 100.0, hero: hero),
+                ],
             )
         )
     );
@@ -54,15 +129,17 @@ class StoryLoadingScreen extends StatefulWidget{
   final Held hero;
   final String storyname;
   final Firestore firestore;
+  final Substitution substitution;
   final Geschichte geschichte;
 
   StoryLoadingScreen({@required this.updateHero, @required this.hero,
-  @required this.firestore, @required this.storyname, @required this.geschichte});
+  @required this.firestore, @required this.storyname, @required this.geschichte,
+  @required this.substitution});
 
   @override
   StoryLoadingScreenState createState() => new StoryLoadingScreenState(hero: hero,
   updateHero: updateHero, firestore: firestore, storyname: storyname,
-  geschichte: geschichte);
+  geschichte: geschichte, substitution: substitution);
 }
 
 class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProviderStateMixin{
@@ -70,13 +147,15 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
   String storyname;
   Function updateHero;
   Geschichte geschichte;
+  Substitution substitution;
   Animation<int> _characterCount;
   AnimationController _animationController;
   bool _isLoading = true;
   Firestore firestore;
 
   StoryLoadingScreenState({@required this.updateHero, @required this.hero,
-    @required this.firestore, @required this.storyname, @required this.geschichte});
+    @required this.firestore, @required this.storyname, @required this.geschichte,
+    @required this.substitution});
 
   int _stringIndex;
   static const List<String> _textStrings = const <String>[
@@ -148,7 +227,7 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
     return _isLoading
         ?Center(child: _loadingScreen())
         :GeschichteMainScreen(hero: hero, updateHero: updateHero,
-        geschichte: geschichte);
+        geschichte: geschichte, substitution: substitution);
   }
 
   @override

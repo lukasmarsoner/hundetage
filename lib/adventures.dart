@@ -87,13 +87,12 @@ class GeschichteMainScreen extends StatefulWidget{
   hero: hero, geschichte: geschichte, substitution: substitution);
 }
 
-class GeschichteMainScreenState extends State<GeschichteMainScreen> with TickerProviderStateMixin{
-  AnimationController _animationController;
-  Animation<int> _characterCount;
+class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   Function updateHero;
   Geschichte geschichte;
   Substitution substitution;
   Held hero;
+  double imageHeight = 100.0;
 
   GeschichteMainScreenState({@required this.updateHero, @required this.hero,
   @required this.geschichte, @required this.substitution});
@@ -105,12 +104,13 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen> with TickerP
         home: Scaffold(
             body: new Stack(
               children: <Widget>[
-                TopAdventurePanel(imageHeight: 100.0, hero: hero),
-                ProfileAdventureRow(imageHeight: 100.0, hero: hero),
+                //StoryText(hero: hero, substitution: substitution,
+                //  geschichte: geschichte, imageHeight: imageHeight,),
+                TopAdventurePanel(imageHeight: imageHeight, hero: hero),
+                ProfileAdventureRow(imageHeight: imageHeight, hero: hero),
                 ],
             )
-        )
-    );
+    ));
   }
 }
 
@@ -232,6 +232,93 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
 
   @override
   Widget build(BuildContext context){
-    return MaterialApp(debugShowCheckedModeBanner: false,
-        home: Scaffold(body:_showCircularProgress()));}
+    return _showCircularProgress();}
+}
+
+class StoryText extends StatefulWidget{
+  final Substitution substitution;
+  final Geschichte geschichte;
+  final Held hero;
+  final double imageHeight;
+
+  StoryText({@required this.geschichte, @required this.substitution,
+  @required this.hero, @required this.imageHeight});
+
+  @override
+  StoryTextState createState() => new StoryTextState(geschichte: geschichte,
+      substitution: substitution, hero: hero, imageHeight: imageHeight);
+}
+
+class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
+  Substitution substitution;
+  Geschichte geschichte;
+  Animation<int> _characterCount;
+  Held hero;
+  AnimationController _animationController;
+  int _stringIndex;
+  double imageHeight;
+  List<String> _textStrings;
+
+
+  StoryTextState({@required this.substitution, @required this.geschichte,
+  @required this.hero, @required this.imageHeight});
+
+  String get _currentString => _textStrings[_stringIndex % _textStrings.length];
+
+  Future<void> _animateText() async {
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 5),
+      vsync: this,
+    );
+    setState(() {
+      _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
+      _characterCount = new StepTween(begin: 0, end: _currentString.length)
+          .animate(
+          new CurvedAnimation(parent: _animationController, curve: Curves.easeInOutCubic));
+    });
+    await _animationController.forward();
+    _animationController.dispose();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  String _convertText(String textIn){
+    return substitution.applyAllSubstitutions(textIn);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _textStrings = <String>[_convertText(geschichte.screens[hero.iScreen]['text'])];
+    _animateText();
+  }
+
+  Widget _textScreen(){
+    return ListView(
+        children: <Widget>[
+          Container(
+              padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
+              child: _characterCount == null ? null : new AnimatedBuilder(
+                  key: Key('storyText'),
+                  animation: _characterCount,
+                  builder: (BuildContext context, Widget child) {
+                    String text = _currentString.substring(0, _characterCount.value);
+                    return new Text(text, style: new TextStyle(
+                        fontSize: 20.0,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w300),
+                    );
+                  })
+          ),
+        ]
+    );
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return _textScreen();}
 }

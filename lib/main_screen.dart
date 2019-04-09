@@ -72,8 +72,7 @@ class MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: <Widget>[
-      new Scaffold(
+    return new Scaffold(
       //Add new screen elements here
         body: new Stack(
               children: <Widget>[
@@ -90,8 +89,7 @@ class MainPageState extends State<MainPage> {
                     updateHero:updateHero,
                     hero:hero)],
             ),
-        )
-    ]);
+    );
   }
 }
 

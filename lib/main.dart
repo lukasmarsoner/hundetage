@@ -85,7 +85,8 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
   }
 
   Future<void> _loadData() async{
-    firestore = Firestore();
+    firestore = Firestore.instance;
+    firestore.settings(timestampsInSnapshotsEnabled: true);
     authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
     generalData = await loadGeneralData(firestore);
     bool _signedIn = await checkLoginStatus();

@@ -26,7 +26,7 @@ Map<String,Map<String,String>> erlebnisseTestData = {
   'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
 Map<String, dynamic> geschichteTestData = {
   'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
-  'forwards': {'0':1,'1':5},'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+  'forwards': {'0':'1','1':'5'},'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
   'options': {'0':'test0','1':'test1'}};
 final testHeld = new Held.test();
 final testGeschichte = new Geschichte(hero: testHeld, storyname: 'Roja');

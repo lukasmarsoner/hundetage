@@ -121,7 +121,16 @@ class Geschichte{
 
   Geschichte({@required this.hero, @required this.storyname, this.screens});
 
-  void setStory(List<Map<String,dynamic>> _map) => screens = _map;
+  //Make sure all maps have the correct types
+  void setStory(List<Map<String,dynamic>> _map){
+    screens = _map;
+    for(int i=0;i<screens.length;i++){
+      screens[i]['options'] = Map<String,String>.from(screens[i]['options']);
+      screens[i]['forwards'] = Map<String,String>.from(screens[i]['forwards']);
+      screens[i]['erlebnisse'] = Map<String,String>.from(screens[i]['erlebnisse']);
+      screens[i]['conditions'] = Map<String,String>.from(screens[i]['conditions']);
+    }
+  }
 }
 
 class StoryLoadingScreen extends StatefulWidget{
@@ -234,6 +243,74 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
     return Scaffold(body: _showCircularProgress());}
 }
 
+class StringAnimation extends StatefulWidget{
+  final String animatedString;
+  final Function textCallback;
+  final AnimationController animationController;
+  final int delay, totalLength;
+
+  StringAnimation({@required this.animatedString, @required this.delay,
+    @required this.totalLength, @required this.animationController,
+    this.textCallback});
+
+  @override
+  StringAnimationState createState() => new StringAnimationState(animatedString: animatedString,
+      textCallback: textCallback, delay: delay, totalLength: totalLength,
+      animationController: animationController);
+}
+
+class StringAnimationState extends State<StringAnimation> with TickerProviderStateMixin{
+  String animatedString;
+  Function textCallback;
+  final int delay, totalLength;
+  Animation<int> _characterCount;
+  List<String> _textStrings;
+  int _stringIndex;
+  AnimationController animationController;
+
+  StringAnimationState({@required this.animatedString, @required this.delay,
+    @required this.totalLength, @required this.animationController, this.textCallback});
+
+  String get _currentString => _textStrings[_stringIndex % _textStrings.length];
+
+  Future<void> _animateText() async {
+    //Start and stop values for controlling the animation
+    double _start = delay.toDouble() / totalLength;
+    double _stop = (delay+animatedString.length).toDouble() / totalLength;
+    setState(() {
+      _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
+      _characterCount = new StepTween(begin: 0, end: animatedString.length)
+          .animate(new CurvedAnimation(parent: animationController,
+          curve: Interval(_start, _stop, curve: Curves.easeInOutCubic)));
+    });
+    await animationController.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _textStrings = <String>[animatedString];
+    //In case there is no callback function we just do nothing at all
+    if(textCallback==null){textCallback=()=>null;}
+    _animateText();
+    return _characterCount == null ? Container() : new AnimatedBuilder(
+        animation: _characterCount,
+        builder: (BuildContext context, Widget child) {
+          String text = _currentString.substring(0, _characterCount.value);
+          return new GestureDetector(
+            onTap: textCallback,
+              child: new Text(
+                text,
+                key: Key('storyText'),
+                style: new TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w300),
+            )
+          );
+        });
+  }
+}
+
 class StoryText extends StatefulWidget{
   final Substitution substitution;
   final Geschichte geschichte;
@@ -251,64 +328,70 @@ class StoryText extends StatefulWidget{
 class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   Substitution substitution;
   Geschichte geschichte;
-  Animation<int> _characterCount;
   Held hero;
-  AnimationController _animationController;
-  int _stringIndex;
+  int totalTextLength;
+  List<int> delays = <int>[];
+  final int duration = 5;
+  String storyText;
+  List<String> optionTexts = <String>[];
   double imageHeight;
-  List<String> _textStrings;
-
+  AnimationController animationController;
 
   StoryTextState({@required this.substitution, @required this.geschichte,
   @required this.hero, @required this.imageHeight});
 
-  String get _currentString => _textStrings[_stringIndex % _textStrings.length];
-
-  Future<void> _animateText() async {
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 5),
+  @override
+  initState() {
+    super.initState();
+    animationController = AnimationController(
+      duration: Duration(seconds: duration),
       vsync: this,
     );
-    setState(() {
-      _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
-      _characterCount = new StepTween(begin: 0, end: _currentString.length)
-          .animate(new CurvedAnimation(parent: _animationController, curve: Curves.easeInOutCubic));
-    });
-    await _animationController.forward();
-    _animationController.dispose();
+  }
+
+  @override
+  void dispose() {
+    animationController.dispose();
+    super.dispose();
   }
 
   String _convertText(String textIn){
     return substitution.applyAllSubstitutions(textIn);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _textStrings = <String>[_convertText(geschichte.screens[hero.iScreen]['text'])];
-    _animateText();
+  Widget _buildOption({int iOption}){
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
+      child: StringAnimation(animatedString: optionTexts[iOption], totalLength: totalTextLength,
+          delay: delays[iOption], animationController: animationController,),
+    );
   }
 
   @override
   Widget build(BuildContext context){
+    //Animation take 5 second to compleate
+    storyText = _convertText(geschichte.screens[hero.iScreen]['text']);
+    totalTextLength = storyText.length;
+    delays.add(storyText.length);
+    List<String> _optionKeys = geschichte.screens[hero.iScreen]['options'].keys.toList();
+    //I don't really like that all keys are strings but this is what we get from JSON...
+    //Not sure if it is worth fixing this here and having the inconsistency of types elsewhere...
+    for(int i=0; i<_optionKeys.length;i++){
+      String _text = geschichte.screens[hero.iScreen]['options'][i.toString()];
+      optionTexts.add(_text);
+      totalTextLength += _text.length;
+      delays.add(_text.length);
+    }
     return new ListView(
             children: <Widget>[
+              //Main story text
               Container(
               padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
-              child: _characterCount == null ? null : new AnimatedBuilder(
-                  animation: _characterCount,
-                  builder: (BuildContext context, Widget child) {
-                    String text = _currentString.substring(0, _characterCount.value);
-                    return new Text(
-                      text,
-                      key: Key('storyText'),
-                      style: new TextStyle(
-                          fontSize: 20.0,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w300),
-                    );
-                  }),
-              )
+              child: StringAnimation(animatedString: storyText,
+                  delay: 0, totalLength:totalTextLength, animationController: animationController,),
+              ),
+              //First Option
+              _buildOption(iOption: 0)
             ]
     );
   }

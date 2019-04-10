@@ -47,10 +47,6 @@ void main() {
       'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
     Map<String, dynamic> _adventure1 = {
       'name': 'Reja', 'version': 0.6, 'image': 'https...'};
-    Map<String, dynamic> geschichteTestData = {
-      'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
-      'forwards': {'0':1,'1':5},'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
-      'options': {'0':'test0','1':'test1'}};
 
     //Mock the collection
     when(mockFirestore.collection('general_data')).thenReturn(mockCollectionReference);
@@ -328,9 +324,10 @@ void main() {
       await _tester.pumpAndSettle();
 
       //See if the text widget is there at all
-      expect(find.byKey(Key('storyText')), findsOneWidget);
+      expect(find.byKey(Key('storyText')), findsNWidgets(2));
           //See if the text widget is correct
       expect(find.text(_checkText),findsOneWidget);
+      expect(find.text('test0'),findsOneWidget);
 
     });
 

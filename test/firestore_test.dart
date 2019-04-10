@@ -307,11 +307,19 @@ void main() {
       expect(find.byType(CircleAvatar), findsNWidgets(2));
     });
 
+    test('Test text substitution', () async {
+      String _textOut = substitutions.applyAllSubstitutions('#ErSie ist #eineine #wahrerwahre #HeldHeldin.');
+      String _checkText = testHeld.geschlecht=='w'
+          ?'Sie ist eine wahre Heldin.'
+          :'#Er ist ein wahrer Held.';
+      expect(_textOut, _checkText);
+    });
+
     testWidgets('Test Text', (WidgetTester _tester) async {
       Geschichte _geschichte = Geschichte(hero: testHeld, storyname: 'Roja');
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
-      StoryText _widget =  StoryText(hero: testHeld, imageHeight: 100.0,
-          geschichte: _geschichte, substitution: substitutions);
+      StaticTestWidget _widget =  StaticTestWidget(returnWidget: StoryText(hero: testHeld, imageHeight: 100.0,
+          geschichte: _geschichte, substitution: substitutions));
 
       String _checkText = testHeld.geschlecht=='w'
           ?'Sie ist eine wahre Heldin.'

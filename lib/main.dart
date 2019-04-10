@@ -50,7 +50,6 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
           new CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
     });
     await _animationController.forward();
-    _animationController.dispose();
   }
 
   @override
@@ -205,7 +204,7 @@ class Held{
     'name': 'Mara',
     'geschlecht': 'w',
     'iBild': 0,
-    'iScreen': 3,
+    'iScreen': 0,
     'signedIn': false,
     'screens': <int>[0,1,2,3],
     'erlebnisse': <String>['besteFreunde']};

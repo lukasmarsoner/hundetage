@@ -104,8 +104,8 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
         home: Scaffold(
             body: new Stack(
               children: <Widget>[
-                //StoryText(hero: hero, substitution: substitution,
-                //  geschichte: geschichte, imageHeight: imageHeight,),
+                StoryText(hero: hero, substitution: substitution,
+                  geschichte: geschichte, imageHeight: imageHeight,),
                 TopAdventurePanel(imageHeight: imageHeight, hero: hero),
                 ProfileAdventureRow(imageHeight: imageHeight, hero: hero),
                 ],
@@ -176,7 +176,6 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
           new CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
     });
     await _animationController.forward();
-    _animationController.dispose();
   }
 
   @override
@@ -232,7 +231,7 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
 
   @override
   Widget build(BuildContext context){
-    return _showCircularProgress();}
+    return Scaffold(body: _showCircularProgress());}
 }
 
 class StoryText extends StatefulWidget{
@@ -273,17 +272,10 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     setState(() {
       _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
       _characterCount = new StepTween(begin: 0, end: _currentString.length)
-          .animate(
-          new CurvedAnimation(parent: _animationController, curve: Curves.easeInOutCubic));
+          .animate(new CurvedAnimation(parent: _animationController, curve: Curves.easeInOutCubic));
     });
     await _animationController.forward();
     _animationController.dispose();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   String _convertText(String textIn){
@@ -297,28 +289,27 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     _animateText();
   }
 
-  Widget _textScreen(){
-    return ListView(
-        children: <Widget>[
-          Container(
+  @override
+  Widget build(BuildContext context){
+    return new ListView(
+            children: <Widget>[
+              Container(
               padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
               child: _characterCount == null ? null : new AnimatedBuilder(
-                  key: Key('storyText'),
                   animation: _characterCount,
                   builder: (BuildContext context, Widget child) {
                     String text = _currentString.substring(0, _characterCount.value);
-                    return new Text(text, style: new TextStyle(
-                        fontSize: 20.0,
-                        color: Colors.black,
-                        fontWeight: FontWeight.w300),
+                    return new Text(
+                      text,
+                      key: Key('storyText'),
+                      style: new TextStyle(
+                          fontSize: 20.0,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w300),
                     );
-                  })
-          ),
-        ]
+                  }),
+              )
+            ]
     );
   }
-
-  @override
-  Widget build(BuildContext context){
-    return _textScreen();}
 }

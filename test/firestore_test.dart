@@ -324,10 +324,11 @@ void main() {
       await _tester.pumpAndSettle();
 
       //See if the text widget is there at all
-      expect(find.byKey(Key('storyText')), findsNWidgets(2));
-          //See if the text widget is correct
+      expect(find.byKey(Key('TextElements')), findsNWidgets(3));
+          //See if the text widgets are correct
       expect(find.text(_checkText),findsOneWidget);
       expect(find.text('test0'),findsOneWidget);
+      expect(find.text('test1'),findsOneWidget);
 
     });
 

@@ -275,8 +275,8 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
 
   Future<void> _animateText() async {
     //Start and stop values for controlling the animation
-    double _start = delay.toDouble() / totalLength;
-    double _stop = (delay+animatedString.length).toDouble() / totalLength;
+    double _start = delay.toDouble() / totalLength.toDouble();
+    double _stop = (delay+animatedString.length).toDouble() / totalLength.toDouble();
     setState(() {
       _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
       _characterCount = new StepTween(begin: 0, end: animatedString.length)
@@ -300,7 +300,7 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
             onTap: textCallback,
               child: new Text(
                 text,
-                key: Key('storyText'),
+                key: Key('TextElements'),
                 style: new TextStyle(
                     fontSize: 20.0,
                     color: Colors.black,
@@ -331,6 +331,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   Held hero;
   int totalTextLength;
   List<int> delays = <int>[];
+  List<Widget> animatedTexts = <Widget>[];
   final int duration = 5;
   String storyText;
   List<String> optionTexts = <String>[];
@@ -380,19 +381,21 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
       String _text = geschichte.screens[hero.iScreen]['options'][i.toString()];
       optionTexts.add(_text);
       totalTextLength += _text.length;
-      delays.add(_text.length);
+      delays.add(totalTextLength);
     }
+
+    //Create widget for main text
+    animatedTexts.add(Container(
+      padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
+      child: StringAnimation(animatedString: storyText,
+        delay: 0, totalLength:totalTextLength, animationController: animationController,),
+    ));
+
+    //Create widgets for options
+    for(int i=0;i<delays.length-1;i++){animatedTexts.add(_buildOption(iOption: i));}
+
     return new ListView(
-            children: <Widget>[
-              //Main story text
-              Container(
-              padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
-              child: StringAnimation(animatedString: storyText,
-                  delay: 0, totalLength:totalTextLength, animationController: animationController,),
-              ),
-              //First Option
-              _buildOption(iOption: 0)
-            ]
+            children: animatedTexts
     );
   }
 }

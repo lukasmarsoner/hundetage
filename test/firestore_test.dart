@@ -315,7 +315,7 @@ void main() {
       Geschichte _geschichte = Geschichte(hero: testHeld, storyname: 'Roja');
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       StaticTestWidget _widget =  StaticTestWidget(returnWidget: StoryText(hero: testHeld, imageHeight: 100.0,
-          geschichte: _geschichte, substitution: substitutions));
+          geschichte: _geschichte, substitution: substitutions, updateHeroStory: () => null));
 
       String _checkText = testHeld.geschlecht=='w'
           ?'Sie ist eine wahre Heldin.'

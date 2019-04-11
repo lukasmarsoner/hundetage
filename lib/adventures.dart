@@ -94,6 +94,13 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   Held hero;
   double imageHeight = 100.0;
 
+  void updateHeroStory({Held newHero}){
+    setState(() {
+      hero = newHero;
+      updateHero(newHero: hero);
+    });
+  }
+
   GeschichteMainScreenState({@required this.updateHero, @required this.hero,
   @required this.geschichte, @required this.substitution});
 
@@ -104,7 +111,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
         home: Scaffold(
             body: new Stack(
               children: <Widget>[
-                StoryText(hero: hero, substitution: substitution,
+                StoryText(hero: hero, substitution: substitution, updateHeroStory: updateHeroStory,
                   geschichte: geschichte, imageHeight: imageHeight,),
                 TopAdventurePanel(imageHeight: imageHeight, hero: hero),
                 ProfileAdventureRow(imageHeight: imageHeight, hero: hero),
@@ -312,20 +319,23 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
 }
 
 class StoryText extends StatefulWidget{
+  final Function updateHeroStory;
   final Substitution substitution;
   final Geschichte geschichte;
   final Held hero;
   final double imageHeight;
 
   StoryText({@required this.geschichte, @required this.substitution,
-  @required this.hero, @required this.imageHeight});
+  @required this.hero, @required this.imageHeight, @required this.updateHeroStory});
 
   @override
   StoryTextState createState() => new StoryTextState(geschichte: geschichte,
-      substitution: substitution, hero: hero, imageHeight: imageHeight);
+      substitution: substitution, hero: hero, imageHeight: imageHeight,
+      updateHeroStory: updateHeroStory);
 }
 
 class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
+  Function updateHeroStory;
   Substitution substitution;
   Geschichte geschichte;
   Held hero;
@@ -334,12 +344,12 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   List<Widget> animatedTexts = <Widget>[];
   final int duration = 5;
   String storyText;
-  List<String> optionTexts = <String>[];
+  List<String> _optionKeys, optionTexts, forwards;
   double imageHeight;
   AnimationController animationController;
 
   StoryTextState({@required this.substitution, @required this.geschichte,
-  @required this.hero, @required this.imageHeight});
+  @required this.hero, @required this.imageHeight, @required this.updateHeroStory});
 
   @override
   initState() {
@@ -359,31 +369,45 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   String _convertText(String textIn){
     return substitution.applyAllSubstitutions(textIn);
   }
+  
+  //Function moving user to next screen
+  _textCallback(String iNext){
+    setState((){
+      hero.iScreen = int.parse(iNext);
+      updateHeroStory(newHero: hero);
+      animationController.reset();
+    });
+  }
 
   Widget _buildOption({int iOption}){
     return Container(
-      padding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
+      padding: EdgeInsets.all(20.0),
       child: StringAnimation(animatedString: optionTexts[iOption], totalLength: totalTextLength,
-          delay: delays[iOption], animationController: animationController,),
+          delay: delays[iOption], animationController: animationController, 
+        textCallback: () => _textCallback(forwards[iOption])),
     );
   }
 
   @override
   Widget build(BuildContext context){
-    //Animation take 5 second to compleate
+    //Animation take 5 second to complete
     storyText = _convertText(geschichte.screens[hero.iScreen]['text']);
     totalTextLength = storyText.length;
     delays.add(storyText.length);
-    List<String> _optionKeys = geschichte.screens[hero.iScreen]['options'].keys.toList();
+    _optionKeys = geschichte.screens[hero.iScreen]['options'].keys.toList();
     //I don't really like that all keys are strings but this is what we get from JSON...
     //Not sure if it is worth fixing this here and having the inconsistency of types elsewhere...
+    optionTexts = [];
     for(int i=0; i<_optionKeys.length;i++){
-      String _text = geschichte.screens[hero.iScreen]['options'][i.toString()];
+      String _text = _convertText(geschichte.screens[hero.iScreen]['options'][i.toString()]);
       optionTexts.add(_text);
       totalTextLength += _text.length;
       delays.add(totalTextLength);
     }
 
+    //We should always have an equal number of options and forwards for them
+    forwards = [];
+    for(int i=0;i<_optionKeys.length;i++){forwards.add(geschichte.screens[hero.iScreen]['forwards'][i.toString()]);}
     //Create widget for main text
     animatedTexts.add(Container(
       padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
@@ -392,7 +416,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     ));
 
     //Create widgets for options
-    for(int i=0;i<delays.length-1;i++){animatedTexts.add(_buildOption(iOption: i));}
+    for(int i=0;i<_optionKeys.length;i++){animatedTexts.add(_buildOption(iOption: i));}
 
     return new ListView(
             children: animatedTexts

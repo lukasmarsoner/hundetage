@@ -86,7 +86,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
 
   Future<void> _loadData() async{
     firestore = Firestore.instance;
-    firestore.settings(timestampsInSnapshotsEnabled: true);
+    //firestore.settings(timestampsInSnapshotsEnabled: true);
     authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
     generalData = await loadGeneralData(firestore);
     bool _signedIn = await checkLoginStatus();
@@ -272,7 +272,7 @@ class Held{
     if(valIn != null && valIn != '' && !_erlebnisse.contains(valIn)){_erlebnisse.add(valIn);}
   }
   set iScreen(int valIn){
-    if(valIn != null && valIn >=0 && _screens.contains(valIn)){_iScreen = valIn;}
+    if(valIn != null && valIn >=0){_iScreen = valIn;}
   }
   set addScreen(int valIn){
     if(valIn != null && valIn >=0 && !_screens.contains(valIn)){_screens.add(valIn);}

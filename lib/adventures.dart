@@ -124,18 +124,22 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
 class Geschichte{
   String storyname;
   Held hero;
-  List<Map<String,dynamic>> screens;
+  Map<int,Map<String,dynamic>> screens;
 
   Geschichte({@required this.hero, @required this.storyname, this.screens});
 
   //Make sure all maps have the correct types
   void setStory(List<Map<String,dynamic>> _map){
-    screens = _map;
-    for(int i=0;i<screens.length;i++){
-      screens[i]['options'] = Map<String,String>.from(screens[i]['options']);
-      screens[i]['forwards'] = Map<String,String>.from(screens[i]['forwards']);
-      screens[i]['erlebnisse'] = Map<String,String>.from(screens[i]['erlebnisse']);
-      screens[i]['conditions'] = Map<String,String>.from(screens[i]['conditions']);
+    screens = {};
+    for(int i=0;i<_map.length;i++){
+      Map<String,dynamic> _screen = {};
+      _screen['options'] = Map<String,String>.from(_map[i]['options']);
+      _screen['forwards'] = Map<String,String>.from(_map[i]['forwards']);
+      _screen['erlebnisse'] = Map<String,String>.from(_map[i]['erlebnisse']);
+      _screen['conditions'] = Map<String,String>.from(_map[i]['conditions']);
+      _screen['image'] = _map[i]['image'];
+      _screen['text'] = _map[i]['text'];
+      screens[i] = _screen;
     }
   }
 }
@@ -255,27 +259,29 @@ class StringAnimation extends StatefulWidget{
   final Function textCallback;
   final AnimationController animationController;
   final int delay, totalLength;
+  final Key key;
 
   StringAnimation({@required this.animatedString, @required this.delay,
-    @required this.totalLength, @required this.animationController,
+    @required this.totalLength, @required this.animationController, @required this.key,
     this.textCallback});
 
   @override
   StringAnimationState createState() => new StringAnimationState(animatedString: animatedString,
-      textCallback: textCallback, delay: delay, totalLength: totalLength,
+      textCallback: textCallback, delay: delay, totalLength: totalLength, key: key,
       animationController: animationController);
 }
 
 class StringAnimationState extends State<StringAnimation> with TickerProviderStateMixin{
   String animatedString;
   Function textCallback;
+  Key key;
   final int delay, totalLength;
   Animation<int> _characterCount;
   List<String> _textStrings;
   int _stringIndex;
   AnimationController animationController;
 
-  StringAnimationState({@required this.animatedString, @required this.delay,
+  StringAnimationState({@required this.animatedString, @required this.delay, @required this.key,
     @required this.totalLength, @required this.animationController, this.textCallback});
 
   String get _currentString => _textStrings[_stringIndex % _textStrings.length];
@@ -299,7 +305,8 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
     //In case there is no callback function we just do nothing at all
     if(textCallback==null){textCallback=()=>null;}
     _animateText();
-    return _characterCount == null ? Container() : new AnimatedBuilder(
+    return _characterCount == null ? Container(key: key) : new AnimatedBuilder(
+        key: key,
         animation: _characterCount,
         builder: (BuildContext context, Widget child) {
           String text = _currentString.substring(0, _characterCount.value);
@@ -307,7 +314,6 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
             onTap: textCallback,
               child: new Text(
                 text,
-                key: Key('TextElements'),
                 style: new TextStyle(
                     fontSize: 20.0,
                     color: Colors.black,
@@ -340,8 +346,8 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   Geschichte geschichte;
   Held hero;
   int totalTextLength;
-  List<int> delays = <int>[];
-  List<Widget> animatedTexts = <Widget>[];
+  List<int> delays;
+  List<Widget> animatedTexts;
   final int duration = 5;
   String storyText;
   List<String> _optionKeys, optionTexts, forwards;
@@ -372,32 +378,35 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   
   //Function moving user to next screen
   _textCallback(String iNext){
+    animationController.reset();
     setState((){
       hero.iScreen = int.parse(iNext);
       updateHeroStory(newHero: hero);
-      animationController.reset();
     });
+    animationController.forward();
   }
 
   Widget _buildOption({int iOption}){
     return Container(
       padding: EdgeInsets.all(20.0),
       child: StringAnimation(animatedString: optionTexts[iOption], totalLength: totalTextLength,
-          delay: delays[iOption], animationController: animationController, 
-        textCallback: () => _textCallback(forwards[iOption])),
+          delay: delays[iOption], animationController: animationController,
+          key: Key(hero.iScreen.toString()+iOption.toString()),
+          textCallback: () => _textCallback(forwards[iOption])),
     );
   }
 
   @override
   Widget build(BuildContext context){
-    //Animation take 5 second to complete
     storyText = _convertText(geschichte.screens[hero.iScreen]['text']);
     totalTextLength = storyText.length;
+
+    delays = <int>[];
     delays.add(storyText.length);
     _optionKeys = geschichte.screens[hero.iScreen]['options'].keys.toList();
     //I don't really like that all keys are strings but this is what we get from JSON...
     //Not sure if it is worth fixing this here and having the inconsistency of types elsewhere...
-    optionTexts = [];
+    optionTexts = <String>[];
     for(int i=0; i<_optionKeys.length;i++){
       String _text = _convertText(geschichte.screens[hero.iScreen]['options'][i.toString()]);
       optionTexts.add(_text);
@@ -406,13 +415,15 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     }
 
     //We should always have an equal number of options and forwards for them
-    forwards = [];
+    forwards = <String>[];
     for(int i=0;i<_optionKeys.length;i++){forwards.add(geschichte.screens[hero.iScreen]['forwards'][i.toString()]);}
+
     //Create widget for main text
+    animatedTexts = <Widget>[];
     animatedTexts.add(Container(
       padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
-      child: StringAnimation(animatedString: storyText,
-        delay: 0, totalLength:totalTextLength, animationController: animationController,),
+      child: StringAnimation(animatedString: storyText, delay: 0, key: Key(hero.iScreen.toString()),
+        totalLength:totalTextLength, animationController: animationController,),
     ));
 
     //Create widgets for options

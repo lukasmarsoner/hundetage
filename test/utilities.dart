@@ -21,13 +21,21 @@ Map<String,Map<String,String>> genderingTestData = {'ErSie':{'m':'Er','w':'Sie'}
   'eineine':{'m':'ein','w':'eine'},
   'HeldHeldin':{'m':'Held','w':'Heldin'},
   'wahrerwahre':{'m':'wahrer','w':'wahre'}};
+
 Map<String,Map<String,String>> erlebnisseTestData = {
   'besteFreunde':{'text': 'Some test Text', 'image': 'https://example.com/image.png'},
   'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
-Map<String, dynamic> geschichteTestData = {
-  'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
-  'forwards': {'0':'1','1':'5'},'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+
+Map<String, dynamic> geschichteTestPage1 = {
+  'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''}, 'number': 0,
+  'forwards': {'0':'1','1':'5'}, 'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
   'options': {'0':'test0','1':'test1'}};
+
+Map<String, dynamic> geschichteTestPage2 = {
+  'conditions': {'0':''}, 'erlebnisse': {'0':''}, 'number': 1,
+  'forwards': {'0':'0'}, 'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+  'options': {'0':'new page'}};
+
 final testHeld = new Held.test();
 final testGeschichte = new Geschichte(hero: testHeld, storyname: 'Roja');
 final generalData = new GeneralData(erlebnisse: erlebnisseTestData,gendering: genderingTestData);

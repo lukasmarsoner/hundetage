@@ -56,8 +56,8 @@ Future<Held> loadFirestoreUserData({Firestore firestore, Authenticator authentic
 //Loads story data from firestore
 Future<Geschichte> loadGeschichte({Firestore firestore, Geschichte geschichte}) async {
   CollectionReference _collectionReference = firestore.collection(geschichte.storyname);
-  QuerySnapshot _documentSnapshop = await _collectionReference.getDocuments();
-  List<DocumentSnapshot> _documentList = _documentSnapshop.documents;
+  QuerySnapshot _documentSnapshops = await _collectionReference.getDocuments();
+  List<DocumentSnapshot> _documentList = _documentSnapshops.documents;
 
   List<Map<String,dynamic>> _screenlist = _documentList.map((_screen) => _screen.data).toList();
   geschichte.setStory(_screenlist);

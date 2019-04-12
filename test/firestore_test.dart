@@ -26,7 +26,8 @@ void main() {
     final DocumentSnapshot mockDocumentSnapshotErlebnisse = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotUser = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotAbenteuer = MockDocumentSnapshot();
-    final DocumentSnapshot mockDocumentSnapshotGeschichte = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotGeschichte1 = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotGeschichte2 = MockDocumentSnapshot();
 
     final DocumentReference mockDocumentReferenceGendering = MockDocumentReference();
     final DocumentReference mockDocumentReferenceErlebnisse = MockDocumentReference();
@@ -72,8 +73,9 @@ void main() {
     when(mockFirestore.collection('Roja')).thenReturn(mockStoryCollectionReference);
     when(mockStoryCollectionReference.snapshots()).thenAnswer((_) => Stream.fromIterable([mockStoryQuerySnapshot]));
     when(mockStoryCollectionReference.getDocuments()).thenAnswer((_) async => mockStoryQuerySnapshot);
-    when(mockStoryQuerySnapshot.documents).thenReturn([mockDocumentSnapshotGeschichte]);
-    when(mockDocumentSnapshotGeschichte.data).thenReturn(geschichteTestData);
+    when(mockStoryQuerySnapshot.documents).thenReturn([mockDocumentSnapshotGeschichte1,mockDocumentSnapshotGeschichte2]);
+    when(mockDocumentSnapshotGeschichte1.data).thenReturn(geschichteTestPage1);
+    when(mockDocumentSnapshotGeschichte2.data).thenReturn(geschichteTestPage2);
 
     when(mockFireUser.uid).thenReturn('hQtzTZdHkQde3dUxyZQ3EkzxYYn1');
     when(mockFireUser.isEmailVerified).thenReturn(true);
@@ -288,7 +290,7 @@ void main() {
 
       //Check if all data was returned correctly and the story is initialized as it should
       for(int i=0;i<_keys.length;i++){
-        expect(_geschichte.screens[0][_keys[i]], geschichteTestData[_keys[i]]);
+        expect(_geschichte.screens[0][_keys[i]], geschichteTestPage1[_keys[i]]);
       }
     });
 
@@ -315,7 +317,7 @@ void main() {
       Geschichte _geschichte = Geschichte(hero: testHeld, storyname: 'Roja');
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       StaticTestWidget _widget =  StaticTestWidget(returnWidget: StoryText(hero: testHeld, imageHeight: 100.0,
-          geschichte: _geschichte, substitution: substitutions, updateHeroStory: () => null));
+          geschichte: _geschichte, substitution: substitutions, updateHeroStory: ({Held newHero}) => null));
 
       String _checkText = testHeld.geschlecht=='w'
           ?'Sie ist eine wahre Heldin.'
@@ -324,10 +326,32 @@ void main() {
       await _tester.pumpAndSettle();
 
       //See if the text widget is there at all
-      expect(find.byKey(Key('TextElements')), findsNWidgets(3));
+      expect(find.byType(Text), findsNWidgets(3));
           //See if the text widgets are correct
       expect(find.text(_checkText),findsOneWidget);
-      expect(find.text('test0'),findsOneWidget);
+      final _forwardButton = find.text('test0');
+      expect(_forwardButton,findsOneWidget);
+      expect(find.text('test1'),findsOneWidget);
+
+      //Go to next page
+      await _tester.tap(_forwardButton);
+      await _tester.pumpAndSettle();
+
+      //Check text widgets on newly-loaded page
+      expect(find.byType(Text), findsNWidgets(2));
+      expect(find.text(_checkText),findsOneWidget);
+      final _backButton = find.text('new page');
+      expect(find.text('new page'),findsOneWidget);
+
+      //Go back to first page
+      await _tester.tap(_backButton);
+      await _tester.pumpAndSettle();
+
+      //Check text widgets on first page after it was loaded again
+      expect(find.byType(Text), findsNWidgets(3));
+      //See if the text widgets are correct
+      expect(find.text(_checkText),findsOneWidget);
+      expect(_forwardButton,findsOneWidget);
       expect(find.text('test1'),findsOneWidget);
 
     });

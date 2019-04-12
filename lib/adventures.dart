@@ -137,7 +137,6 @@ class Geschichte{
       _screen['forwards'] = Map<String,String>.from(_map[i]['forwards']);
       _screen['erlebnisse'] = Map<String,String>.from(_map[i]['erlebnisse']);
       _screen['conditions'] = Map<String,String>.from(_map[i]['conditions']);
-      _screen['image'] = _map[i]['image'];
       _screen['text'] = _map[i]['text'];
       screens[i] = _screen;
     }

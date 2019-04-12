@@ -28,12 +28,12 @@ Map<String,Map<String,String>> erlebnisseTestData = {
 
 Map<String, dynamic> geschichteTestPage1 = {
   'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''}, 'number': 0,
-  'forwards': {'0':'1','1':'5'}, 'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+  'forwards': {'0':'1','1':'5'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
   'options': {'0':'test0','1':'test1'}};
 
 Map<String, dynamic> geschichteTestPage2 = {
   'conditions': {'0':''}, 'erlebnisse': {'0':''}, 'number': 1,
-  'forwards': {'0':'0'}, 'image': 'avatar', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+  'forwards': {'0':'0'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
   'options': {'0':'new page'}};
 
 final testHeld = new Held.test();

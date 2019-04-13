@@ -168,7 +168,7 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
   Geschichte geschichte;
   Substitution substitution;
   Animation<int> _characterCount;
-  AnimationController _animationController;
+  AnimationController _animationText;
   bool _isLoading = true;
   Firestore firestore;
 
@@ -184,7 +184,7 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
   String get _currentString => _textStrings[_stringIndex % _textStrings.length];
 
   Future<void> _animateText() async {
-    _animationController = AnimationController(
+    _animationText = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
@@ -192,14 +192,14 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
       _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
       _characterCount = new StepTween(begin: 0, end: _currentString.length)
           .animate(
-          new CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+          new CurvedAnimation(parent: _animationText, curve: Curves.easeIn));
     });
-    await _animationController.forward();
+    await _animationText.forward();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _animationText.dispose();
     super.dispose();
   }
 
@@ -256,32 +256,36 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
 class StringAnimation extends StatefulWidget{
   final String animatedString;
   final Function textCallback;
-  final AnimationController animationController;
+  final AnimationController animationText, animationNextScreen;
   final int delay, totalLength;
   final Key key;
+  final bool italic;
 
   StringAnimation({@required this.animatedString, @required this.delay,
-    @required this.totalLength, @required this.animationController, @required this.key,
-    this.textCallback});
+    @required this.totalLength, @required this.animationText, @required this.key,
+    this.textCallback, this.italic, this.animationNextScreen});
 
   @override
   StringAnimationState createState() => new StringAnimationState(animatedString: animatedString,
       textCallback: textCallback, delay: delay, totalLength: totalLength, key: key,
-      animationController: animationController);
+      animationText: animationText, italic: italic, animationNextScreen: animationNextScreen);
 }
 
 class StringAnimationState extends State<StringAnimation> with TickerProviderStateMixin{
   String animatedString;
   Function textCallback;
   Key key;
+  Animation<double> opacity;
+  bool italic, bold;
   final int delay, totalLength;
   Animation<int> _characterCount;
   List<String> _textStrings;
   int _stringIndex;
-  AnimationController animationController;
+  AnimationController animationText, animationNextScreen;
 
-  StringAnimationState({@required this.animatedString, @required this.delay, @required this.key,
-    @required this.totalLength, @required this.animationController, this.textCallback});
+  StringAnimationState({@required this.animatedString, @required this.delay,
+    @required this.key, @required this.totalLength, @required this.animationText,
+    this.textCallback, this.italic, this.animationNextScreen});
 
   String get _currentString => _textStrings[_stringIndex % _textStrings.length];
 
@@ -292,34 +296,76 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
     setState(() {
       _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
       _characterCount = new StepTween(begin: 0, end: animatedString.length)
-          .animate(new CurvedAnimation(parent: animationController,
+          .animate(new CurvedAnimation(parent: animationText,
           curve: Interval(_start, _stop, curve: Curves.easeInOutCubic)));
     });
-    await animationController.forward();
+    await animationText.forward();
+  }
+
+  Future<void> _fadeOut() async {
+    setState(() => opacity = new Tween(begin: 0.0,end: 1.0)
+        .animate(new CurvedAnimation(parent: animationNextScreen,
+        curve: Interval(0.0, 1.0, curve: Curves.easeIn))));
+  }
+
+  void moveToNextScreen() async{
+    bold = true;
+    await animationNextScreen.forward();
+    //In case there is no callback function we just do nothing at all
+    if(textCallback==null){textCallback=()=>null;}
+    textCallback();
+  }
+
+  Widget _buildStaticText(text){
+    return new Text(
+                  text,
+                  style: new TextStyle(
+                      fontSize: 20.0,
+                      fontStyle: italic == null
+                          ? FontStyle.normal
+                          : FontStyle.italic,
+                      color: Colors.black,
+                      fontWeight: bold == null
+                          ? FontWeight.w300
+                          : FontWeight.w500)
+              );
+  }
+
+  Widget _buildTextWithFadeOut({String text, BuildContext context}){
+    return new AnimatedBuilder(animation: opacity,
+        builder: (BuildContext context, Widget child) {
+          return new Opacity(opacity: 1.0 - opacity.value,
+              child: new Text(
+                  text,
+                  style: new TextStyle(
+                      fontSize: 20.0,
+                      fontStyle: italic == null
+                          ? FontStyle.normal
+                          : FontStyle.italic,
+                      color: Colors.black,
+                      fontWeight: bold == null
+                          ? FontWeight.w300
+                          : FontWeight.w500)
+              )
+          );});
   }
 
   @override
   Widget build(BuildContext context) {
     _textStrings = <String>[animatedString];
-    //In case there is no callback function we just do nothing at all
-    if(textCallback==null){textCallback=()=>null;}
     _animateText();
+    if(!(animationNextScreen==null)){_fadeOut();}
     return _characterCount == null ? Container(key: key) : new AnimatedBuilder(
         key: key,
         animation: _characterCount,
-        builder: (BuildContext context, Widget child) {
+        builder: (BuildContext context, Widget child){
           String text = _currentString.substring(0, _characterCount.value);
           return new GestureDetector(
-            onTap: textCallback,
-              child: new Text(
-                text,
-                style: new TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w300),
-            )
-          );
-        });
+              onTap: moveToNextScreen,
+              child: opacity == null
+                  ?_buildStaticText(text)
+                  :_buildTextWithFadeOut(text: text, context: context)
+          );});
   }
 }
 
@@ -351,7 +397,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   String storyText;
   List<String> _optionKeys, optionTexts, forwards;
   double imageHeight;
-  AnimationController animationController;
+  AnimationController animationText, animationNextScreen;
 
   StoryTextState({@required this.substitution, @required this.geschichte,
   @required this.hero, @required this.imageHeight, @required this.updateHeroStory});
@@ -359,15 +405,20 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   @override
   initState() {
     super.initState();
-    animationController = AnimationController(
+    animationText = AnimationController(
       duration: Duration(seconds: duration),
+      vsync: this,
+    );
+    //Animation for transition to new screen
+    animationNextScreen = AnimationController(
+      duration: Duration(milliseconds: 700),
       vsync: this,
     );
   }
 
   @override
   void dispose() {
-    animationController.dispose();
+    animationText.dispose();
     super.dispose();
   }
 
@@ -377,20 +428,21 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   
   //Function moving user to next screen
   _textCallback(String iNext){
-    animationController.reset();
     setState((){
       hero.iScreen = int.parse(iNext);
       updateHeroStory(newHero: hero);
     });
-    animationController.forward();
+    animationText.reset();
+    animationText.forward();
+    animationNextScreen.reset();
   }
 
   Widget _buildOption({int iOption}){
     return Container(
       padding: EdgeInsets.all(20.0),
       child: StringAnimation(animatedString: optionTexts[iOption], totalLength: totalTextLength,
-          delay: delays[iOption], animationController: animationController,
-          key: Key(hero.iScreen.toString()+iOption.toString()),
+          delay: delays[iOption], animationText: animationText, animationNextScreen: animationNextScreen,
+          key: Key(hero.iScreen.toString()+iOption.toString()), italic: true,
           textCallback: () => _textCallback(forwards[iOption])),
     );
   }
@@ -422,7 +474,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     animatedTexts.add(Container(
       padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
       child: StringAnimation(animatedString: storyText, delay: 0, key: Key(hero.iScreen.toString()),
-        totalLength:totalTextLength, animationController: animationController,),
+        totalLength:totalTextLength, animationText: animationText),
     ));
 
     //Create widgets for options

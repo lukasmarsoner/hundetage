@@ -364,7 +364,7 @@ void main() {
       //See if the text widget is there at all
       expect(find.byType(Text), findsNWidgets(3));
           //See if the text widgets are correct
-      expect(find.text(_checkText),findsNWidgets(2));
+      expect(find.text(_checkText),findsOneWidget);
       final _forwardButton = find.text('test0');
       expect(_forwardButton,findsOneWidget);
       expect(find.text('test1'),findsOneWidget);

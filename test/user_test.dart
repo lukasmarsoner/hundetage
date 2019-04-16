@@ -80,7 +80,7 @@ void main() {
       expect(_testHeld.screens,[4]);
 
       String _error;
-      try{_testHeld.iBild=-1;} on Exception catch(error){_error = error.toString();}
+      try{_testHeld.iBild=-2;} on Exception catch(error){_error = error.toString();}
       expect(_error, 'Exception: Invalid imange index!');
       try{_testHeld.iBild=null;} on Exception catch(error){_error = error.toString();}
       expect(_error, 'Exception: Invalid imange index!');

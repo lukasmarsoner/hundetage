@@ -35,7 +35,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
 
   //Check if user is currently logged-in
   Future<bool> checkLoginStatus() async{
-    if(await authenticator.getCurrentUser()==null){return false;}else{return true;}
+    if(await authenticator.getUid()==null){return false;}else{return true;}
   }
 
   Future<void> _animateText() async {

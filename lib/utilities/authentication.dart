@@ -29,13 +29,8 @@ class Authenticator {
     return _user.uid;
   }
 
-  Future<FirebaseUser> getCurrentUser() async {
-    FirebaseUser _user = await firebaseAuth.currentUser();
-    return _user;
-  }
-
   Future<String> getUid() async {
-    FirebaseUser _user = await getCurrentUser();
+    FirebaseUser _user = await firebaseAuth.currentUser();
     if(_user == null){return null;}else{return _user.uid;}
   }
 
@@ -43,7 +38,7 @@ class Authenticator {
   //We catch the error here and log the user out, should he/she not
   //have signed-in recently. If the user is not - we sign him/her out
   deleteUser() async {
-    FirebaseUser _user = await getCurrentUser();
+    FirebaseUser _user = await firebaseAuth.currentUser();
     _user.delete();
   }
 

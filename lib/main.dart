@@ -192,7 +192,7 @@ class Held{
 
   // Default values for user
   Map<String,dynamic> _defaults = {
-    'name': '????????',
+    'name': '??????',
     'geschlecht': 'w',
     'iBild': -1,
     'iScreen': 0,
@@ -246,14 +246,13 @@ class Held{
   //returns a default hero if nothing is found
   Future<Held> load({bool signedIn, Authenticator authenticator, Firestore firestore}) async{
     //If we are signed-in we load user data from firebase
-    Held _hero;
     if(signedIn){
-      _hero = await loadFirestoreUserData(firestore: firestore, authenticator: authenticator);
+      Held _hero = await loadFirestoreUserData(firestore: firestore, authenticator: authenticator);
       if(_hero==null){return null;}else{return _hero;}
     }
     //if not we lookf for a local file
     else{
-      _hero = await loadLocalUserData();
+      Held _hero = await loadLocalUserData();
       if(_hero==null){return null;}else{return _hero;}
     }
   }
@@ -266,7 +265,7 @@ class Held{
     (valIn=='m' || valIn=='w')?_geschlecht = valIn:throw new Exception('Invalid sex!');
   }
   set iBild(int valIn){
-    (valIn != null && valIn >=0 && valIn <= maxImages)?_iBild = valIn:throw new Exception('Invalid imange index!');
+    (valIn != null && valIn >=-1 && valIn <= maxImages)?_iBild = valIn:throw new Exception('Invalid imange index!');
   }
   set addErlebniss(String valIn){
     if(valIn != null && valIn != '' && !_erlebnisse.contains(valIn)){_erlebnisse.add(valIn);}

@@ -42,10 +42,9 @@ class Authenticator {
   //Deleting requires the user to have logged-in only recenty
   //We catch the error here and log the user out, should he/she not
   //have signed-in recently. If the user is not - we sign him/her out
-  Future<bool> deleteUser() async {
+  deleteUser() async {
     FirebaseUser _user = await getCurrentUser();
-    _user.delete().then((error){return true;}).catchError(signOut);
-    return false;
+    _user.delete();
   }
 
   Future<void> signOut() async {

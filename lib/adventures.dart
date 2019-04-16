@@ -456,6 +456,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
       String _text = generalData.erlebnisse[erlebniss]['text'];
       Image _image = Image.network(generalData.erlebnisse[erlebniss]['image'], fit: BoxFit.cover);
       final _record = Erlebniss(text: _text, image: _image, substitution: substitution);
+      _record.applySubstitutions();
       _openDialog(ShowErlebniss(image: _record.image, text: _record.text), context);}
     setState((){
       hero.iScreen = int.parse(iNext);

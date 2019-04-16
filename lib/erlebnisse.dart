@@ -174,11 +174,15 @@ class ShowErlebniss extends StatelessWidget{
 }
 
 class Erlebniss {
-  final String text;
+  String text;
   Image image;
   Substitution substitution;
 
   Erlebniss({this.text, this.image, this.substitution});
+
+  applySubstitutions(){
+    this.text = substitution.applyAllSubstitutions(text);
+  }
 
   Erlebniss.fromMap({Map<String, String> data, Substitution substitution})
       : assert(data['text'] != null),

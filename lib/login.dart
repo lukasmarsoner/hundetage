@@ -47,7 +47,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   void _loadAndUpdateHero() async{
-    _changeFormToSignOut();
     Held _newHero = await hero.load(authenticator:authenticator, signedIn: true, firestore: firestore);
     if(_newHero==null){_newHero=hero;}
     setState((){
@@ -59,7 +58,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       hero = _newHero;
       hero.signedIn = true;
     });
-    updateHero(newHero: hero);
+    _changeFormToSignOut();
   }
 
 
@@ -108,14 +107,30 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Future<void> _deleteUserData() async{
-    //TODO: add a pop-up explaining what has happened to the user in this case
     setState(() {
       _isLoading = true;
+      _errorMessage = "";
     });
-    bool _success = await authenticator.deleteUser();
-    if(_success){deleteFirestoreUserData(firestore: firestore, authenticator: authenticator);
-    _showDeletionDialog();}
-    else{_changeFormToLogin();_showDeletionLogoutDialog();}
+    try {
+      //Deletes user data in the database
+      //We need to do this first as otherwise we don't have authorization to
+      deleteFirestoreUserData(firestore: firestore, authenticator: authenticator);
+      await authenticator.deleteUser();
+      _showDeletionDialog();
+    }
+    catch (e) {
+    setState(() {
+    _isLoading = false;
+    if (_isIos) {
+      _changeFormToLogin();
+      _showDeletionLogoutDialog();
+      _errorMessage = e.details;
+    } else
+      _changeFormToLogin();
+      _showDeletionLogoutDialog();
+      _errorMessage = e.message;
+    });
+    }
     setState(() {
       _isLoading = false;
     });
@@ -138,21 +153,21 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       _isLoading = true;
     });
     if (_validateAndSave()) {
-      String userId = "";
+      String uid = "";
       try {
         if (_formMode == FormMode.LOGIN) {
-          userId = await authenticator.signIn(_email, _password);
-        } else {
-          userId = await authenticator.signUp(_email, _password);
+          uid = await authenticator.signIn(_email, _password);
+        }
+        else {
+          uid = await authenticator.signUp(_email, _password);
           authenticator.sendEmailVerification();
-          _createUserdataInFirebase(userId);
+          _createUserdataInFirebase(uid);
           _showVerifyEmailSentDialog();
         }
-        if (userId.length > 0 && userId != null && _formMode == FormMode.LOGIN) {
+        if (uid.length > 0 && uid != null && _formMode == FormMode.LOGIN) {
           hero.signedIn = true;
           _loadAndUpdateHero();
         }
-
       } catch (e) {
         setState(() {
           _isLoading = false;
@@ -232,6 +247,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
               child: new Text("Löschen"),
               onPressed: () {
                 _deleteUserData();
+                _signOut();
                 Navigator.of(context).pop();
               },
             ),

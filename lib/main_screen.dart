@@ -76,7 +76,7 @@ class MainPageState extends State<MainPage> {
       //Add new screen elements here
         body: new Stack(
               children: <Widget>[
-                AbenteuerAuswahl(imageHeight: _imageHeight, firestore: firestore,
+                AbenteuerAuswahl(imageHeight: _imageHeight, firestore: firestore, generalData: generalData,
                     hero: hero, updateHero: updateHero, substitution: substitution),
                 TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
@@ -483,10 +483,11 @@ class AbenteuerAuswahl extends StatelessWidget{
   final Firestore firestore;
   final double imageHeight;
   final Held hero;
+  final GeneralData generalData;
   final Function updateHero;
   final Substitution substitution;
 
-  AbenteuerAuswahl({@required this.imageHeight, @required this.firestore,
+  AbenteuerAuswahl({@required this.imageHeight, @required this.firestore, @required this.generalData,
   @required this.hero, @required this.updateHero, @required this.substitution});
 
   @override
@@ -534,7 +535,7 @@ class AbenteuerAuswahl extends StatelessWidget{
       context,
       MaterialPageRoute(builder: (context) => StoryLoadingScreen(
           hero: hero, updateHero: updateHero, firestore: firestore,
-          storyname: storyname, substitution: substitution,
+          storyname: storyname, substitution: substitution, generalData: generalData,
         geschichte: Geschichte(hero: hero, storyname: storyname)))
     );
   }

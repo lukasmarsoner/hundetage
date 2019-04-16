@@ -132,16 +132,30 @@ class Erlebnisse extends StatelessWidget{
       child: Card(
         child: MaterialButton(
             child: record.image,
-            onPressed: () => _showErlebniss(context:context, image: record.image, text: record.text))
+            onPressed: () => _openDialog(ShowErlebniss(image: record.image, text: record.text), context))
         ),
       );
   }
 
-  _showErlebniss({BuildContext context, Image image, String text}) {
+  _openDialog(Widget _dialog, BuildContext context) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return SimpleDialog(
+          return _dialog;
+        }
+    );
+  }
+}
+
+class ShowErlebniss extends StatelessWidget{
+  final Image image;
+  final String text;
+
+  ShowErlebniss({this.image, this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return SimpleDialog(
               key: Key('PopUp'),
               contentPadding: EdgeInsets.all(30.0),
               children: <Widget>[
@@ -156,15 +170,15 @@ class Erlebnisse extends StatelessWidget{
                             fontWeight: FontWeight.w300)))
               ]
           );
-        }
-    );
-  }
+    }
 }
 
 class Erlebniss {
   final String text;
   Image image;
   Substitution substitution;
+
+  Erlebniss({this.text, this.image, this.substitution});
 
   Erlebniss.fromMap({Map<String, String> data, Substitution substitution})
       : assert(data['text'] != null),

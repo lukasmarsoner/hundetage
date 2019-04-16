@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/firebase.dart';
 import 'package:hundetage/main.dart';
 import 'utilities.dart';
+import 'package:hundetage/erlebnisse.dart';
 import 'package:hundetage/main_screen.dart';
 import 'package:image_test_utils/image_test_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -44,8 +45,8 @@ void main() {
       'HeldHeldin':{'m':'Held','w':'Heldin'},
       'wahrerwahre':{'m':'wahrer','w':'wahre'}};
     Map<String,dynamic> _erlebnisseMockData = {
-      'besteFreunde':{'text': 'Some test Text', 'image': 'https://example.com/image.png'},
-      'alteFrau':{'text': 'Some other test Text', 'image': 'https://example.com/image.png'}};
+      'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'},
+      'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
     Map<String, dynamic> _adventure1 = {
       'name': 'Reja', 'version': 0.6, 'image': 'https...'};
 
@@ -99,11 +100,40 @@ void main() {
       expect(_generalData.erlebnisse, erlebnisseTestData);
     });
 
+    testWidgets('Test Erlebnisse Screen', (WidgetTester _tester) async {
+      provideMockedNetworkImages(() async {
+        Widget _widget = StaticTestWidget(returnWidget: Erlebnisse(generalData: generalData,
+        hero: testHeld, substitution: substitutions,));
+        await _tester.pumpWidget(_widget);
+
+        //See if everything looks right
+        expect(find.text('Erlebnisse'), findsOneWidget);
+        expect(find.byType(CircleAvatar), findsNWidgets(2));
+        expect(find.byType(ClipPath), findsOneWidget);
+        expect(find.byType(GridTile), findsOneWidget);
+
+        //Test the pop-up
+        final _button = find.byType(MaterialButton);
+        expect(_button, findsOneWidget);
+        await _tester.tap(_button);
+        await _tester.pumpAndSettle();
+        //See if pop-up is there
+        expect(find.byType(SimpleDialog), findsOneWidget);
+
+        //See if the pop-up looks right
+        String _checkText = testHeld.geschlecht=='w'
+            ?'Sie ist eine wahre Heldin.'
+            :'Er ist ein wahrer Held.';
+        expect(find.text(_checkText), findsOneWidget);
+        expect(find.byType(Image), findsNWidgets(2));
+      });
+    });
+
     testWidgets('Test Adventure Selection', (WidgetTester _tester) async {
       provideMockedNetworkImages(() async {
 
         AbenteuerAuswahl _widget = AbenteuerAuswahl(firestore: mockFirestore, imageHeight: 200.0,
-        updateHero: (_) => null, substitution: substitutions, hero: testHeld);
+        updateHero: (_) => null, substitution: substitutions, hero: testHeld, generalData: generalData,);
         await _tester.pumpWidget(StaticTestWidget(returnWidget: _widget));
         await _tester.pumpAndSettle();
 
@@ -112,7 +142,11 @@ void main() {
         expect(_findTile, findsOneWidget);
         final _image = find.byType(Image);
         expect(_image, findsOneWidget);
-        _tester.tap(_findTile);
+        final _button = find.byType(MaterialButton);
+        expect(_button, findsOneWidget);
+        //Just test tapping the button here - we need an integration test
+        //to actually test going to the next screen
+        await _tester.tap(_button);
       });
     });
 
@@ -274,7 +308,7 @@ void main() {
 
     testWidgets('Test loading page', (WidgetTester _tester) async {
       StaticTestWidget _widget = StaticTestWidget(returnWidget: StoryLoadingScreen(updateHero: (_) => null,
-          hero: testHeld, firestore: mockFirestore, storyname: 'Roja',
+          hero: testHeld, firestore: mockFirestore, storyname: 'Roja', generalData: generalData,
           geschichte: testGeschichte, substitution: substitutions));
 
       await _tester.pumpWidget(_widget);
@@ -298,7 +332,8 @@ void main() {
       Geschichte _geschichte = Geschichte(hero: testHeld, storyname: 'Roja');
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       GeschichteMainScreen _widget = GeschichteMainScreen(updateHero: (_) => null,
-          hero: testHeld, geschichte: _geschichte, substitution: substitutions);
+          hero: testHeld, geschichte: _geschichte, substitution: substitutions,
+      generalData: generalData,);
 
       await _tester.pumpWidget(MaterialApp(home: _widget));
       await _tester.pumpAndSettle();
@@ -309,7 +344,7 @@ void main() {
       String _textOut = substitutions.applyAllSubstitutions('#ErSie ist #eineine #wahrerwahre #HeldHeldin.');
       String _checkText = testHeld.geschlecht=='w'
           ?'Sie ist eine wahre Heldin.'
-          :'#Er ist ein wahrer Held.';
+          :'Er ist ein wahrer Held.';
       expect(_textOut, _checkText);
     });
 
@@ -317,11 +352,12 @@ void main() {
       Geschichte _geschichte = Geschichte(hero: testHeld, storyname: 'Roja');
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       StaticTestWidget _widget =  StaticTestWidget(returnWidget: StoryText(hero: testHeld, imageHeight: 100.0,
-          geschichte: _geschichte, substitution: substitutions, updateHeroStory: ({Held newHero}) => null));
+          geschichte: _geschichte, substitution: substitutions, updateHeroStory: ({Held newHero}) => null,
+      generalData: generalData,));
 
       String _checkText = testHeld.geschlecht=='w'
           ?'Sie ist eine wahre Heldin.'
-          :'#Er ist ein wahrer Held.';
+          :'Er ist ein wahrer Held.';
       await _tester.pumpWidget(_widget);
       await _tester.pumpAndSettle();
 
@@ -347,8 +383,14 @@ void main() {
       await _tester.tap(_backButton);
       await _tester.pumpAndSettle();
 
+      //See if pop-up is there
+      expect(find.byType(SimpleDialog), findsOneWidget);
+
       //Check text widgets on first page after it was loaded again
-      expect(find.byType(Text), findsNWidgets(3));
+      //There is one more text now because of the pop-up that is still open
+      //Don't really need to test closing it here as it is flutter standart
+      //so this should be fine...
+      expect(find.byType(Text), findsNWidgets(4));
       //See if the text widgets are correct
       expect(find.text(_checkText),findsOneWidget);
       expect(_forwardButton,findsOneWidget);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
+import 'package:hundetage/erlebnisse.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hundetage/utilities/firebase.dart';
 
@@ -76,20 +77,22 @@ class ProfileAdventureRow extends StatelessWidget {
 class GeschichteMainScreen extends StatefulWidget{
   final Function updateHero;
   final Held hero;
+  final GeneralData generalData;
   final Geschichte geschichte;
   final Substitution substitution;
 
   GeschichteMainScreen({@required this.updateHero, @required this.hero,
-  @required this.geschichte, @required this.substitution});
+  @required this.geschichte, @required this.substitution, @required this.generalData});
 
   @override
   GeschichteMainScreenState createState() => GeschichteMainScreenState(updateHero: updateHero,
-  hero: hero, geschichte: geschichte, substitution: substitution);
+  hero: hero, geschichte: geschichte, substitution: substitution, generalData: generalData);
 }
 
 class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   Function updateHero;
   Geschichte geschichte;
+  GeneralData generalData;
   Substitution substitution;
   Held hero;
   double imageHeight = 100.0;
@@ -102,7 +105,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   }
 
   GeschichteMainScreenState({@required this.updateHero, @required this.hero,
-  @required this.geschichte, @required this.substitution});
+  @required this.geschichte, @required this.substitution, @required this.generalData});
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +115,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
             body: new Stack(
               children: <Widget>[
                 StoryText(hero: hero, substitution: substitution, updateHeroStory: updateHeroStory,
-                  geschichte: geschichte, imageHeight: imageHeight,),
+                  geschichte: geschichte, imageHeight: imageHeight, generalData: generalData),
                 TopAdventurePanel(imageHeight: imageHeight, hero: hero),
                 ProfileAdventureRow(imageHeight: imageHeight, hero: hero),
                 ],
@@ -146,6 +149,7 @@ class Geschichte{
 class StoryLoadingScreen extends StatefulWidget{
   final Function updateHero;
   final Held hero;
+  final GeneralData generalData;
   final String storyname;
   final Firestore firestore;
   final Substitution substitution;
@@ -153,18 +157,19 @@ class StoryLoadingScreen extends StatefulWidget{
 
   StoryLoadingScreen({@required this.updateHero, @required this.hero,
   @required this.firestore, @required this.storyname, @required this.geschichte,
-  @required this.substitution});
+  @required this.substitution, @required this.generalData});
 
   @override
   StoryLoadingScreenState createState() => new StoryLoadingScreenState(hero: hero,
   updateHero: updateHero, firestore: firestore, storyname: storyname,
-  geschichte: geschichte, substitution: substitution);
+  geschichte: geschichte, substitution: substitution, generalData: generalData);
 }
 
 class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProviderStateMixin{
   Held hero;
   String storyname;
   Function updateHero;
+  GeneralData generalData;
   Geschichte geschichte;
   Substitution substitution;
   Animation<int> _characterCount;
@@ -174,7 +179,7 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
 
   StoryLoadingScreenState({@required this.updateHero, @required this.hero,
     @required this.firestore, @required this.storyname, @required this.geschichte,
-    @required this.substitution});
+    @required this.substitution, @required this.generalData});
 
   int _stringIndex;
   static const List<String> _textStrings = const <String>[
@@ -244,7 +249,7 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
   Widget _showCircularProgress(){
     return _isLoading
         ?Center(child: _loadingScreen())
-        :GeschichteMainScreen(hero: hero, updateHero: updateHero,
+        :GeschichteMainScreen(hero: hero, updateHero: updateHero, generalData: generalData,
         geschichte: geschichte, substitution: substitution);
   }
 
@@ -256,19 +261,19 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
 class StringAnimation extends StatefulWidget{
   final String animatedString;
   final Function textCallback;
-  final AnimationController animationText, animationNextScreen;
+  final AnimationController animationText;
   final int delay, totalLength;
   final Key key;
   final bool italic;
 
   StringAnimation({@required this.animatedString, @required this.delay,
     @required this.totalLength, @required this.animationText, @required this.key,
-    this.textCallback, this.italic, this.animationNextScreen});
+    this.textCallback, this.italic});
 
   @override
   StringAnimationState createState() => new StringAnimationState(animatedString: animatedString,
       textCallback: textCallback, delay: delay, totalLength: totalLength, key: key,
-      animationText: animationText, italic: italic, animationNextScreen: animationNextScreen);
+      animationText: animationText, italic: italic);
 }
 
 class StringAnimationState extends State<StringAnimation> with TickerProviderStateMixin{
@@ -285,7 +290,17 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
 
   StringAnimationState({@required this.animatedString, @required this.delay,
     @required this.key, @required this.totalLength, @required this.animationText,
-    this.textCallback, this.italic, this.animationNextScreen});
+    this.textCallback, this.italic});
+
+  @override
+  initState() {
+    super.initState();
+    //Animation for transition to new screen
+    animationNextScreen = AnimationController(
+      duration: Duration(milliseconds: 700),
+      vsync: this,
+    );
+  }
 
   String get _currentString => _textStrings[_stringIndex % _textStrings.length];
 
@@ -374,44 +389,43 @@ class StoryText extends StatefulWidget{
   final Substitution substitution;
   final Geschichte geschichte;
   final Held hero;
+  final GeneralData generalData;
   final double imageHeight;
 
-  StoryText({@required this.geschichte, @required this.substitution,
+  StoryText({@required this.geschichte, @required this.substitution, @required this.generalData,
   @required this.hero, @required this.imageHeight, @required this.updateHeroStory});
 
   @override
   StoryTextState createState() => new StoryTextState(geschichte: geschichte,
       substitution: substitution, hero: hero, imageHeight: imageHeight,
-      updateHeroStory: updateHeroStory);
+      updateHeroStory: updateHeroStory, generalData: generalData);
 }
 
 class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   Function updateHeroStory;
   Substitution substitution;
   Geschichte geschichte;
+  GeneralData generalData;
   Held hero;
   int totalTextLength;
   List<int> delays;
   List<Widget> animatedTexts;
   final int duration = 5;
-  String storyText;
-  List<String> _optionKeys, optionTexts, forwards;
+  String storyText, _condition;
+  List<String> _optionKeys, optionTexts, forwards, _erlebnisse;
+  List<bool> _validForward;
   double imageHeight;
-  AnimationController animationText, animationNextScreen;
+  AnimationController animationText;
 
   StoryTextState({@required this.substitution, @required this.geschichte,
-  @required this.hero, @required this.imageHeight, @required this.updateHeroStory});
+  @required this.hero, @required this.imageHeight, @required this.updateHeroStory,
+  @required this.generalData});
 
   @override
   initState() {
     super.initState();
     animationText = AnimationController(
       duration: Duration(seconds: duration),
-      vsync: this,
-    );
-    //Animation for transition to new screen
-    animationNextScreen = AnimationController(
-      duration: Duration(milliseconds: 700),
       vsync: this,
     );
   }
@@ -425,25 +439,41 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   String _convertText(String textIn){
     return substitution.applyAllSubstitutions(textIn);
   }
+
+  _openDialog(Widget _dialog, BuildContext context){
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return _dialog;
+        }
+    );
+  }
   
   //Function moving user to next screen
-  _textCallback(String iNext){
+  _textCallback(String iNext, String erlebniss){
+    //Show pop-up if user encounters a new event
+    if(erlebniss!='' && !(hero.erlebnisse.contains(erlebniss))){
+      String _text = generalData.erlebnisse[erlebniss]['text'];
+      Image _image = Image.network(generalData.erlebnisse[erlebniss]['image'], fit: BoxFit.cover);
+      final _record = Erlebniss(text: _text, image: _image, substitution: substitution);
+      _openDialog(ShowErlebniss(image: _record.image, text: _record.text), context);}
     setState((){
       hero.iScreen = int.parse(iNext);
-      updateHeroStory(newHero: hero);
+      hero.addScreen = int.parse(iNext);
+      hero.addErlebniss = erlebniss;
     });
+    updateHeroStory(newHero: hero);
     animationText.reset();
     animationText.forward();
-    animationNextScreen.reset();
   }
 
   Widget _buildOption({int iOption}){
     return Container(
       padding: EdgeInsets.all(20.0),
       child: StringAnimation(animatedString: optionTexts[iOption], totalLength: totalTextLength,
-          delay: delays[iOption], animationText: animationText, animationNextScreen: animationNextScreen,
+          delay: delays[iOption], animationText: animationText,
           key: Key(hero.iScreen.toString()+iOption.toString()), italic: true,
-          textCallback: () => _textCallback(forwards[iOption])),
+          textCallback: () => _textCallback(forwards[iOption], _erlebnisse[iOption])),
     );
   }
 
@@ -458,16 +488,23 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     //I don't really like that all keys are strings but this is what we get from JSON...
     //Not sure if it is worth fixing this here and having the inconsistency of types elsewhere...
     optionTexts = <String>[];
+    _erlebnisse = <String>[];
+    _validForward = <bool>[];
     for(int i=0; i<_optionKeys.length;i++){
       String _text = _convertText(geschichte.screens[hero.iScreen]['options'][i.toString()]);
       optionTexts.add(_text);
       totalTextLength += _text.length;
       delays.add(totalTextLength);
+      _condition = geschichte.screens[hero.iScreen]['conditions'][i.toString()];
+      _erlebnisse.add(geschichte.screens[hero.iScreen]['erlebnisse'][i.toString()]);
+      //Check if conditions for the option are fulfilled
+      _validForward.add(hero.erlebnisse.contains(_condition)||_condition=='');
     }
 
     //We should always have an equal number of options and forwards for them
     forwards = <String>[];
-    for(int i=0;i<_optionKeys.length;i++){forwards.add(geschichte.screens[hero.iScreen]['forwards'][i.toString()]);}
+    for(int i=0;i<_optionKeys.length;i++){if(_validForward[i])
+    {forwards.add(geschichte.screens[hero.iScreen]['forwards'][i.toString()]);}}
 
     //Create widget for main text
     animatedTexts = <Widget>[];
@@ -478,7 +515,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     ));
 
     //Create widgets for options
-    for(int i=0;i<_optionKeys.length;i++){animatedTexts.add(_buildOption(iOption: i));}
+    for(int i=0;i<_optionKeys.length;i++){if(_validForward[i]){animatedTexts.add(_buildOption(iOption: i));}}
 
     return new ListView(
             children: animatedTexts

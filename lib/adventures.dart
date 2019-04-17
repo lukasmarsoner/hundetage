@@ -296,10 +296,12 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
   initState() {
     super.initState();
     //Animation for transition to new screen
-    animationNextScreen = AnimationController(
-      duration: Duration(milliseconds: 700),
-      vsync: this,
-    );
+    //We only need this when we have an option not a main text
+    if(!(textCallback==null)){
+      animationNextScreen = AnimationController(
+        duration: Duration(milliseconds: 700),
+        vsync: this,
+    );}
   }
 
   String get _currentString => _textStrings[_stringIndex % _textStrings.length];
@@ -325,9 +327,13 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
 
   void moveToNextScreen() async{
     bold = true;
-    await animationNextScreen.forward();
     //In case there is no callback function we just do nothing at all
-    if(textCallback==null){textCallback=()=>null;}
+    if(textCallback==null) {
+      textCallback=()=>null;
+    }
+    else {
+      await animationNextScreen.forward();
+    }
     textCallback();
   }
 
@@ -518,8 +524,8 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     //Create widgets for options
     for(int i=0;i<_optionKeys.length;i++){if(_validForward[i]){animatedTexts.add(_buildOption(iOption: i));}}
 
-    return new ListView(
+    return new Scrollbar(child: new ListView(
             children: animatedTexts
-    );
+    ));
   }
 }

@@ -392,7 +392,7 @@ void main() {
       //so this should be fine...
       expect(find.byType(Text), findsNWidgets(4));
       //See if the text widgets are correct
-      expect(find.text(_checkText),findsOneWidget);
+      expect(find.text(_checkText),findsNWidgets(2));
       expect(_forwardButton,findsOneWidget);
       expect(find.text('test1'),findsOneWidget);
 

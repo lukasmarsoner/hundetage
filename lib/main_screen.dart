@@ -517,12 +517,12 @@ class AbenteuerAuswahl extends StatelessWidget{
 
   Widget _buildTile({BuildContext context, DocumentSnapshot data, Held hero,
     Firestore firestore, Function updateHero, Substitution substitution}) {
-    final record = Adventure.fromSnapshot(data);
+    final record = Geschichte.fromSnapshot(data);
     return GridTile(
         child: Card(
           child: MaterialButton(onPressed: () => _gotoAdventureScreen(
             context: context, data: data, hero: hero, firestore: firestore,
-            updateHero: updateHero, substitution: substitution, storyname: record.name),
+            updateHero: updateHero, substitution: substitution, geschichte: record),
               child: record.image),
               ),
         );
@@ -530,31 +530,51 @@ class AbenteuerAuswahl extends StatelessWidget{
 
   _gotoAdventureScreen({BuildContext context, DocumentSnapshot data, Held hero,
     Firestore firestore, Function updateHero, Substitution substitution,
-    String storyname}){
+    Geschichte geschichte}){
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => StoryLoadingScreen(
           hero: hero, updateHero: updateHero, firestore: firestore,
-          storyname: storyname, substitution: substitution, generalData: generalData,
-        geschichte: Geschichte(hero: hero, storyname: storyname)))
+          substitution: substitution, generalData: generalData,
+        geschichte: geschichte))
     );
   }
 }
 
-class Adventure {
-  final String name;
+class Geschichte {
+  final String storyname;
   final double version;
+  final int nscreens;
   Image image;
-
-  Adventure.fromMap(Map<String, dynamic> map)
+  Held hero;
+  Map<int,Map<String,dynamic>> screens;
+  
+  Geschichte.fromMap(Map<String, dynamic> map)
       : assert(map['name'] != null),
         assert(map['image'] != null),
         assert(map['version'] != null),
-        name = map['name'],
+        assert(map['nscreens'] != null),
+        storyname = map['name'],
         version = map['version'],
+        nscreens = int.parse(map['nscreens']),
         image = Image.network(map['image'], fit: BoxFit.cover);
 
-  Adventure.fromSnapshot(DocumentSnapshot snapshot)
+  Geschichte.fromSnapshot(DocumentSnapshot snapshot)
       : this.fromMap(snapshot.data);
+
+  //Make sure all maps have the correct types
+  void setStory(Map<String,dynamic> _map){
+    screens = {};
+    for(int i=0;i<nscreens;i++){
+      Map<String,dynamic> _screen = {};
+      String index = i.toString();
+      _screen['options'] = Map<String,String>.from(_map[index]['options']);
+      _screen['forwards'] = Map<String,String>.from(_map[index]['forwards']);
+      _screen['erlebnisse'] = Map<String,String>.from(_map[index]['erlebnisse']);
+      _screen['conditions'] = Map<String,String>.from(_map[index]['conditions']);
+      _screen['text'] = _map[index]['text'];
+      screens[i] = _screen;
+    }
+  }
 }
 

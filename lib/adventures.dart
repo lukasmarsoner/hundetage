@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
 import 'package:hundetage/erlebnisse.dart';
+import 'package:hundetage/main_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hundetage/utilities/firebase.dart';
 
@@ -124,50 +125,26 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   }
 }
 
-class Geschichte{
-  String storyname;
-  Held hero;
-  Map<int,Map<String,dynamic>> screens;
-
-  Geschichte({@required this.hero, @required this.storyname, this.screens});
-
-  //Make sure all maps have the correct types
-  void setStory(List<Map<String,dynamic>> _map){
-    screens = {};
-    for(int i=0;i<_map.length;i++){
-      Map<String,dynamic> _screen = {};
-      _screen['options'] = Map<String,String>.from(_map[i]['options']);
-      _screen['forwards'] = Map<String,String>.from(_map[i]['forwards']);
-      _screen['erlebnisse'] = Map<String,String>.from(_map[i]['erlebnisse']);
-      _screen['conditions'] = Map<String,String>.from(_map[i]['conditions']);
-      _screen['text'] = _map[i]['text'];
-      screens[i] = _screen;
-    }
-  }
-}
-
 class StoryLoadingScreen extends StatefulWidget{
   final Function updateHero;
   final Held hero;
   final GeneralData generalData;
-  final String storyname;
   final Firestore firestore;
   final Substitution substitution;
   final Geschichte geschichte;
 
   StoryLoadingScreen({@required this.updateHero, @required this.hero,
-  @required this.firestore, @required this.storyname, @required this.geschichte,
+  @required this.firestore, @required this.geschichte,
   @required this.substitution, @required this.generalData});
 
   @override
   StoryLoadingScreenState createState() => new StoryLoadingScreenState(hero: hero,
-  updateHero: updateHero, firestore: firestore, storyname: storyname,
+  updateHero: updateHero, firestore: firestore,
   geschichte: geschichte, substitution: substitution, generalData: generalData);
 }
 
 class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProviderStateMixin{
   Held hero;
-  String storyname;
   Function updateHero;
   GeneralData generalData;
   Geschichte geschichte;
@@ -178,7 +155,7 @@ class StoryLoadingScreenState extends State<StoryLoadingScreen> with TickerProvi
   Firestore firestore;
 
   StoryLoadingScreenState({@required this.updateHero, @required this.hero,
-    @required this.firestore, @required this.storyname, @required this.geschichte,
+    @required this.firestore, @required this.geschichte,
     @required this.substitution, @required this.generalData});
 
   int _stringIndex;

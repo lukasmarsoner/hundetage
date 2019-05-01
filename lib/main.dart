@@ -298,23 +298,6 @@ class Held{
   };
 }
 
-class Adventure{
-  // Properties of adventures
-  String name;
-  int version;
-  Map<int,Map<String,dynamic>> story;
-
-  Adventure({@required this.name, @required this.version, @required this.story});
-
-  factory Adventure.fromJson(Map<String, dynamic> _jsonData){
-    return Adventure(
-        name:_jsonData['name'],
-        version: _jsonData['version'],
-        story: _jsonData['story']
-    );
-  }
-}
-
 class GeneralData{
   //Contains stuff needed by all adventures
   //gendering contains mappings for male/female versions of words

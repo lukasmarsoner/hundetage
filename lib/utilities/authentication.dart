@@ -39,6 +39,7 @@ class Authenticator {
   //have signed-in recently. If the user is not - we sign him/her out
   deleteUser() async {
     FirebaseUser _user = await firebaseAuth.currentUser();
+    _user.reload();
     _user.delete();
   }
 

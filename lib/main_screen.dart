@@ -544,7 +544,6 @@ class AbenteuerAuswahl extends StatelessWidget{
 class Geschichte {
   final String storyname;
   final double version;
-  final int nscreens;
   Image image;
   Held hero;
   Map<int,Map<String,dynamic>> screens;
@@ -553,10 +552,8 @@ class Geschichte {
       : assert(map['name'] != null),
         assert(map['image'] != null),
         assert(map['version'] != null),
-        assert(map['nscreens'] != null),
         storyname = map['name'],
         version = map['version'],
-        nscreens = int.parse(map['nscreens']),
         image = Image.network(map['image'], fit: BoxFit.cover);
 
   Geschichte.fromSnapshot(DocumentSnapshot snapshot)
@@ -565,15 +562,19 @@ class Geschichte {
   //Make sure all maps have the correct types
   void setStory(Map<String,dynamic> _map){
     screens = {};
-    for(int i=0;i<nscreens;i++){
-      Map<String,dynamic> _screen = {};
-      String index = i.toString();
-      _screen['options'] = Map<String,String>.from(_map[index]['options']);
-      _screen['forwards'] = Map<String,String>.from(_map[index]['forwards']);
-      _screen['erlebnisse'] = Map<String,String>.from(_map[index]['erlebnisse']);
-      _screen['conditions'] = Map<String,String>.from(_map[index]['conditions']);
-      _screen['text'] = _map[index]['text'];
-      screens[i] = _screen;
+    List<String> _keys = _map.keys.toList();
+    for(int i=0;i<_keys.length;i++){
+      String key = _keys[i];
+      //Exclude metadata
+      if(!<String>['name','image','version'].contains(key)){
+        Map<String,dynamic> _screen = {};
+        _screen['options'] = Map<String,String>.from(_map[key]['options']);
+        _screen['forwards'] = Map<String,String>.from(_map[key]['forwards']);
+        _screen['erlebnisse'] = Map<String,String>.from(_map[key]['erlebnisse']);
+        _screen['conditions'] = Map<String,String>.from(_map[key]['conditions']);
+        _screen['text'] = _map[key]['text'];
+        screens[i] = _screen;
+      }
     }
   }
 }

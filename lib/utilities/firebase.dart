@@ -3,6 +3,7 @@ import 'package:hundetage/main.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hundetage/main_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 //Loads data needed by all adventures from firestore
 Future<GeneralData> loadGeneralData(Firestore firestore) async {
@@ -79,11 +80,12 @@ Held hero, String uid}) async {
 }
 
 //Deletes entry from firebase
-void deleteFirestoreUserData({Firestore firestore, Authenticator authenticator}) async {
-  String uid = await authenticator.getUid();
+void deleteFirestoreUserData({Firestore firestore, FirebaseUser user}) async {
+  String uid = user.uid;
 
   CollectionReference _collectionReference = firestore.collection('user_data');
 
   DocumentReference _documentReference = _collectionReference.document(uid);
-  _documentReference.delete();
+  await _documentReference.delete();
+  await user.delete();
 }

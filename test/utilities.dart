@@ -27,7 +27,7 @@ Map<String,Map<String,String>> erlebnisseTestData = {
   'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
 
 Map<String, dynamic> adventure1 = {
-  'name': 'Raja', 'version': 0.6, 'image': 'https...', 'nscreens': '2',
+  'name': 'Raja', 'version': 0.6, 'image': 'https...',
   '0':
     {'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
     'forwards': {'0':'1','1':'5'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',

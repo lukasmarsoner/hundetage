@@ -3,6 +3,8 @@ import 'package:hundetage/utilities/authentication.dart';
 import 'main.dart';
 import 'package:hundetage/utilities/firebase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class LoginSignUpPage extends StatefulWidget{
   final Function updateHero;
@@ -107,29 +109,31 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Future<void> _deleteUserData() async{
+    FirebaseUser user = await authenticator.getCurrentUser();
     setState(() {
       _isLoading = true;
       _errorMessage = "";
     });
     try {
-      //Deletes user data in the database
-      //We need to do this first as otherwise we don't have authorization to
-      deleteFirestoreUserData(firestore: firestore, authenticator: authenticator);
-      await authenticator.deleteUser();
+      //Deleting requires the user to have logged-in only recently
+      //We catch the error here and log the user out, should he/she not
+      //have signed-in recently. If the user is not - we sign him/her out
+      deleteFirestoreUserData(firestore: firestore, user: user);
       _showDeletionDialog();
+      _signOut();
     }
-    catch (e) {
-    setState(() {
-    _isLoading = false;
-    if (_isIos) {
-      _changeFormToLogin();
-      _showDeletionLogoutDialog();
-      _errorMessage = e.details;
-    } else
-      _changeFormToLogin();
-      _showDeletionLogoutDialog();
-      _errorMessage = e.message;
-    });
+      catch (e) {
+      setState(() {
+      _isLoading = false;
+      if (_isIos) {
+        _changeFormToLogin();
+        _showDeletionLogoutDialog();
+        _errorMessage = e.details;
+      } else
+        _changeFormToLogin();
+        _showDeletionLogoutDialog();
+        _errorMessage = e.message;
+      });
     }
     setState(() {
       _isLoading = false;
@@ -247,7 +251,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
               child: new Text("Löschen"),
               onPressed: () {
                 _deleteUserData();
-                _signOut();
                 Navigator.of(context).pop();
               },
             ),

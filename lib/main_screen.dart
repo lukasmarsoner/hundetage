@@ -494,7 +494,7 @@ class AbenteuerAuswahl extends StatelessWidget{
   Widget build(BuildContext context) {
     return Container(padding: EdgeInsets.only(top: imageHeight-50.0),
         child: StreamBuilder<QuerySnapshot>(
-          stream: firestore.collection('abenteuer').snapshots(),
+          stream: firestore.collection('abenteuer_metadata').snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return LinearProgressIndicator();
             return _buildTiledSelection(context: context, snapshot: snapshot.data.documents,

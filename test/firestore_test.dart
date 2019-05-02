@@ -26,6 +26,7 @@ void main() {
     final DocumentSnapshot mockDocumentSnapshotErlebnisse = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotUser = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotAbenteuer = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotAbenteuerMetadata = MockDocumentSnapshot();
 
     final DocumentReference mockDocumentReferenceGendering = MockDocumentReference();
     final DocumentReference mockDocumentReferenceErlebnisse = MockDocumentReference();
@@ -62,11 +63,13 @@ void main() {
     when(mockDocumentSnapshotUser.data).thenReturn(testHeld.values);
 
     when(mockFirestore.collection('abenteuer')).thenReturn(mockCollectionReference);
+    when(mockFirestore.collection('abenteuer_metadata')).thenReturn(mockCollectionReference);
     when(mockCollectionReference.snapshots()).thenAnswer((_) => Stream.fromIterable([mockQuerySnapshot]));
-    when(mockQuerySnapshot.documents).thenReturn([mockDocumentSnapshotAbenteuer]);
+    when(mockQuerySnapshot.documents).thenReturn([mockDocumentSnapshotAbenteuerMetadata]);
     when(mockCollectionReference.document('Raja')).thenReturn(mockDocumentReferenceAbenteuer);
     when(mockDocumentReferenceAbenteuer.get()).thenAnswer((_) async => mockDocumentSnapshotAbenteuer);
-    when(mockDocumentSnapshotAbenteuer.data).thenReturn(adventure1);
+    when(mockDocumentSnapshotAbenteuer.data).thenReturn(adventure);
+    when(mockDocumentSnapshotAbenteuerMetadata.data).thenReturn(adventureMetadata);
 
     when(mockFireUser.uid).thenReturn('hQtzTZdHkQde3dUxyZQ3EkzxYYn1');
     when(mockFireUser.isEmailVerified).thenReturn(true);
@@ -307,20 +310,20 @@ void main() {
       });
 
     test('Test loading story data', () async{
-      Geschichte _geschichte = new Geschichte.fromMap(adventure1);
+      Geschichte _geschichte = new Geschichte.fromMap(adventureMetadata);
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
 
       List<String> _keys = _geschichte.screens[0].keys.toList();
 
       //Check if all data was returned correctly and the story is initialized as it should
       for(int i=0;i<_keys.length;i++){
-        expect(_geschichte.screens[0][_keys[i]], adventure1['0'][_keys[i]]);
-        expect(_geschichte.screens[1][_keys[i]], adventure1['1'][_keys[i]]);
+        expect(_geschichte.screens[0][_keys[i]], adventure['0'][_keys[i]]);
+        expect(_geschichte.screens[1][_keys[i]], adventure['1'][_keys[i]]);
       }
     });
 
     testWidgets('Test adventure screen', (WidgetTester _tester) async {
-      Geschichte _geschichte = new Geschichte.fromMap(adventure1);
+      Geschichte _geschichte = new Geschichte.fromMap(adventureMetadata);
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       GeschichteMainScreen _widget = GeschichteMainScreen(updateHero: (_) => null,
           hero: testHeld, geschichte: _geschichte, substitution: substitutions,
@@ -340,11 +343,11 @@ void main() {
     });
 
     testWidgets('Test Text', (WidgetTester _tester) async {
-      Geschichte _geschichte = new Geschichte.fromMap(adventure1);
+      Geschichte _geschichte = new Geschichte.fromMap(adventureMetadata);
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       StaticTestWidget _widget =  StaticTestWidget(returnWidget: StoryText(hero: testHeld, imageHeight: 100.0,
           geschichte: _geschichte, substitution: substitutions, updateHeroStory: ({Held newHero}) => null,
-      generalData: generalData,));
+      generalData: generalData));
 
       String _checkText = testHeld.geschlecht=='w'
           ?'Sie ist eine wahre Heldin.'

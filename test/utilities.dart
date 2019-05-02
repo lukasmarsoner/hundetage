@@ -26,8 +26,7 @@ Map<String,Map<String,String>> erlebnisseTestData = {
   'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'},
   'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
 
-Map<String, dynamic> adventure1 = {
-  'name': 'Raja', 'version': 0.6, 'image': 'https...',
+Map<String, dynamic> adventure = {
   '0':
     {'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
     'forwards': {'0':'1','1':'5'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
@@ -37,8 +36,11 @@ Map<String, dynamic> adventure1 = {
     'forwards': {'0':'0'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
     'options': {'0':'new page'}}};
 
+Map<String, dynamic> adventureMetadata = {
+  'name': 'Raja', 'version': 0.6, 'image': 'https...'};
+
 final testHeld = new Held.test();
-final testGeschichte = new Geschichte.fromMap(adventure1);
+final testGeschichte = new Geschichte.fromMap(adventureMetadata);
 final generalData = new GeneralData(erlebnisse: erlebnisseTestData,gendering: genderingTestData);
 final substitutions = new Substitution(hero: testHeld, generalData: generalData);
 final authenticator = new Authenticator();

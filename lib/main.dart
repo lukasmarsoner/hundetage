@@ -6,6 +6,7 @@ import 'package:hundetage/utilities/authentication.dart';
 import 'utilities/json.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
 
 void main() async{
   runApp(SplashScreen());
@@ -16,15 +17,133 @@ class SplashScreen extends StatefulWidget{
   SplashScreenState createState() => new SplashScreenState();
 }
 
-class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin{
-  Held hero;
-  Animation<int> _characterCount;
-  AnimationController _animationController;
-  bool _isLoading = true;
+class DataLoader {
   Authenticator authenticator;
   Substitution substitution;
   GeneralData generalData;
+  VersionController versionController, testVersionController;
+  VersionController _firebaseVersions = new VersionController();
   Firestore firestore;
+  bool local, fakeOnlineMode;
+  Held hero = Held.initial();
+  BuildContext context;
+  ConnectionStatus connectionStatus = new ConnectionStatus();
+
+  //fakeOnlineMode is used so we don't need to mock the http-request during testing
+  DataLoader({this.authenticator, this.context, this.firestore, this.fakeOnlineMode,
+  this.testVersionController});
+
+  Future<void> loadData() async {
+    //Check if we are connected to the internet
+    connectionStatus.checkConnection();
+    //If so - we can check if there are any updates available for us
+    //If not we see if we have local data - if not we need to inform the user
+    //that they need to go online to retrieve it
+    fakeOnlineMode
+        ?local = false
+        :local = !connectionStatus.online;
+
+    versionController = await loadLocalVersionData();
+    //If we have no connection we just load the local data
+    if (local) {
+      if (!(await canWorkOffline())) {
+        _showConnectionNeededDialog(context);
+      }
+      else {
+        generalData = await loadLocalGeneralData();
+        hero = await hero.loadOffline();
+      }
+    }
+    else {
+        //First see if we have newer versions available on Firebase
+        //For testing we need to mock this
+        fakeOnlineMode
+            ?_firebaseVersions = testVersionController
+            :_firebaseVersions = await loadVersionInformation(firestore: firestore);
+
+        bool _offineDataAvailable = await canWorkOffline();
+        //If there is no offline data we need to load everything
+      if (!_offineDataAvailable) {
+        generalData = await loadGeneralData(firestore);
+        versionController = _firebaseVersions;
+
+        //Write stuff to file so it is there next time
+        writeLocalVersionData(versionController);
+        writeLocalGeneralData(generalData);
+      }
+      //If there is, we can just update what has changed
+      else {
+        if (versionController.gendering < _firebaseVersions.gendering) {
+          generalData.gendering = await loadGendering(firestore);
+          versionController.gendering = _firebaseVersions.gendering;
+          //Update version-information on disk
+          writeLocalVersionData(versionController);
+          //Update data on disk
+          writeLocalGenderingData(generalData);
+        }
+        if (versionController.erlebnisse < _firebaseVersions.erlebnisse) {
+          generalData.erlebnisse = await loadGendering(firestore);
+          versionController.erlebnisse = _firebaseVersions.erlebnisse;
+          //Update version-information on disk
+          writeLocalVersionData(versionController);
+          //Update data on disk
+          writeLocalErlebnisseData(generalData);
+        }
+      }
+    }
+
+    //Here we manage user data. This is different as we might want to load local
+    //data even if we are online
+    //First we check if the user is currently logged-in
+    bool _signedIn = await authenticator.getUid()==null;
+    hero = await hero.load(authenticator: authenticator,
+        signedIn: _signedIn,
+        firestore: firestore);
+    if (hero == null) {
+      hero = Held.initial();
+    }
+    //Check if we are already logged-in
+    hero.signedIn = _signedIn;
+
+    //Generate substitutions and terminate loading animation
+    substitution = Substitution(hero: hero, generalData: generalData);
+  }
+
+  _showConnectionNeededDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          // return object of type Dialog
+          return AlertDialog(
+            key: Key('MissingDataAlert'),
+            title: new Text("Keine Internetverbindung"),
+            content: new Text(
+                "Beim ersten Start wird eine internetverbindung benötigt."
+                    "Danach kannst du die App auch offline benutzen."),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text("Schließen"),
+                onPressed: () {
+                  exit(0);
+                },
+              ),
+            ],
+          );
+        }
+    );
+  }
+}
+
+class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin{
+  Held hero = Held.initial();
+  Animation<int> _characterCount;
+  AnimationController _animationController;
+  bool _isLoading = true;
+  Authenticator authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
+  Substitution substitution;
+  GeneralData generalData;
+  VersionController versionController;
+  Firestore firestore = Firestore.instance;
 
   int _stringIndex;
   static const List<String> _textStrings = const <String>[
@@ -32,11 +151,6 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
   ];
 
   String get _currentString => _textStrings[_stringIndex % _textStrings.length];
-
-  //Check if user is currently logged-in
-  Future<bool> checkLoginStatus() async{
-    if(await authenticator.getUid()==null){return false;}else{return true;}
-  }
 
   Future<void> _animateText() async {
     _animationController = AnimationController(
@@ -84,30 +198,22 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
     );
   }
 
-  Future<void> _loadData() async{
-    firestore = Firestore.instance;
-    //firestore.settings(timestampsInSnapshotsEnabled: true);
-    authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
-    generalData = await loadGeneralData(firestore);
-    bool _signedIn = await checkLoginStatus();
-    hero = Held.initial();
-    hero = await hero.load(authenticator: authenticator,
-        signedIn: _signedIn,
-        firestore: firestore);
-    if (hero == null) {
-      hero = Held.initial();
-    }
-    //Check if we are already logged-in
-    hero.signedIn = _signedIn;
-    substitution = Substitution(hero: hero, generalData: generalData);
-    setState(() => _isLoading = false);
-  }
-
   @override
   void initState() {
     super.initState();
     _animateText();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    WidgetsBinding.instance.addPostFrameCallback((_)=>_runDataLoaders());
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _runDataLoaders() async{
+    //Class taking care of all data-loading logic
+    DataLoader _dataLoader = new DataLoader(firestore: firestore,
+        authenticator: authenticator, context: context);
+    await _dataLoader.loadData();
+    generalData = _dataLoader.generalData;
+    substitution = _dataLoader.substitution;
+    hero = _dataLoader.hero;
   }
 
   Widget _showCircularProgress(){
@@ -257,6 +363,12 @@ class Held{
     }
   }
 
+  //Loading method for offline use
+  Future<Held> loadOffline() async{
+    Held _hero = await loadLocalUserData();
+    if(_hero==null){return null;}else{return _hero;}
+  }
+
   // Setters with sanity-checks
   set name(String valIn){
     (valIn != null && valIn.length != 0)?_name = valIn:throw new Exception('Invalid name!');
@@ -306,6 +418,80 @@ class GeneralData{
   Map<String,Map<String,String>> erlebnisse;
 
   GeneralData({@required this.gendering, @required this.erlebnisse});
+
+  Map<String,dynamic> get values => {
+    'gendering': gendering,
+    'erlebnisse': erlebnisse
+  };
+
+  GeneralData.fromMap(Map<String,dynamic> _map){
+    gendering = _map['gendering'];
+    erlebnisse = _map['erlebnisse'];
+  }
+
+  set setGendering(Map<String, dynamic> _dataIn){gendering = generalDataFromDynamic(_dataIn);}
+  set setErlebnisse(Map<String, dynamic> _dataIn){erlebnisse = generalDataFromDynamic(_dataIn);}
+}
+
+//Central class to monitor version-information
+class VersionController{
+  Map<String,double> stories;
+  double gendering, erlebnisse;
+
+  VersionController();
+
+  VersionController.fromMap(Map<String,dynamic> _map){
+    //Explicitly set some data
+    gendering = double.parse(_map['gendering']);
+    erlebnisse = double.parse(_map['erlebnisse']);
+    //All other version-data refers to stories
+    List<String> _keys = _map.keys.toList();
+    stories = new Map<String,double>();
+    for(int i=0;i<_keys.length;i++){
+      String _key = _keys[i];
+      if(!(<String>['gendering','erlebnisse'].contains(_key))){
+        stories[_key] = double.parse(_map[_key]);
+      }
+    }
+  }
+
+  Map<String,String> getOutputData(){
+    //Used to convert map into a format that can be written to JSON
+    //And Firebase in the same way
+    Map<String,String> _outputAsString = new Map<String,String>();
+    _outputAsString['gendering'] = gendering.toString();
+    _outputAsString['erlebnisse'] = erlebnisse.toString();
+    List<String> _keys = stories.keys.toList();
+    for(int i=0;i<_keys.length;i++){
+      String _key = _keys[i];
+      if(!(<String>['gendering','erlebnisse'].contains(_key))){
+        _outputAsString[_key] = stories[_key].toString();
+      }
+    }
+    return _outputAsString;
+  }
+
+  Map<String,dynamic> get values => getOutputData();
+}
+
+//Helper class to check online-offline status
+class ConnectionStatus{
+  bool online = false;
+
+  //The test to actually see if there is a connection
+  Future<void> checkConnection() async {
+    try {
+      final result = await InternetAddress.lookup('http://wwww.google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        online = true;
+      } else {
+        online = false;
+      }
+    } on SocketException
+    catch(_) {
+      online = false;
+    }
+  }
 }
 
 //From here we handle gendering and name substitutions

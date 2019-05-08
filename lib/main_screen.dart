@@ -543,7 +543,6 @@ class AbenteuerAuswahl extends StatelessWidget{
 
 class Geschichte {
   final String storyname;
-  final double version;
   Image image;
   Held hero;
   Map<int,Map<String,dynamic>> screens;
@@ -551,9 +550,7 @@ class Geschichte {
   Geschichte.fromMap(Map<String, dynamic> map)
       : assert(map['name'] != null),
         assert(map['image'] != null),
-        assert(map['version'] != null),
         storyname = map['name'],
-        version = map['version'],
         image = Image.network(map['image'], fit: BoxFit.cover);
 
   Geschichte.fromSnapshot(DocumentSnapshot snapshot)
@@ -566,16 +563,20 @@ class Geschichte {
     for(int i=0;i<_keys.length;i++){
       String key = _keys[i];
       //Exclude metadata
-      if(!<String>['name','image','version'].contains(key)){
+      if(!<String>['name','image'].contains(key)){
         Map<String,dynamic> _screen = {};
         _screen['options'] = Map<String,String>.from(_map[key]['options']);
         _screen['forwards'] = Map<String,String>.from(_map[key]['forwards']);
         _screen['erlebnisse'] = Map<String,String>.from(_map[key]['erlebnisse']);
         _screen['conditions'] = Map<String,String>.from(_map[key]['conditions']);
         _screen['text'] = _map[key]['text'];
-        screens[i] = _screen;
+        screens[int.parse(key)] = _screen;
       }
     }
   }
+
+  Map<String,dynamic> get data => {
+    'screens': screens
+  };
 }
 

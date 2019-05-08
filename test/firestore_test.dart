@@ -12,50 +12,65 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'package:hundetage/adventures.dart';
 import 'package:hundetage/login.dart';
+import 'dart:io';
+import 'package:hundetage/utilities/json.dart';
+import 'package:flutter/services.dart';
 
 void main() {
-  group('Firebase unit tests', () {
+  group('Tests involving Firebase', () {
+    //Mocks calls to the application directory
+    setUpAll(() async {
+      // Create a temporary directory to work with
+      final directory = await Directory.systemTemp.createTemp();
+
+      // Mock out the MethodChannel for the path_provider plugin
+      const MethodChannel('plugins.flutter.io/path_provider')
+          .setMockMethodCallHandler((MethodCall methodCall) async {
+        // If you're getting the apps documents directory, return the path to the
+        // temp directory on the test environment instead.
+        if (methodCall.method == 'getApplicationDocumentsDirectory') {
+          return directory.path;
+        }
+        return null;
+      });
+    });
+
     //Mock class-instances needed in all tests involving classes initialized from Firebase
     final Firestore mockFirestore = MockFirestore();
     final MockFireUser mockFireUser = MockFireUser();
     final MockAuthenticator mockFireAuth = MockAuthenticator();
+    final Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
 
     final CollectionReference mockCollectionReference = MockCollectionReference();
 
     final DocumentSnapshot mockDocumentSnapshotGendering = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotErlebnisse = MockDocumentSnapshot();
+    final DocumentSnapshot mockDocumentSnapshotVersions = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotUser = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotAbenteuer = MockDocumentSnapshot();
     final DocumentSnapshot mockDocumentSnapshotAbenteuerMetadata = MockDocumentSnapshot();
 
     final DocumentReference mockDocumentReferenceGendering = MockDocumentReference();
     final DocumentReference mockDocumentReferenceErlebnisse = MockDocumentReference();
+    final DocumentReference mockDocumentReferenceVersions = MockDocumentReference();
     final DocumentReference mockDocumentReferenceUser = MockDocumentReference();
     final DocumentReference mockDocumentReferenceAbenteuer = MockDocumentReference();
     final QuerySnapshot mockQuerySnapshot = MockQuerySnapshot();
-
-    //Data used for testing - we will return this in our mocked request to Firebase
-    //The data returnd from firebase is Map<dynamic,dynamic>, so the versions handed
-    //to the mock firebase should be of that same type. As tests seem to fail that
-    //way, we use the next-best thing
-    Map<String,dynamic> _genderingMockData = {'ErSie':{'m':'Er','w':'Sie'},
-      'eineine':{'m':'ein','w':'eine'},
-      'HeldHeldin':{'m':'Held','w':'Heldin'},
-      'wahrerwahre':{'m':'wahrer','w':'wahre'}};
-    Map<String,dynamic> _erlebnisseMockData = {
-      'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'},
-      'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
 
     //Mock the collection
     when(mockFirestore.collection('general_data')).thenReturn(mockCollectionReference);
     //Mock both documents
     when(mockCollectionReference.document('gendering')).thenReturn(mockDocumentReferenceGendering);
     when(mockDocumentReferenceGendering.get()).thenAnswer((_) async => mockDocumentSnapshotGendering);
-    when(mockDocumentSnapshotGendering.data).thenReturn(_genderingMockData);
+    when(mockDocumentSnapshotGendering.data).thenReturn(genderingMockData);
 
     when(mockCollectionReference.document('erlebnisse')).thenReturn(mockDocumentReferenceErlebnisse);
     when(mockDocumentReferenceErlebnisse.get()).thenAnswer((_) async => mockDocumentSnapshotErlebnisse);
-    when(mockDocumentSnapshotErlebnisse.data).thenReturn(_erlebnisseMockData);
+    when(mockDocumentSnapshotErlebnisse.data).thenReturn(erlebnisseMockData);
+
+    when(mockCollectionReference.document('firebase_versions')).thenReturn(mockDocumentReferenceVersions);
+    when(mockDocumentReferenceVersions.get()).thenAnswer((_) async => mockDocumentSnapshotVersions);
+    when(mockDocumentSnapshotVersions.data).thenReturn(versionData);
 
     when(mockFirestore.collection('user_data')).thenReturn(mockCollectionReference);
     when(mockCollectionReference.document('hQtzTZdHkQde3dUxyZQ3EkzxYYn1')).thenReturn(mockDocumentReferenceUser);
@@ -229,21 +244,19 @@ void main() {
       expect(_findAppText, findsOneWidget);
     });
 
-    testWidgets('Test login screen', (WidgetTester _tester) async {
-      SplashScreen _widget = new SplashScreen();
-      await _tester.pumpWidget(_widget);
-      final _findImage = find.byType(Image);
-      expect(_findImage, findsOneWidget);
-      await _tester.pump();
-      final _findText = find.byKey(Key('loadingText'));
-      expect(_findText, findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
+    //TODO: mock http-request
+    //testWidgets('Test splash screen', (WidgetTester _tester) async {
+    //  SplashScreen _widget = new SplashScreen();
+    //  await _tester.pumpWidget(_widget);
+    //  final _findImage = find.byType(Image);
+    //  expect(_findImage, findsOneWidget);
+    //  await _tester.pump();
+    //  final _findText = find.byKey(Key('loadingText'));
+    //  expect(_findText, findsOneWidget);
+    //  expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    //  });
 
     test('Load User from Firebase', () async{
-      //Initialize the class
-      Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
-
       //Make sure we don't just get the same values we put in
       Held _tmpHeld = Held.initial();
 
@@ -252,7 +265,6 @@ void main() {
     });
 
     testWidgets('Test login screen', (WidgetTester _tester) async {
-        Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
         StaticTestWidget _widget = StaticTestWidget(returnWidget: LoginSignUpPage(
             authenticator: _testAuth, hero: testHeld,
             updateHero: ({Held newHero}) => null, firestore: mockFirestore));
@@ -392,6 +404,61 @@ void main() {
 
     });
 
+    test('Test loading version data', () async{
+      VersionController _versionController = await loadVersionInformation(firestore: mockFirestore);
+
+      //Check if all data was returned correctly
+      expect(_versionController.gendering,versionTestData['gendering']);
+      expect(_versionController.erlebnisse,versionTestData['erlebnisse']);
+      //Check story-versions
+      Map<String,double> _storyVersions = _versionController.stories;
+      List<String> _keys = _storyVersions.keys.toList();
+      for(int i=0;i<_keys.length;i++){
+        expect(_storyVersions[_keys[i]],versionTestData[_keys[i]]);
+      }
+    });
+
+    test('Test offline data loading', () async {{
+      //TODO: Add test for no-data warning - needs to be widget test
+      DataLoader _dataLoader = new DataLoader(firestore: mockFirestore,
+      authenticator: _testAuth, fakeOnlineMode: false);
+
+      //We add the local data and try to load it
+      writeLocalUserData(testHeld);
+      writeLocalGeneralData(generalData);
+      await _dataLoader.loadData();
+
+      expect(_dataLoader.substitution, isNotNull);
+      expect(_dataLoader.generalData.values['erlebnisse'], erlebnisseTestData);
+      expect(_dataLoader.generalData.values['gendering'], genderingTestData);
+    }
+    });
+
+    test('Test online data loading', () async {{
+      DataLoader _dataLoader = new DataLoader(firestore: mockFirestore,
+          authenticator: _testAuth, testVersionController:versionController, fakeOnlineMode: true);
+
+      //Test loading with no local data present
+      //First we delete all local data
+      await deleteLocalVersionData();
+      await deleteLocalGeneralData();
+
+      await _dataLoader.loadData();
+      expect(_dataLoader.substitution, isNotNull);
+      expect(_dataLoader.generalData.values['erlebnisse'], erlebnisseTestData);
+      expect(_dataLoader.generalData.values['gendering'], genderingTestData);
+
+      //We add the local data and try to load it
+      writeLocalUserData(testHeld);
+      writeLocalGeneralData(generalData);
+      writeLocalVersionData(versionController);
+
+      await _dataLoader.loadData();
+      expect(_dataLoader.substitution, isNotNull);
+      expect(_dataLoader.generalData.values['erlebnisse'], erlebnisseTestData);
+      expect(_dataLoader.generalData.values['gendering'], genderingTestData);
+    }
+    });
     //Group ends here
   });
 }

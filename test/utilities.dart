@@ -26,6 +26,18 @@ Map<String,Map<String,String>> erlebnisseTestData = {
   'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'},
   'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
 
+//Data used for testing - we will return this in our mocked request to Firebase
+//The data returnd from firebase is Map<dynamic,dynamic>, so the versions handed
+//to the mock firebase should be of that same type. As tests seem to fail that
+//way, we use the next-best thing
+Map<String,dynamic> genderingMockData = {'ErSie':{'m':'Er','w':'Sie'},
+  'eineine':{'m':'ein','w':'eine'},
+  'HeldHeldin':{'m':'Held','w':'Heldin'},
+  'wahrerwahre':{'m':'wahrer','w':'wahre'}};
+Map<String,dynamic> erlebnisseMockData = {
+  'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'},
+  'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
+
 Map<String, dynamic> adventure = {
   '0':
     {'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
@@ -37,10 +49,17 @@ Map<String, dynamic> adventure = {
     'options': {'0':'new page'}}};
 
 Map<String, dynamic> adventureMetadata = {
-  'name': 'Raja', 'version': 0.6, 'image': 'https...'};
+  'name': 'Raja', 'image': 'https...'};
+
+Map<String, dynamic> versionData = {
+  'gendering': '0.7', 'erlebnisse': '0.8', 'Raja': '0.8', 'GrosseFahrt': '0.0'};
+
+Map<String, double> versionTestData = {
+  'gendering': 0.7, 'erlebnisse': 0.8, 'Raja': 0.8, 'GrosseFahrt': 0.0};
 
 final testHeld = new Held.test();
 final testGeschichte = new Geschichte.fromMap(adventureMetadata);
 final generalData = new GeneralData(erlebnisse: erlebnisseTestData,gendering: genderingTestData);
 final substitutions = new Substitution(hero: testHeld, generalData: generalData);
 final authenticator = new Authenticator();
+final versionController = new VersionController.fromMap(versionData);

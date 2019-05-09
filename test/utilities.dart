@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
 import 'package:hundetage/utilities/authentication.dart';
-import 'package:hundetage/main_screen.dart';
 
 class StaticTestWidget extends StatelessWidget{
   final Widget returnWidget;
@@ -56,6 +55,9 @@ Map<String, dynamic> versionData = {
 
 Map<String, double> versionTestData = {
   'gendering': 0.7, 'erlebnisse': 0.8, 'Raja': 0.8, 'GrosseFahrt': 0.0};
+
+Map<String, dynamic> versionDataLower = {
+  'gendering': '0.5', 'erlebnisse': '0.6', 'Raja': '0.8', 'GrosseFahrt': '0.0'};
 
 final testHeld = new Held.test();
 final testGeschichte = new Geschichte.fromMap(adventureMetadata);

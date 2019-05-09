@@ -16,6 +16,17 @@ import 'dart:io';
 import 'package:hundetage/utilities/json.dart';
 import 'package:flutter/services.dart';
 
+
+//Stuff needed for mocking Firestore calls
+class MockDocumentReference extends Mock implements DocumentReference {}
+class MockFirestore extends Mock implements Firestore {}
+class MockCollectionReference extends Mock implements CollectionReference {}
+class MockDocumentSnapshot extends Mock implements DocumentSnapshot {}
+class MockQuerySnapshot extends Mock implements QuerySnapshot {}
+
+class MockAuthenticator extends Mock implements FirebaseAuth {}
+class MockFireUser extends Mock implements FirebaseUser {}
+
 void main() {
   group('Tests involving Firebase', () {
     //Mocks calls to the application directory
@@ -418,7 +429,7 @@ void main() {
       }
     });
 
-    test('Test offline data loading', () async {{
+    test('Test offline general data loading', () async {{
       //TODO: Add test for no-data warning - needs to be widget test
       DataLoader _dataLoader = new DataLoader(firestore: mockFirestore,
       authenticator: _testAuth, fakeOnlineMode: false);
@@ -434,7 +445,7 @@ void main() {
     }
     });
 
-    test('Test online data loading', () async {{
+    test('Test online general data loading', () async {{
       DataLoader _dataLoader = new DataLoader(firestore: mockFirestore,
           authenticator: _testAuth, testVersionController:versionController, fakeOnlineMode: true);
 
@@ -451,24 +462,17 @@ void main() {
       //We add the local data and try to load it
       writeLocalUserData(testHeld);
       writeLocalGeneralData(generalData);
-      writeLocalVersionData(versionController);
+      //Update the local versions and see if they are updated
+      VersionController versionControllerLower = VersionController.fromMap(versionDataLower);
+      writeLocalVersionData(versionControllerLower);
 
       await _dataLoader.loadData();
       expect(_dataLoader.substitution, isNotNull);
       expect(_dataLoader.generalData.values['erlebnisse'], erlebnisseTestData);
       expect(_dataLoader.generalData.values['gendering'], genderingTestData);
+      expect(_dataLoader.versionController.values, versionController.values);
     }
     });
     //Group ends here
   });
 }
-
-//Stuff needed for mocking Firestore calls
-class MockDocumentReference extends Mock implements DocumentReference {}
-class MockFirestore extends Mock implements Firestore {}
-class MockCollectionReference extends Mock implements CollectionReference {}
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot {}
-class MockQuerySnapshot extends Mock implements QuerySnapshot {}
-
-class MockAuthenticator extends Mock implements FirebaseAuth {}
-class MockFireUser extends Mock implements FirebaseUser {}

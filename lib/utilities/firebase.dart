@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:hundetage/main.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hundetage/main_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 //Loads current version information from firebase

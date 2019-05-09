@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
 import 'package:hundetage/erlebnisse.dart';
-import 'package:hundetage/main_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hundetage/utilities/firebase.dart';
 

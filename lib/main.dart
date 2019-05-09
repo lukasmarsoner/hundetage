@@ -82,7 +82,7 @@ class DataLoader {
           writeLocalGenderingData(generalData);
         }
         if (versionController.erlebnisse < _firebaseVersions.erlebnisse) {
-          generalData.erlebnisse = await loadGendering(firestore);
+          generalData.erlebnisse = await loadErlebnisse(firestore);
           versionController.erlebnisse = _firebaseVersions.erlebnisse;
           //Update version-information on disk
           writeLocalVersionData(versionController);
@@ -522,4 +522,48 @@ class Substitution{
     textIn = _applyNameSubstitutions(textIn);
     return textIn;
   }
+}
+
+class Geschichte {
+  final String storyname;
+  Image image;
+  Held hero;
+  Map<int,Map<String,dynamic>> screens;
+
+  Geschichte.fromMap(Map<String, dynamic> map)
+      : assert(map['name'] != null),
+        assert(map['image'] != null),
+        storyname = map['name'],
+        image = Image.network(map['image'], fit: BoxFit.cover);
+
+  Geschichte.fromSnapshot(DocumentSnapshot snapshot)
+      : this.fromMap(snapshot.data);
+
+  //Make sure all maps have the correct types
+  void setStory(Map<String,dynamic> _map){
+    screens = {};
+    List<String> _keys = _map.keys.toList();
+    for(int i=0;i<_keys.length;i++){
+      String key = _keys[i];
+      //Exclude metadata
+      if(!<String>['name','image'].contains(key)){
+        Map<String,dynamic> _screen = {};
+        _screen['options'] = Map<String,String>.from(_map[key]['options']);
+        _screen['forwards'] = Map<String,String>.from(_map[key]['forwards']);
+        _screen['erlebnisse'] = Map<String,String>.from(_map[key]['erlebnisse']);
+        _screen['conditions'] = Map<String,String>.from(_map[key]['conditions']);
+        _screen['text'] = _map[key]['text'];
+        screens[int.parse(key)] = _screen;
+      }
+    }
+  }
+
+  Map<String,dynamic> get data => {
+    'screens': screens
+  };
+
+  Map<String,dynamic> get metaData => {
+    'storyname': storyname,
+    'image': image
+  };
 }

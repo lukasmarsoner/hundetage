@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:hundetage/main.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:hundetage/main_screen.dart';
 
 Future<String> get _localPath async {
   final Directory directory = await getApplicationDocumentsDirectory();
@@ -48,6 +47,31 @@ Future<void> deleteLocalUserData() async{
 
   if(await fileExists(file)){
     await file.delete();
+  }
+}
+
+//Write and read functions for story meta-data
+//This will at the same time also save the
+//corresponding images to file
+Future<File> writeLocalStoryMetaData(Geschichte abenteuer) async {
+  final File file = await _localFile(abenteuer.storyname);
+  final String _jsonString = json.encode(abenteuer.metaData);
+
+  return file.writeAsString(_jsonString);
+}
+
+Future<Geschichte> loadLocalStoryMetaData(Geschichte abenteuer) async {
+  final File file = await _localFile(abenteuer.storyname);
+
+  if(await fileExists(file)){
+    String contents = await file.readAsString();
+    Map<String, dynamic> _map = json.decode(contents);
+    abenteuer.setStory(_map);
+
+    return abenteuer;
+  }
+  else {
+    return null;
   }
 }
 

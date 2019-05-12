@@ -5,7 +5,12 @@ import 'package:hundetage/login.dart';
 import 'user_settings.dart';
 import 'dart:math' as math;
 import 'erlebnisse.dart';
+import 'package:hundetage/utilities/firebase.dart';
+import 'package:flutter/scheduler.dart';
 import 'main.dart';
+import 'package:hundetage/utilities/json.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:hundetage/utilities/authentication.dart';
 import 'package:hundetage/adventures.dart';
 
@@ -25,6 +30,41 @@ class _DiagonalClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
+class ConnectionStatusCheckerStories{
+  ConnectionStatus connectionStatus = new ConnectionStatus();
+  bool haveOfflineData = true;
+  List<Geschichte> offlineStories;
+  Firestore firestore;
+  bool fakeOnlineMode = false;
+  VersionController testVersionController, versionController, firebaseVersions;
+
+  ConnectionStatusCheckerStories({this.testVersionController, this.fakeOnlineMode});
+
+  Future<void> checkOnlineStatus() async{
+    //Check if we are online or not and if we are offline
+    //whether we have local data available
+
+    await connectionStatus.checkConnection();
+
+    await loadLocalAllStoryMetadata()==null
+        ?haveOfflineData = false
+        :offlineStories = await loadLocalAllStoryMetadata();
+
+    //First see if we have newer versions available on Firebase
+    //For testing we need to mock this
+    if(fakeOnlineMode)
+        {
+          connectionStatus.online = true;
+          firebaseVersions = testVersionController;
+          versionController = testVersionController;
+        }
+        {
+          firebaseVersions = await loadVersionInformation(firestore: firestore);
+          versionController = await loadLocalVersionData();
+        }
+  }
+}
+
 //Main page class
 class MainPage extends StatefulWidget {
   final Held hero;
@@ -33,16 +73,20 @@ class MainPage extends StatefulWidget {
   final Firestore firestore;
   final Authenticator authenticator;
   final Substitution substitution;
+  final ConnectionStatusCheckerStories connectionStatusCheckerStories;
+  final VersionController versionController;
 
   const MainPage({@required this.substitution, @required this.authenticator,
-    @required this.hero, @required this.heroCallback,
-    @required this.generalData, @required this.firestore});
+    @required this.hero, @required this.heroCallback, @required this.versionController,
+    @required this.generalData, @required this.firestore,
+    this.connectionStatusCheckerStories});
 
   @override
   MainPageState createState() => new MainPageState(
       hero: hero,
       authenticator: authenticator,
       generalData: generalData,
+      connectionStatusCheckerStories: connectionStatusCheckerStories,
       substitution: substitution,
       firestore: firestore,
       heroCallback: heroCallback);
@@ -56,11 +100,25 @@ class MainPageState extends State<MainPage> {
   double _imageHeight = 200.0;
   Authenticator authenticator;
   Substitution substitution;
+  ConnectionStatusCheckerStories connectionStatusCheckerStories;
   Rect rect;
+
+  @override
+  void initState() {
+    super.initState();
+    if(connectionStatusCheckerStories==null) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _checkOnlineStatus());
+    }
+  }
+
+  Future<void> _checkOnlineStatus() async{
+    await connectionStatusCheckerStories.checkOnlineStatus();
+  }
 
   MainPageState({@required this.substitution, @required this.authenticator,
     @required this.hero, @required this.heroCallback,
-    @required this.generalData, @required this.firestore});
+    @required this.generalData, @required this.firestore,
+    this.connectionStatusCheckerStories});
 
   //Update user page and hand change to hero to main function
   void updateHero({Held newHero}){
@@ -76,8 +134,10 @@ class MainPageState extends State<MainPage> {
       //Add new screen elements here
         body: new Stack(
               children: <Widget>[
-                AbenteuerAuswahl(imageHeight: _imageHeight, firestore: firestore, generalData: generalData,
-                    hero: hero, updateHero: updateHero, substitution: substitution),
+                AbenteuerAuswahl(imageHeight: _imageHeight, firestore: firestore,
+                    generalData: generalData, hero: hero, updateHero: updateHero,
+                    substitution: substitution,
+                    connectionStatusCheckerStories: connectionStatusCheckerStories),
                 TopPanel(imageHeight: _imageHeight, hero: hero),
                 ProfileRow(imageHeight: _imageHeight, hero: hero),
                 License(),
@@ -486,57 +546,108 @@ class AbenteuerAuswahl extends StatelessWidget{
   final GeneralData generalData;
   final Function updateHero;
   final Substitution substitution;
+  final ConnectionStatusCheckerStories connectionStatusCheckerStories;
 
-  AbenteuerAuswahl({@required this.imageHeight, @required this.firestore, @required this.generalData,
-  @required this.hero, @required this.updateHero, @required this.substitution});
+  AbenteuerAuswahl({@required this.imageHeight, @required this.firestore,
+    @required this.generalData, @required this.hero, @required this.updateHero,
+    @required this.substitution, @required this.connectionStatusCheckerStories});
 
   @override
   Widget build(BuildContext context) {
-    return Container(padding: EdgeInsets.only(top: imageHeight-50.0),
-        child: StreamBuilder<QuerySnapshot>(
-          stream: firestore.collection('abenteuer_metadata').snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return LinearProgressIndicator();
-            return _buildTiledSelection(context: context, snapshot: snapshot.data.documents,
-                hero: hero, substitution: substitution, updateHero: updateHero, firestore: firestore);
+    if(connectionStatusCheckerStories.connectionStatus.online) {
+      return Container(padding: EdgeInsets.only(top: imageHeight - 50.0),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: firestore.collection('abenteuer_metadata').snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return LinearProgressIndicator();
+              return _buildTiledSelectionFirebase(context: context,
+                  snapshot: snapshot.data.documents);
             },
-        )
-    );
+          )
+      );
+    }
+    else{
+      //If we are offline we need to have local data available
+      //otherwise we need to show an error message
+      if(connectionStatusCheckerStories.haveOfflineData){
+        return Container(padding: EdgeInsets.only(top: imageHeight - 50.0),
+            child: _buildTiledSelectionJSON(context: context,
+                stories: connectionStatusCheckerStories.offlineStories)
+        );
+      }
+      else{
+        showConnectionNeededDialog(context);
+        return Container();}
+    }
   }
 
   //Builds the tiled list for adventure selection
-  Widget _buildTiledSelection({BuildContext context, List<DocumentSnapshot> snapshot,
-      Held hero, Substitution substitution, Function updateHero, Firestore firestore}) {
+  Widget _buildTiledSelectionFirebase({BuildContext context, List<DocumentSnapshot> snapshot}) {
     return GridView.count(
       crossAxisCount: 2,
       padding: EdgeInsets.only(top: 80.0, left: 10.0),
-      children: snapshot.map((data) => _buildTile(context: context, data: data,
-      hero: hero, firestore: firestore, updateHero: updateHero, substitution: substitution)).toList(),
+      children: snapshot.map((data) => _buildTileFirebase(context: context, data: data)).toList(),
     );
   }
 
-  Widget _buildTile({BuildContext context, DocumentSnapshot data, Held hero,
-    Firestore firestore, Function updateHero, Substitution substitution}) {
+  Widget _buildTiledSelectionJSON({BuildContext context, List<Geschichte> stories}) {
+    return GridView.count(
+      crossAxisCount: 2,
+      padding: EdgeInsets.only(top: 80.0, left: 10.0),
+      children: stories.map((data) => _buildTileJSON(context: context, record: data)).toList(),
+    );
+  }
+
+  //Encode image as base 64 string to save to file
+  //This is rather clunky so don't keep it in memory
+  //And just write it to file directly
+  Future<String> encodeAsBase64(String url) async {
+    http.Response response = await http.get(url);
+    List<int> imageBytes  = response.bodyBytes;
+    return base64Encode(imageBytes);
+  }
+
+  Widget _buildTileFirebase({BuildContext context, DocumentSnapshot data}) {
     final record = Geschichte.fromSnapshot(data);
+
+    //We save the data for the record to file right away
+    //We only do that, if we are working with an old
+    //version of the story in question is newer than the one we have on file
+    if(connectionStatusCheckerStories.versionController.stories[record.storyname]
+    < connectionStatusCheckerStories.firebaseVersions.stories[record.storyname]) {
+      //Use an asset-image for testing
+      if(connectionStatusCheckerStories.fakeOnlineMode){data.data['image']=Image.asset('images/icon.png');}
+      Future<String> _base64 = encodeAsBase64(data.data['image']);
+      writeLocalStoryMetaData(abenteuer: record, imageB64: _base64);
+    }
+
     return GridTile(
         child: Card(
           child: MaterialButton(onPressed: () => _gotoAdventureScreen(
-            context: context, data: data, hero: hero, firestore: firestore,
-            updateHero: updateHero, substitution: substitution, geschichte: record),
+            context: context, geschichte: record),
               child: record.image),
               ),
         );
   }
 
-  _gotoAdventureScreen({BuildContext context, DocumentSnapshot data, Held hero,
-    Firestore firestore, Function updateHero, Substitution substitution,
-    Geschichte geschichte}){
+  Widget _buildTileJSON({BuildContext context, Geschichte record}) {
+
+    return GridTile(
+      child: Card(
+        child: MaterialButton(onPressed: () => _gotoAdventureScreen(
+            context: context, geschichte: record),
+            child: record.image),
+      ),
+    );
+  }
+
+  _gotoAdventureScreen({BuildContext context, Geschichte geschichte}){
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => StoryLoadingScreen(
           hero: hero, updateHero: updateHero, firestore: firestore,
           substitution: substitution, generalData: generalData,
-        geschichte: geschichte))
+          geschichte: geschichte))
     );
   }
 }

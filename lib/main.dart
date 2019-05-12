@@ -4,6 +4,7 @@ import 'main_screen.dart';
 import 'package:hundetage/utilities/firebase.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'utilities/json.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
@@ -15,6 +16,30 @@ void main() async{
 class SplashScreen extends StatefulWidget{
   @override
   SplashScreenState createState() => new SplashScreenState();
+}
+
+showConnectionNeededDialog(BuildContext context) {
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          key: Key('MissingDataAlert'),
+          title: new Text("Keine Internetverbindung"),
+          content: new Text(
+              "Beim ersten Start wird eine internetverbindung benötigt."
+                  "Danach kannst du die App auch offline benutzen."),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Schließen"),
+              onPressed: () {
+                exit(0);
+              },
+            ),
+          ],
+        );
+      }
+  );
 }
 
 class DataLoader {
@@ -35,7 +60,7 @@ class DataLoader {
 
   Future<void> loadData() async {
     //Check if we are connected to the internet
-    connectionStatus.checkConnection();
+    await connectionStatus.checkConnection();
     //If so - we can check if there are any updates available for us
     //If not we see if we have local data - if not we need to inform the user
     //that they need to go online to retrieve it
@@ -47,7 +72,7 @@ class DataLoader {
     //If we have no connection we just load the local data
     if (local) {
       if (!(await canWorkOffline())) {
-        _showConnectionNeededDialog(context);
+        showConnectionNeededDialog(context);
       }
       else {
         generalData = await loadLocalGeneralData();
@@ -108,40 +133,14 @@ class DataLoader {
     //Generate substitutions and terminate loading animation
     substitution = Substitution(hero: hero, generalData: generalData);
   }
-
-  _showConnectionNeededDialog(BuildContext context) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          // return object of type Dialog
-          return AlertDialog(
-            key: Key('MissingDataAlert'),
-            title: new Text("Keine Internetverbindung"),
-            content: new Text(
-                "Beim ersten Start wird eine internetverbindung benötigt."
-                    "Danach kannst du die App auch offline benutzen."),
-            actions: <Widget>[
-              new FlatButton(
-                child: new Text("Schließen"),
-                onPressed: () {
-                  exit(0);
-                },
-              ),
-            ],
-          );
-        }
-    );
-  }
 }
 
 class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin{
-  Held hero = Held.initial();
   Animation<int> _characterCount;
   AnimationController _animationController;
   bool _isLoading = true;
   Authenticator authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
-  Substitution substitution;
-  GeneralData generalData;
+  DataLoader _dataLoader;
   VersionController versionController;
   Firestore firestore = Firestore.instance;
 
@@ -202,7 +201,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
   void initState() {
     super.initState();
     _animateText();
-    WidgetsBinding.instance.addPostFrameCallback((_)=>_runDataLoaders());
+    SchedulerBinding.instance.addPostFrameCallback((_)=>_runDataLoaders());
     setState(() => _isLoading = false);
   }
 
@@ -211,16 +210,13 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
     DataLoader _dataLoader = new DataLoader(firestore: firestore,
         authenticator: authenticator, context: context);
     await _dataLoader.loadData();
-    generalData = _dataLoader.generalData;
-    substitution = _dataLoader.substitution;
-    hero = _dataLoader.hero;
   }
 
   Widget _showCircularProgress(){
     return _isLoading
         ?Center(child: _loadingScreen())
-        :MyApp(hero: hero, authenticator: authenticator,
-        generalData: generalData, substitution: substitution, firestore: firestore);
+        :MyApp(hero: _dataLoader.hero, authenticator: authenticator, versionController: versionController,
+        generalData: _dataLoader.generalData, substitution: _dataLoader.substitution, firestore: firestore);
   }
 
   @override
@@ -235,13 +231,15 @@ class MyApp extends StatefulWidget{
   final Substitution substitution;
   final GeneralData generalData;
   final Firestore firestore;
+  final VersionController versionController;
 
   MyApp({@required this.hero, @required this.authenticator, @required this.generalData,
-  @required this.substitution, @required this.firestore});
+  @required this.substitution, @required this.firestore, @required this.versionController});
 
   @override
   _MyAppState createState() => new _MyAppState(hero: hero, substitution: substitution,
-  generalData: generalData, firestore: firestore, authenticator: authenticator);
+      generalData: generalData, firestore: firestore, authenticator: authenticator,
+      versionController: versionController);
 }
 
 //All global should be store and kept-updated here
@@ -251,8 +249,9 @@ class _MyAppState extends State<MyApp>{
   Substitution substitution;
   GeneralData generalData;
   Firestore firestore;
+  VersionController versionController;
 
-  _MyAppState({@required this.hero, @required this.authenticator,
+  _MyAppState({@required this.hero, @required this.authenticator, @required this.versionController,
   @required this.generalData, @required this.firestore, @required this.substitution});
 
   void heroCallback({Held newHero}){
@@ -268,7 +267,7 @@ class _MyAppState extends State<MyApp>{
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Hundetage',
-      home: Scaffold(body: MainPage(hero: hero,
+      home: Scaffold(body: MainPage(hero: hero, versionController: versionController,
           heroCallback: heroCallback, authenticator: authenticator,
           generalData: generalData, substitution:substitution, firestore: firestore)),
     );
@@ -530,14 +529,21 @@ class Geschichte {
   Held hero;
   Map<int,Map<String,dynamic>> screens;
 
-  Geschichte.fromMap(Map<String, dynamic> map)
+  Geschichte.fromFirebaseMap(Map<String, dynamic> map)
       : assert(map['name'] != null),
         assert(map['image'] != null),
         storyname = map['name'],
         image = Image.network(map['image'], fit: BoxFit.cover);
 
+  //Used for loading from local file
+  Geschichte.fromJSONMap(Map<String, dynamic> map)
+      : assert(map['name'] != null),
+        assert(map['image'] != null),
+        storyname = map['name'],
+        image = map['image'];
+
   Geschichte.fromSnapshot(DocumentSnapshot snapshot)
-      : this.fromMap(snapshot.data);
+      : this.fromFirebaseMap(snapshot.data);
 
   //Make sure all maps have the correct types
   void setStory(Map<String,dynamic> _map){
@@ -563,7 +569,6 @@ class Geschichte {
   };
 
   Map<String,dynamic> get metaData => {
-    'storyname': storyname,
-    'image': image
+    'storyname': storyname
   };
 }

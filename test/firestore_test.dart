@@ -148,27 +148,6 @@ void main() {
       });
     });
 
-    testWidgets('Test Adventure Selection', (WidgetTester _tester) async {
-      provideMockedNetworkImages(() async {
-
-        AbenteuerAuswahl _widget = AbenteuerAuswahl(firestore: mockFirestore, imageHeight: 200.0,
-        updateHero: (_) => null, substitution: substitutions, hero: testHeld, generalData: generalData,);
-        await _tester.pumpWidget(StaticTestWidget(returnWidget: _widget));
-        await _tester.pumpAndSettle();
-
-        //Check if one grid-tile was added
-        var _findTile = find.byType(GridTile);
-        expect(_findTile, findsOneWidget);
-        final _image = find.byType(Image);
-        expect(_image, findsOneWidget);
-        final _button = find.byType(MaterialButton);
-        expect(_button, findsOneWidget);
-        //Just test tapping the button here - we need an integration test
-        //to actually test going to the next screen
-        await _tester.tap(_button);
-      });
-    });
-
     testWidgets('Test main-screen', (WidgetTester _tester) async {
       await _tester.pumpWidget(
           StaticTestWidget(returnWidget: ProfileRow(hero: testHeld, imageHeight: 200.0))
@@ -235,24 +214,38 @@ void main() {
     });
 
     testWidgets('Test License', (WidgetTester _tester) async {
-      MainPage _widget = MainPage(hero: testHeld,heroCallback: ()=>null,
-          substitution: substitutions,
-          generalData: generalData, firestore: mockFirestore, authenticator: authenticator);
-      await _tester.pumpWidget(
-          StaticTestWidget(returnWidget: _widget));
+      provideMockedNetworkImages(() async {
+        //Create a Connection Status Checker that fakes being online
+        ConnectionStatusCheckerStories connectionStatusCheckerStories =
+        new ConnectionStatusCheckerStories(fakeOnlineMode: true,
+            testVersionController: versionController);
 
-      //Click on license button
-      var _findButton = find.byType(IconButton);
-      expect(_findButton, findsOneWidget);
-      await _tester.tap(find.byType(IconButton));
-      //Wait for animation to terminate
-      await _tester.pumpAndSettle();
-      //Check Title is there
-      var _findTitleText = find.text('Licenses');
-      expect(_findTitleText, findsOneWidget);
-      //Check App Title is maintained
-      var _findAppText = find.text('Hundetage');
-      expect(_findAppText, findsOneWidget);
+        await connectionStatusCheckerStories.checkOnlineStatus();
+
+        MainPage _widget = MainPage(hero: testHeld,
+            heroCallback: () => null,
+            substitution: substitutions,
+            versionController: versionController,
+            connectionStatusCheckerStories: connectionStatusCheckerStories,
+            generalData: generalData,
+            firestore: mockFirestore,
+            authenticator: authenticator);
+
+        await _tester.pumpWidget(StaticTestWidget(returnWidget: _widget));
+
+        //Click on license button
+        var _findButton = find.byType(IconButton);
+        expect(_findButton, findsOneWidget);
+        await _tester.tap(find.byType(IconButton));
+        //Wait for animation to terminate
+        await _tester.pumpAndSettle();
+        //Check Title is there
+        var _findTitleText = find.text('Licenses');
+        expect(_findTitleText, findsOneWidget);
+        //Check App Title is maintained
+        var _findAppText = find.text('Hundetage');
+        expect(_findAppText, findsOneWidget);
+      });
     });
 
     //TODO: mock http-request
@@ -333,7 +326,7 @@ void main() {
       });
 
     test('Test loading story data', () async{
-      Geschichte _geschichte = new Geschichte.fromMap(adventureMetadata);
+      Geschichte _geschichte = new Geschichte.fromFirebaseMap(adventureMetadata);
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
 
       List<String> _keys = _geschichte.screens[0].keys.toList();
@@ -346,7 +339,7 @@ void main() {
     });
 
     testWidgets('Test adventure screen', (WidgetTester _tester) async {
-      Geschichte _geschichte = new Geschichte.fromMap(adventureMetadata);
+      Geschichte _geschichte = new Geschichte.fromFirebaseMap(adventureMetadata);
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       GeschichteMainScreen _widget = GeschichteMainScreen(updateHero: (_) => null,
           hero: testHeld, geschichte: _geschichte, substitution: substitutions,
@@ -366,7 +359,7 @@ void main() {
     });
 
     testWidgets('Test Text', (WidgetTester _tester) async {
-      Geschichte _geschichte = new Geschichte.fromMap(adventureMetadata);
+      Geschichte _geschichte = new Geschichte.fromFirebaseMap(adventureMetadata);
       _geschichte = await loadGeschichte(firestore: mockFirestore, geschichte: _geschichte);
       StaticTestWidget _widget =  StaticTestWidget(returnWidget: StoryText(hero: testHeld, imageHeight: 100.0,
           geschichte: _geschichte, substitution: substitutions, updateHeroStory: ({Held newHero}) => null,
@@ -473,6 +466,37 @@ void main() {
       expect(_dataLoader.versionController.values, versionController.values);
     }
     });
+
+    testWidgets('Test online adventure selection', (WidgetTester _tester) async {
+      provideMockedNetworkImages(() async {
+        //Create a Connection Status Checker that fakes being online
+        ConnectionStatusCheckerStories connectionStatusCheckerStories =
+        new ConnectionStatusCheckerStories(fakeOnlineMode: true,
+            testVersionController: versionController);
+
+        await connectionStatusCheckerStories.checkOnlineStatus();
+
+        AbenteuerAuswahl _widget = AbenteuerAuswahl(firestore: mockFirestore,
+          imageHeight: 200.0, updateHero: (_) => null, substitution: substitutions,
+          hero: testHeld, generalData: generalData,
+          connectionStatusCheckerStories: connectionStatusCheckerStories,);
+
+        await _tester.pumpWidget(StaticTestWidget(returnWidget: _widget));
+        await _tester.pumpAndSettle();
+
+        //Check if one grid-tile was added
+        var _findTile = find.byType(GridTile);
+        expect(_findTile, findsOneWidget);
+        final _image = find.byType(Image);
+        expect(_image, findsOneWidget);
+        final _button = find.byType(MaterialButton);
+        expect(_button, findsOneWidget);
+        //Just test tapping the button here - we need an integration test
+        //to actually test going to the next screen
+        await _tester.tap(_button);
+      });
+    });
+
     //Group ends here
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -52,28 +53,66 @@ Future<void> deleteLocalUserData() async{
 
 //Write and read functions for story meta-data
 //This will at the same time also save the
-//corresponding images to file
-Future<File> writeLocalStoryMetaData(Geschichte abenteuer) async {
-  final File file = await _localFile(abenteuer.storyname);
-  final String _jsonString = json.encode(abenteuer.metaData);
-
-  return file.writeAsString(_jsonString);
+//corresponding images to file as a base64-encoded string
+Future<File> writeLocalStoryMetaData({Geschichte abenteuer, Future<String> imageB64}) async {
+  final File file = await _localFile('stories');
+  String _storyImageKey = abenteuer.storyname + '_image';
+  //If the file is already there - check if we have encountered a new story
+  if(await fileExists(file)) {
+    String contents = await file.readAsString();
+    Map<String, String> _map = json.decode(contents);
+    if(_map.keys.toList().contains(abenteuer.storyname)){
+      return file.writeAsString(contents);
+    }
+    else{
+      //If not - add new story
+      _map[abenteuer.storyname] = abenteuer.storyname;
+      _map[_storyImageKey] = await imageB64;
+      final String _jsonString = json.encode(_map);
+      return file.writeAsString(_jsonString);
+    }
+  }
+  //If no file is there yet - create a new one from scratch
+  else{
+    Map<String,dynamic> _map = Map();
+    _map[abenteuer.storyname] = abenteuer.storyname;
+    _map[_storyImageKey] = await imageB64;
+    final String _jsonString = json.encode(_map);
+    return file.writeAsString(_jsonString);
+  }
 }
 
-Future<Geschichte> loadLocalStoryMetaData(Geschichte abenteuer) async {
-  final File file = await _localFile(abenteuer.storyname);
+//Load metadata for all stories from file
+Future<List<Geschichte>> loadLocalAllStoryMetadata() async {
+  final File file = await _localFile('stories');
 
   if(await fileExists(file)){
-    String contents = await file.readAsString();
-    Map<String, dynamic> _map = json.decode(contents);
-    abenteuer.setStory(_map);
-
-    return abenteuer;
-  }
-  else {
     return null;
   }
+  else {
+    //Create list for output
+    List<Geschichte> _stories = List();
+
+    //Load json file into memory
+    String contents = await file.readAsString();
+    Map<String, String> _jsonFile = json.decode(contents);
+
+    //Variable for looping through the file
+    List<String> _keys = _jsonFile.keys.toList();
+    for (int i = 0; i < _keys.length; i++) {
+      //Have we found a new story?
+      if (!(_keys[i].split('_')[1] == 'image')) {
+        String _storyname = _keys[i];
+        Image _image = Image.memory(base64Decode(_jsonFile[_storyname + '_image']), fit: BoxFit.cover);
+        Map<String,dynamic> _map = {'name': _storyname, 'image': _image};
+        Geschichte _gesch = Geschichte.fromJSONMap(_map);
+        _stories.add(_gesch);
+      }
+    }
+    return _stories;
+  }
 }
+
 
 //Write and read functions for story data
 Future<File> writeLocalStoryData(Geschichte abenteuer) async {

@@ -60,7 +60,7 @@ Map<String, dynamic> versionDataLower = {
   'gendering': '0.5', 'erlebnisse': '0.6', 'Raja': '0.8', 'GrosseFahrt': '0.0'};
 
 final testHeld = new Held.test();
-final testGeschichte = new Geschichte.fromMap(adventureMetadata);
+final testGeschichte = new Geschichte.fromFirebaseMap(adventureMetadata);
 final generalData = new GeneralData(erlebnisse: erlebnisseTestData,gendering: genderingTestData);
 final substitutions = new Substitution(hero: testHeld, generalData: generalData);
 final authenticator = new Authenticator();

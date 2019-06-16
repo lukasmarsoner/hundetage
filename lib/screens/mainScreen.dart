@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:hundetage/screens/userSettings.dart';
 import 'package:flutter/services.dart';
 import 'package:hundetage/main.dart';
+import 'package:hundetage/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'package:hundetage/screens/adventures.dart';
 
@@ -34,30 +35,31 @@ class MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-      SystemChrome.setEnabledSystemUIOverlays([]);
-      return Scaffold(
-        body: Stack(
-          children: <Widget>[
-            SafeArea(
-              child: Stack(
-                children: <Widget>[
-                  Background(getWidth: getWidth, getHeight: getHeight),
-                  Column(children: <Widget>[
-                    ProfileRow(dataHandler: dataHandler),
-                    AbenteuerAuswahl(dataHandler: dataHandler, getHeight: getHeight),
-                    ]
-                  )
-                ],
-              ),
+    SystemChrome.setEnabledSystemUIOverlays([]);
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          SafeArea(
+            child: Stack(
+              children: <Widget>[
+                Background(getWidth: getWidth, getHeight: getHeight),
+                Column(children: <Widget>[
+                  ProfileRow(dataHandler: dataHandler),
+                  AbenteuerAuswahl(dataHandler: dataHandler, getHeight: getHeight),
+                ]),
+                MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+                    getWidth: getWidth, homeButtonFunction: () => null)
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class ProfileRow extends StatelessWidget{
-  DataHandler dataHandler;
+  final DataHandler dataHandler;
 
   ProfileRow({@required this.dataHandler});
 
@@ -66,15 +68,15 @@ class ProfileRow extends StatelessWidget{
     return GestureDetector(
       onTap: () => Navigator.push(context,
           MaterialPageRoute(builder: (context) => UserPage(dataHandler: dataHandler))),
-      child: Padding(padding: EdgeInsets.only(left: 15.0, top: 40.0),
+      child: Padding(padding: EdgeInsets.only(left: 20.0, top: 20.0),
         child: Row(
             children: <Widget>[
               dataHandler.hero.iBild!=-1
                   ?new CircleAvatar(
                   backgroundImage:
                   new AssetImage('assets/images/user_images/hund_${dataHandler.hero.iBild}.jpg'),
-                  minRadius: 61.0,
-                  maxRadius: 61.0)
+                  minRadius: 56.0,
+                  maxRadius: 56.0)
                   :new Container(),
               new Padding(
                 padding: EdgeInsets.only(left: 10.0),
@@ -113,7 +115,7 @@ class AbenteuerAuswahl extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: getHeight - 200.0,
+      height: getHeight - 220.0,
         padding: EdgeInsets.only(left: 20.0, right: 20.0),
         child: _buildTiledSelection(context: context,
             storyList: dataHandler.stories.keys.toList())
@@ -133,22 +135,27 @@ class AbenteuerAuswahl extends StatelessWidget{
     return new GestureDetector(
         onTap: () => _gotoAdventureScreen(context: context, dataHandler: dataHandler),
         child: new Card(margin: EdgeInsets.only(left: 8, right: 8, top: 25),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                dataHandler.getCurrentStory.image,
-                SizedBox(height: 20),
-                Padding(
-                    padding: EdgeInsets.only(left: 10.0),
-                    child: Text(storyname,
-                        style: titleBlackStyle)),
-                SizedBox(height: 10),
-                Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: Text(
-                        dataHandler.stories[storyname].zusammenfassung,
-                        style: textStyle))
-              ])
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  ClipRRect(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20)),
+                      child: dataHandler.getCurrentStory.image),
+                  SizedBox(height: 20),
+                  Padding(
+                      padding: EdgeInsets.only(left: 10.0),
+                      child: Text(storyname,
+                          style: titleBlackStyle)),
+                  SizedBox(height: 10),
+                  Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Text(dataHandler.stories[storyname].zusammenfassung,
+                          style: textStyle))
+                ]
+            )
         )
     );
   }

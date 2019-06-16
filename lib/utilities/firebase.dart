@@ -16,16 +16,15 @@ Future<VersionController> loadVersionInformation({Firestore firestore}) async {
 
 Map<String,Map<String,String>> generalDataFromDynamic(Map<dynamic, dynamic> mapIn) {
   Map<String, Map<String, String>> mapOut = {};
-  List<String> outerKeys = mapIn.keys.toList();
+  List<String> _outerKeys = mapIn.keys.toList();
 
-  for (int i = 0; i < outerKeys.length; i++) {
-    List innerKeys = mapIn[outerKeys[i]].keys.toList();
-    mapOut[outerKeys[i]] = {};
-    for (int j = 0; j < innerKeys.length; j++) {
-      mapOut[outerKeys[i]][innerKeys[j]] = mapIn[outerKeys[i]][innerKeys[j]];
+  for (String _outerKey in _outerKeys) {
+    List _innerKeys = mapIn[_outerKey].keys.toList();
+    mapOut[_outerKey] = {};
+    for (String _innerKey in _innerKeys) {
+      mapOut[_outerKey][_innerKey] = mapIn[_outerKey][_innerKey];
     }
   }
-
   return mapOut;
 }
 
@@ -48,10 +47,10 @@ Map<String,Erlebniss> transformErlebnisse(Map<String,dynamic> data){
   Map<String,Map<String,String>> _erlebnisseIn = generalDataFromDynamic(data);
   List<String> _keys = _erlebnisseIn.keys.toList();
 
-  for(int i=0;i<_keys.length;i++){
-    _erlebnisseOut[_keys[i]] = Erlebniss(text: _erlebnisseIn[_keys[i]]['text'],
-        image: Image.network(_erlebnisseIn[_keys[i]]['image']),
-        url: _erlebnisseIn[_keys[i]]['image']);
+  for(String _key in _keys){
+    _erlebnisseOut[_key] = Erlebniss(text: _erlebnisseIn[_key]['text'],
+        image: Image.network(_erlebnisseIn[_key]['image']),
+        url: _erlebnisseIn[_key]['image']);
   }
   return _erlebnisseOut;
 }
@@ -98,20 +97,20 @@ Future<Map<String,Geschichte>> loadGeschichten({Firestore firestore}) async {
   List<DocumentSnapshot> allStories = _queryReference.documents;
 
   Map<String, Geschichte> _stories = Map<String, Geschichte>();
-  for(int i=0;i<allStories.length;i++){
-    String _storyname = allStories[i].data['name'];
-    allStories[i].data['url'] = allStories[i].data['image'];
+  for(DocumentSnapshot _story in allStories){
+    String _storyname = _story.data['name'];
+    _story.data['url'] = _story.data['image'];
 
     //Save image to local file - we do this here so we don't load stuff twice...
-    await saveImageToFile(url: allStories[i].data['url'],
-        filename: allStories[i].data['name']);
+    await saveImageToFile(url: _story.data['url'],
+        filename: _story.data['name']);
 
-    Image _image = Image.network(allStories[i].data['url'], fit: BoxFit.cover);
-    allStories[i].data['image'] = _image;
+    Image _image = Image.network(_story.data['url'], fit: BoxFit.cover);
+    _story.data['image'] = _image;
 
-    _stories[_storyname] = Geschichte.fromFirebaseMap(allStories[i].data);
+    _stories[_storyname] = Geschichte.fromFirebaseMap(_story.data);
     //Add actual data - make sure we have the right one
-    _stories[_storyname].setStory(allStories[i].data['screens']);
+    _stories[_storyname].setStory(_story.data['screens']);
   }
   return _stories;
 }

@@ -33,14 +33,14 @@ flutter:
     - family: Montserrat
       fonts:
         - asset: assets/Montserrat-Regular.ttf
-        - style: normal
+          style: normal
         - asset: assets/Montserrat-Bold.ttf
-        - weight: 600
+          weight: 600
         - asset: assets/Montserrat-Italic.ttf
-        - style: italic
+          style: italic
         - asset: assets/Montserrat-BoldItalic.ttf
-        - style: italic
-        - weight: 600
+          style: italic
+          weight: 600
 
   assets:
     - assets/images/cloud.png

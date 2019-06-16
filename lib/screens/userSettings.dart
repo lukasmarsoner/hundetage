@@ -96,11 +96,15 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
     setState(() => dataHandler.updateData = newData);
   }
 
+  _gotoHomeScreen({BuildContext context}){
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     //Dialog for entering user name
     Dialog userNameDialog = Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)), //this right here
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)), //this right here
       child: Container(
         height: 160.0,
         width: 160.0,
@@ -142,7 +146,9 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
                   )
                 ])
               ),
-              MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler)
+              MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+                  getWidth: getWidth,
+                  homeButtonFunction: () => _gotoHomeScreen(context: context))
             ])
         )
     );
@@ -257,15 +263,21 @@ class HeldAuswahlState extends State<HeldAuswahl> with SingleTickerProviderState
 
   Widget _buildCard({BuildContext context, int iBild}) {
     double _imageHeight = getHeight - 400.0;
-    return new Card(margin: EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 24.0),
+    return new Card(
+        margin: EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 24.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
         child: Column(
             children: <Widget>[
-              Image.asset('assets/images/user_images/hund_$iBild.jpg',
-                scale: 800 / _imageHeight * 0.8,
-                height: _imageHeight,
-                fit: BoxFit.none,
-                alignment: Alignment(-(pageOffset.abs() - iBild.toDouble()), 0), ),
-              SizedBox(height: 20),
+              ClipRRect(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20)),
+                  child:Image.asset('assets/images/user_images/hund_$iBild.jpg',
+                    scale: 800 / _imageHeight * 0.8,
+                    height: _imageHeight,
+                    fit: BoxFit.none,
+                    alignment: Alignment(-(pageOffset.abs() - iBild.toDouble()), 0), )),
+              SizedBox(height: 8),
               Text(
                 dataHandler.hero.iBild != -1
                     ? dataHandler.hero.name

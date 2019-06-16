@@ -19,10 +19,16 @@ final TextStyle subTitleStyle = new TextStyle(
     fontWeight: FontWeight.w300);
 
 final TextStyle subTitleBlackStyle = new TextStyle(
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'IndieFlower',
     fontStyle: FontStyle.italic,
     fontWeight: FontWeight.w300);
+
+final TextStyle subTitleBlackBoldStyle = new TextStyle(
+    fontSize: 18,
+    fontFamily: 'IndieFlower',
+    fontStyle: FontStyle.italic,
+    fontWeight: FontWeight.w600);
 
 final TextStyle textStyle = new TextStyle(
     fontSize: 16,

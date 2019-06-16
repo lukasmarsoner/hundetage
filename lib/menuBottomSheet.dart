@@ -1,58 +1,40 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'main.dart';
-import 'package:hundetage/screens/mainScreen.dart';
 import 'package:hundetage/utilities/styles.dart';
 
 import 'package:flutter/material.dart';
 
 const double minHeightBottomSheet = 60;
-const double iconStartSize = 44;
-const double iconEndSize = 120;
-const double iconStartMarginTop = 36;
-const double iconEndMarginTop = 80;
-const double iconsVerticalSpacing = 24;
-const double iconsHorizontalSpacing = 16;
 
 class MenuBottomSheet extends StatefulWidget {
-  final double getHeight;
+  final double getHeight, getWidth;
   final DataHandler dataHandler;
+  final Function homeButtonFunction;
 
-  MenuBottomSheet({@required this.getHeight, @required this.dataHandler});
+  MenuBottomSheet({@required this.getHeight, @required this.dataHandler,
+  @required this.homeButtonFunction, @required this.getWidth});
 
   @override
   MenuBottomSheetState createState() => MenuBottomSheetState(getHeight: getHeight,
-  dataHandler: dataHandler);
+  dataHandler: dataHandler, homeButtonFunction: homeButtonFunction,
+  getWidth: getWidth);
 }
 
 class MenuBottomSheetState extends State<MenuBottomSheet>
     with SingleTickerProviderStateMixin {
   AnimationController _controller;
-  final double getHeight;
-  final DataHandler dataHandler;
+  double getHeight, getWidth;
+  Function homeButtonFunction;
+  DataHandler dataHandler;
 
-  MenuBottomSheetState({@required this.getHeight, @required this.dataHandler});
+  MenuBottomSheetState({@required this.getHeight, @required this.dataHandler,
+  @required this.homeButtonFunction, @required this.getWidth});
 
   double get headerTopMargin =>
       lerp(8, 8 + MediaQuery.of(context).padding.top);
 
   TextStyle get headerTextStyle => TextStyleTween(begin: subTitleStyle, end: titleStyle).animate(_controller).value;
-
-  double get itemBorderRadius => lerp(8, 24);
-
-  double get iconLeftBorderRadius => itemBorderRadius;
-
-  double get iconRightBorderRadius => lerp(8, 0);
-
-  double get iconSize => lerp(iconStartSize, iconEndSize);
-
-  double iconTopMargin(int index) =>
-      lerp(iconStartMarginTop,
-          iconEndMarginTop + index * (iconsVerticalSpacing + iconEndSize)) +
-          headerTopMargin;
-
-  double iconLeftMargin(int index) =>
-      lerp(index * (iconsHorizontalSpacing + iconStartSize), 0);
 
   @override
   void initState() {
@@ -89,21 +71,19 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               decoration: const BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Stack(
                 children: <Widget>[
-                  for (Event event in events) _buildFullItem(event),
-                  for (Event event in events) _buildIcon(event),
+                  _buildErlebnisseList(),
                   Padding(padding: EdgeInsets.only(top: headerTopMargin),
-                  child: Row(children: <Widget>[
-                    HomeButton(dataHandler: dataHandler),
-                    SheetHeader(fontStyle: headerTextStyle),
-                    Spacer(),
-                    MenuButton(),
-                  ]))
-                ],
+                      child: Row(children: <Widget>[
+                        HomeButton(homeButtonFunction: homeButtonFunction),
+                        SheetHeader(fontStyle: headerTextStyle),
+                        Spacer(),
+                        MenuButton()
+                      ]))],
               ),
             ),
           ),
@@ -112,37 +92,37 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
     );
   }
 
-  Widget _buildIcon(Event event) {
-    int index = events.indexOf(event);
-    return Positioned(
-      height: iconSize,
-      width: iconSize,
-      top: iconTopMargin(index),
-      left: iconLeftMargin(index),
-      child: ClipRRect(
-        borderRadius: BorderRadius.horizontal(
-          left: Radius.circular(iconLeftBorderRadius),
-          right: Radius.circular(iconRightBorderRadius),
-        ),
-        child: Image.asset(
-          'assets/${event.assetName}',
-          fit: BoxFit.cover,
-          alignment: Alignment(lerp(1, 0), 0),
-        ),
-      ),
-    );
+  Widget _buildErlebnisseList(){
+    List<Widget> _erlebnisseList = new List<Widget>();
+
+    print(dataHandler.hero.erlebnisse);
+    for(String title in dataHandler.hero.erlebnisse){
+      _erlebnisseList.add(_buildItem(erlebniss: dataHandler.generalData.erlebnisse[title]));
+    }
+
+    return Container(
+        padding: EdgeInsets.only(top: 70.0),
+        child:GridView.count(
+            crossAxisSpacing: 10.0,
+            mainAxisSpacing: 10.0,
+            crossAxisCount: 2,
+            children: _erlebnisseList));
   }
 
-  Widget _buildFullItem(Event event) {
-    int index = events.indexOf(event);
-    return ExpandedEventItem(
-      topMargin: iconTopMargin(index),
-      leftMargin: iconLeftMargin(index),
-      height: iconSize,
+  Widget _buildItem({Erlebniss erlebniss}) {
+    return ExpandedErlebniss(
+      onTap: () => _openDialog(ShowErlebniss(erlebniss: erlebniss, dataHandler: dataHandler),
+          context),
       isVisible: _controller.status == AnimationStatus.completed,
-      borderRadius: itemBorderRadius,
-      title: event.title,
-      date: event.date,
+      erlebniss: erlebniss);
+  }
+
+  _openDialog(Widget _dialog, BuildContext context){
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return _dialog;
+        }
     );
   }
 
@@ -170,102 +150,78 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   }
 }
 
-class ExpandedEventItem extends StatelessWidget {
-  final double topMargin;
-  final double leftMargin;
-  final double height;
+class ExpandedErlebniss extends StatelessWidget {
   final bool isVisible;
-  final double borderRadius;
-  final String title;
-  final String date;
+  final Function onTap;
+  final Erlebniss erlebniss;
 
-  const ExpandedEventItem(
-      {Key key,
-        this.topMargin,
-        this.height,
-        this.isVisible,
-        this.borderRadius,
-        this.title,
-        this.date,
-        this.leftMargin})
-      : super(key: key);
+  const ExpandedErlebniss(
+      {@required this.isVisible,
+        @required this.onTap,
+        @required this.erlebniss});
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: topMargin,
-      left: leftMargin,
-      right: 0,
-      height: height,
-      child: AnimatedOpacity(
+    return AnimatedOpacity(
         opacity: isVisible ? 1 : 0,
         duration: Duration(milliseconds: 200),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(borderRadius),
-            color: Colors.white,
-          ),
-          padding: EdgeInsets.only(left: height).add(EdgeInsets.all(8)),
-          child: _buildContent(),
-        ),
-      ),
+        child:GestureDetector(
+          onTap: () => onTap(),
+            child: Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10)),
+              child: _buildContent(),
+        )
+        )
     );
   }
 
   Widget _buildContent() {
-    return Column(
-      children: <Widget>[
-        Text(title, style: TextStyle(fontSize: 16)),
-        SizedBox(height: 8),
-        Row(
-          children: <Widget>[
-            Text(
-              '1 ticket',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
-            ),
-            SizedBox(width: 8),
-            Text(
-              date,
-              style: TextStyle(
-                fontWeight: FontWeight.w300,
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-        Spacer(),
-        Row(
-          children: <Widget>[
-            Icon(Icons.place, color: Colors.grey.shade400, size: 16),
-            Text(
-              'Science Park 10 25A',
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-            )
-          ],
-        )
-      ],
+    return Container(
+      decoration: BoxDecoration(color: yellow,
+          borderRadius: BorderRadius.all(Radius.circular(10))),
+      padding: EdgeInsets.all(3.0),
+      child: ClipRRect(
+          borderRadius: BorderRadius.horizontal(
+              left: Radius.circular(10),
+              right: Radius.circular(10)),
+          child: erlebniss.image)
     );
   }
 }
 
-final List<Event> events = [
-  Event('steve-johnson.jpeg', 'Shenzhen GLOBAL DESIGN AWARD 2018', '4.20-30'),
-  Event('efe-kurnaz.jpg', 'Shenzhen GLOBAL DESIGN AWARD 2018', '4.20-30'),
-  Event('rodion-kutsaev.jpeg', 'Dawan District Guangdong Hong Kong', '4.28-31'),
-];
+class ShowErlebniss extends StatelessWidget{
+  final Erlebniss erlebniss;
+  final DataHandler dataHandler;
 
-class Event {
-  final String assetName;
-  final String title;
-  final String date;
+  ShowErlebniss({this.erlebniss, this.dataHandler});
 
-  Event(this.assetName, this.title, this.date);
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 5.0,
+        child: Container(
+            width: 120,
+            height: 340,
+            child: ListView(
+                children: <Widget>[
+                  Container(
+                      padding: EdgeInsets.all(20.0),
+                      child: erlebniss.image),
+                  Container(
+                      padding: EdgeInsets.fromLTRB(20.0,0.0,20.0,20.0),
+                      child: Text(dataHandler.substitution.applyAllSubstitutions(erlebniss.text),
+                          style: textStyle))
+                ]
+            )
+        )
+    );
+  }
 }
+
 
 class SheetHeader extends StatelessWidget {
   final TextStyle fontStyle;
@@ -296,21 +252,18 @@ class MenuButton extends StatelessWidget {
 }
 
 class HomeButton extends StatelessWidget {
-  HomeButton();
+  final Function homeButtonFunction;
+
+  HomeButton({@required this.homeButtonFunction});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _gotoHomeScreen(),
+      onTap: () => homeButtonFunction(),
       child: Image.asset('assets/images/house.png',
-        color: Colors.white,
         height: 45,
         width: 45,
       )
     );
-  }
-
-  _gotoHomeScreen({BuildContext context}){
-    Navigator.pop(context);
   }
 }

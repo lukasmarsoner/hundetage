@@ -108,8 +108,9 @@ class DataHandler {
       }
     }
     else {
+      if(connectionStatus.online) {
         //First see if we have newer versions available on Firebase
-      firebaseVersions = await loadVersionInformation(firestore: firestore);
+        firebaseVersions = await loadVersionInformation(firestore: firestore);
         //If there is no offline data we need to load everything
         if (!(await canWorkOffline())) {
           generalData = await loadGeneralData(firestore);
@@ -143,34 +144,39 @@ class DataHandler {
           }
 
           //Check all stories for updates
-          List<String> _storiesFirebase = firebaseVersions.stories.keys.toList();
+          List<String> _storiesFirebase = firebaseVersions.stories.keys
+              .toList();
           List<String> _storiesLocal = versionController.stories.keys.toList();
           //Update existing stories
-          for(int i=0;i<_storiesFirebase.length;i++) {
+          for (int i = 0; i < _storiesFirebase.length; i++) {
             String _storyname = _storiesFirebase[i];
-            if(_storiesLocal.contains(_storyname)) {
+            if (_storiesLocal.contains(_storyname)) {
               if (versionController.stories[_storyname] <
                   firebaseVersions.stories[_storyname]) {
                 stories[_storyname] = await loadGeschichte(firestore: firestore,
                     story: stories[_storyname]);
-                versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
+                versionController.stories[_storyname] =
+                firebaseVersions.stories[_storyname];
                 //Update local data
                 updateLocalStoryData(stories[_storyname]);
               }
             }
             //Add missing stories
-            else{
+            else {
               //Create new story-entry and load data from firestore
               stories[_storyname] = Geschichte(storyname: _storyname);
               stories[_storyname] = await loadGeschichte(
                   firestore: firestore, story: stories[_storyname]);
               //Add version data to local version controller
-              versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
+              versionController.stories[_storyname] =
+              firebaseVersions.stories[_storyname];
               //Update local data
               updateLocalStoryData(stories[_storyname]);
             }
           }
         }
+      }
+      else{await loadData();}
     }
 
     //Here we manage user data. This is different as we might want to load local
@@ -448,8 +454,8 @@ class GeneralData{
   erlebnisseToJSON(){
     List<String> _keys = erlebnisse.keys.toList();
     Map<String, Map<String,String>> _erlebnisseOut = Map<String, Map<String,String>>();
-    for(int i=0;i<_keys.length;i++){
-      _erlebnisseOut[_keys[i]] = erlebnisse[_keys[i]].toMap;
+    for(String _key in _keys){
+      _erlebnisseOut[_key] = erlebnisse[_key].toMap;
     }
     return _erlebnisseOut;
   }
@@ -482,8 +488,7 @@ class VersionController{
     //All other version-data refers to stories
     List<String> _keys = _map.keys.toList();
     stories = new Map<String,double>();
-    for(int i=0;i<_keys.length;i++){
-      String _key = _keys[i];
+    for(String _key in _keys){
       if(!(<String>['gendering','erlebnisse'].contains(_key))){
         stories[_key] = _map[_key];
       }
@@ -497,8 +502,7 @@ class VersionController{
     _outputAsString['gendering'] = gendering;
     _outputAsString['erlebnisse'] = erlebnisse;
     List<String> _keys = stories.keys.toList();
-    for(int i=0;i<_keys.length;i++){
-      String _key = _keys[i];
+    for(String _key in _keys){
       if(!(<String>['gendering','erlebnisse'].contains(_key))){
         _outputAsString[_key] = stories[_key];
       }
@@ -531,9 +535,9 @@ class Substitution{
   //Substitute gendered Versions of Words
   _applyGenderSubstitutions(String textIn){
     List<String> _keys = generalData.gendering.keys.toList();
-    for(int i=0;i<_keys.length;i++){
-      String _substring = generalData.gendering[_keys[i]][hero.geschlecht];
-      textIn = textIn.replaceAll('#'+_keys[i], _substring);
+    for(String _key in _keys){
+      String _substring = generalData.gendering[_key][hero.geschlecht];
+      textIn = textIn.replaceAll('#'+_key, _substring);
     }
     return textIn;
   }
@@ -582,23 +586,22 @@ class Geschichte {
   void setStory(Map<dynamic,dynamic> _map){
     screens = {};
     List<String> _keys = List<String>.from(_map.keys);
-    for(int i=0;i<_keys.length;i++){
-      String key = _keys[i];
+    for(String _key in _keys){
       Map<String,dynamic> _screen = {};
-      _screen['options'] = Map<String,String>.from(_map[key]['options']);
-      _screen['forwards'] = Map<String,String>.from(_map[key]['forwards']);
-      _screen['erlebnisse'] = Map<String,String>.from(_map[key]['erlebnisse']);
-      _screen['conditions'] = Map<String,String>.from(_map[key]['conditions']);
-      _screen['text'] = _map[key]['text'];
-      screens[int.parse(key)] = _screen;
+      _screen['options'] = Map<String,String>.from(_map[_key]['options']);
+      _screen['forwards'] = Map<String,String>.from(_map[_key]['forwards']);
+      _screen['erlebnisse'] = Map<String,String>.from(_map[_key]['erlebnisse']);
+      _screen['conditions'] = Map<String,String>.from(_map[_key]['conditions']);
+      _screen['text'] = _map[_key]['text'];
+      screens[int.parse(_key)] = _screen;
     }
   }
 
   Map<String,Map<String,dynamic>> allKeysToString(){
     Map<String,Map<String,dynamic>> _screensJSON = Map<String,Map<String,dynamic>>();
     List<int> _keys = screens.keys.toList();
-    for(int i=0;i<_keys.length;i++){
-      _screensJSON[_keys[i].toString()] = screens[_keys[i]];
+    for(int _key in _keys){
+      _screensJSON[_key.toString()] = screens[_key];
     }
     return _screensJSON;
   }
@@ -606,8 +609,8 @@ class Geschichte {
   Map<int,Map<String,dynamic>> screensFromJSON(Map<String,dynamic> _screensJSON){
     List<String> _keys = _screensJSON.keys.toList();
     Map<int,Map<String,dynamic>> _screensInt = Map<int,Map<String,dynamic>>();
-    for(int i=0;i<_keys.length;i++){
-      _screensInt[int.parse(_keys[i])] = _screensJSON[_keys[i]];
+    for(String _key in _keys){
+      _screensInt[int.parse(_key)] = _screensJSON[_key];
     }
     return _screensInt;
   }

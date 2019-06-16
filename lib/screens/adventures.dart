@@ -285,15 +285,6 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     animationText.dispose();
     super.dispose();
   }
-
-  _openDialog(Widget _dialog, BuildContext context){
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return _dialog;
-        }
-    );
-  }
   
   //Function moving user to next screen
   _textCallback(String iNext, String erlebniss){

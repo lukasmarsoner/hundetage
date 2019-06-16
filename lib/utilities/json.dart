@@ -74,8 +74,8 @@ Future<void> deleteLocalUserData() async{
 Future<void> writeAllLocalStoriesData(Map<String,Geschichte> stories) async {
   //Loop through stories and write them to file
   List<String> _keys = stories.keys.toList();
-  for(int i=0; i<_keys.length; i++){
-    writeLocalStoryData(stories[_keys[i]]);
+  for(String _key in _keys){
+    writeLocalStoryData(stories[_key]);
   }
 }
 
@@ -124,9 +124,8 @@ Future<Map<String,Geschichte>> loadAllLocalStoryData() async {
 
     //Variable for looping through the file
     List<String> _keys = jsonFile.keys.toList();
-    for (int i = 0; i < _keys.length; i++) {
-      String storyname = _keys[i];
-      stories[storyname] = await loadLocalStoryData(jsonFile: jsonFile, storyname: storyname);
+    for (String _key in  _keys) {
+      stories[_key] = await loadLocalStoryData(jsonFile: jsonFile, storyname: _key);
     }
     return stories;
   }
@@ -206,10 +205,10 @@ Future<File> writeLocalErlebnisseData(GeneralData generalData) async {
   //Write images to file
   //TODO: load this during first loading as we do for story images
   List<String> _keys = generalData.erlebnisse.keys.toList();
-  for(int i=0;i<_keys.length;i++){
+  for(String _key in _keys){
     //First write image to disk - then write the data to JSON
-    await saveImageToFile(url: generalData.erlebnisse[_keys[i]].url,
-        filename: _keys[i]);
+    await saveImageToFile(url: generalData.erlebnisse[_key].url,
+        filename: _key);
   }
 
   final File file = await localFile('erlebnisse_data');
@@ -227,9 +226,9 @@ Future<GeneralData> loadLocalErlebnisseData(GeneralData generalData) async {
 
     //Load images associated with experiences
     List<String> _keys = _map.keys.toList();
-    for(int i=0;i<_keys.length;i++){
-      _mapOut[_keys[i]] = Erlebniss(image:await loadImageFromFile(_keys[i]),
-      text: _map[_keys[i]]['text'], url: _map[_keys[i]]['image']);
+    for(String _key in _keys){
+      _mapOut[_key] = Erlebniss(image:await loadImageFromFile(_key),
+      text: _map[_key]['text'], url: _map[_key]['image']);
     }
     generalData.setErlebnisse = _mapOut;
     return generalData;

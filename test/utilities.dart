@@ -22,8 +22,8 @@ Map<String,Map<String,String>> genderingTestData = {'ErSie':{'m':'Er','w':'Sie'}
   'wahrerwahre':{'m':'wahrer','w':'wahre'}};
 
 Map<String,Map<String,String>> erlebnisseTestData = {
-  'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'},
-  'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
+  'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'url': 'https://example.com/image.png'},
+  'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'url': 'https://example.com/image.png'}};
 
 //Data used for testing - we will return this in our mocked request to Firebase
 //The data returnd from firebase is Map<dynamic,dynamic>, so the versions handed
@@ -37,31 +37,42 @@ Map<String,dynamic> erlebnisseMockData = {
   'besteFreunde':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'},
   'alteFrau':{'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.', 'image': 'https://example.com/image.png'}};
 
-Map<String, dynamic> adventure = {
-  '0':
+Map<int,Map<String, dynamic>> screens = {
+  0:
     {'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
     'forwards': {'0':'1','1':'5'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
     'options': {'0':'test0','1':'test1'}},
-  '1':{
-    'conditions': {'0':''}, 'erlebnisse': {'0':'alteFrau'},
+  1:{'conditions': {'0':''}, 'erlebnisse': {'0':'alteFrau'},
     'forwards': {'0':'0'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
     'options': {'0':'new page'}}};
+
+Map<String, dynamic> screensFirebase = {
+  '0':
+  {'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
+    'forwards': {'0':'1','1':'5'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+    'options': {'0':'test0','1':'test1'}},
+  '1':{'conditions': {'0':''}, 'erlebnisse': {'0':'alteFrau'},
+    'forwards': {'0':'0'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+    'options': {'0':'new page'}}};
+
+Map<String, Geschichte> geschichten = {'Raja': Geschichte(storyname: 'Raja')};
 
 Map<String, dynamic> adventureMetadata = {
   'name': 'Raja', 'image': 'https...'};
 
-Map<String, dynamic> versionData = {
-  'gendering': '0.7', 'erlebnisse': '0.8', 'Raja': '0.8', 'GrosseFahrt': '0.0'};
-
-Map<String, double> versionTestData = {
+Map<String, double> versionData = {
   'gendering': 0.7, 'erlebnisse': 0.8, 'Raja': 0.8, 'GrosseFahrt': 0.0};
 
 Map<String, dynamic> versionDataLower = {
-  'gendering': '0.5', 'erlebnisse': '0.6', 'Raja': '0.8', 'GrosseFahrt': '0.0'};
+  'gendering': 0.5, 'erlebnisse': 0.6, 'Raja': 0.8, 'GrosseFahrt': 0.0};
 
 final testHeld = new Held.test();
 final testGeschichte = new Geschichte.fromFirebaseMap(adventureMetadata);
-final generalData = new GeneralData(erlebnisse: erlebnisseTestData,gendering: genderingTestData);
+final generalData = new GeneralData(erlebnisse: {'alteFrau':
+Erlebniss(text: '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',image: Image.asset('images/icon.png')),
+'besteFreunde':
+Erlebniss(text: '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',image: Image.asset('images/icon.png'))}
+,gendering: genderingTestData);
 final substitutions = new Substitution(hero: testHeld, generalData: generalData);
 final authenticator = new Authenticator();
 final versionController = new VersionController.fromMap(versionData);

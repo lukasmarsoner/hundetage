@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
+import 'package:hundetage/utilities/json.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,15 +32,28 @@ Map<String,Map<String,String>> generalDataFromDynamic(Map<dynamic, dynamic> mapI
 //Loads data needed by all adventures from firestore
 Future<GeneralData> loadGeneralData(Firestore firestore) async {
   Map<String,Map<String,String>> _gendering = await loadGendering(firestore);
-  Map<String,Map<String,String>> _erlebnisse = await loadErlebnisse(firestore);
+  Map<String, Erlebniss> _erlebnisse = await loadErlebnisse(firestore);
   return new GeneralData(gendering: _gendering, erlebnisse: _erlebnisse);
 }
 
-Future<Map<String,Map<String,String>>> loadErlebnisse(Firestore firestore) async {
+Future<Map<String,Erlebniss>> loadErlebnisse(Firestore firestore) async {
   CollectionReference _collectionReference = firestore.collection('general_data');
   DocumentReference _documentReference = _collectionReference.document('erlebnisse');
   DocumentSnapshot _documentSnapshot = await _documentReference.get();
-  return generalDataFromDynamic(_documentSnapshot.data);
+  return transformErlebnisse(_documentSnapshot.data);
+}
+
+Map<String,Erlebniss> transformErlebnisse(Map<String,dynamic> data){
+  Map<String, Erlebniss> _erlebnisseOut = Map();
+  Map<String,Map<String,String>> _erlebnisseIn = generalDataFromDynamic(data);
+  List<String> _keys = _erlebnisseIn.keys.toList();
+
+  for(int i=0;i<_keys.length;i++){
+    _erlebnisseOut[_keys[i]] = Erlebniss(text: _erlebnisseIn[_keys[i]]['text'],
+        image: Image.network(_erlebnisseIn[_keys[i]]['image']),
+        url: _erlebnisseIn[_keys[i]]['image']);
+  }
+  return _erlebnisseOut;
 }
 
 Future<Map<String,Map<String,String>>> loadGendering(Firestore firestore) async {
@@ -67,17 +82,40 @@ Future<Held> loadFirestoreUserData({Firestore firestore, Authenticator authentic
   }
 }
 
-//Loads story data from firestore
-Future<Geschichte> loadGeschichte({Firestore firestore, Geschichte geschichte}) async {
-  CollectionReference _collectionReference = firestore.collection('abenteuer');
-  DocumentReference _documentReference = _collectionReference.document(geschichte.storyname);
+//Loads story from firestore
+Future<Geschichte> loadGeschichte({Firestore firestore, Geschichte story}) async {
+  CollectionReference _collection = firestore.collection('abenteuer');
+  DocumentReference _documentReference = _collection.document(story.storyname);
   DocumentSnapshot _documentSnapshot = await _documentReference.get();
-
-  Map<String,dynamic> _screens = _documentSnapshot.data;
-  geschichte.setStory(_screens);
-
-  return geschichte;
+  story.setStory(_documentSnapshot.data['screens']);
+  return story;
 }
+
+//Loads all stories data from firestore
+Future<Map<String,Geschichte>> loadGeschichten({Firestore firestore}) async {
+  CollectionReference _collection = firestore.collection('abenteuer');
+  QuerySnapshot _queryReference = await _collection.getDocuments();
+  List<DocumentSnapshot> allStories = _queryReference.documents;
+
+  Map<String, Geschichte> _stories = Map<String, Geschichte>();
+  for(int i=0;i<allStories.length;i++){
+    String _storyname = allStories[i].data['name'];
+    allStories[i].data['url'] = allStories[i].data['image'];
+
+    //Save image to local file - we do this here so we don't load stuff twice...
+    await saveImageToFile(url: allStories[i].data['url'],
+        filename: allStories[i].data['name']);
+
+    Image _image = Image.network(allStories[i].data['url'], fit: BoxFit.cover);
+    allStories[i].data['image'] = _image;
+
+    _stories[_storyname] = Geschichte.fromFirebaseMap(allStories[i].data);
+    //Add actual data - make sure we have the right one
+    _stories[_storyname].setStory(allStories[i].data['screens']);
+  }
+  return _stories;
+}
+
 
 //Updates user data in firestore
 //If the file does not exist - create a new entry

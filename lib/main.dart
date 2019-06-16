@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'main_screen.dart';
+import 'package:hundetage/screens/mainScreen.dart';
 import 'package:hundetage/utilities/firebase.dart';
 import 'package:hundetage/utilities/authentication.dart';
 import 'utilities/json.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:io';
+
+String convertText({DataHandler dataHandler,String textIn}){
+  return dataHandler.substitution.applyAllSubstitutions(textIn);
+}
 
 void main() async{
   runApp(SplashScreen());
@@ -18,45 +22,66 @@ class SplashScreen extends StatefulWidget{
   SplashScreenState createState() => new SplashScreenState();
 }
 
-showConnectionNeededDialog(BuildContext context) {
-  showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          key: Key('MissingDataAlert'),
-          title: new Text("Keine Internetverbindung"),
-          content: new Text(
-              "Beim ersten Start wird eine internetverbindung benötigt."
-                  "Danach kannst du die App auch offline benutzen."),
-          actions: <Widget>[
-            new FlatButton(
-              child: new Text("Schließen"),
-              onPressed: () {
-                exit(0);
-              },
-            ),
-          ],
-        );
-      }
-  );
-}
-
-class DataLoader {
-  Authenticator authenticator;
+class DataHandler {
+  Authenticator authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
   Substitution substitution;
   GeneralData generalData;
-  VersionController versionController, testVersionController;
-  VersionController _firebaseVersions = new VersionController();
-  Firestore firestore;
-  bool local, fakeOnlineMode;
+  VersionController versionController, firebaseVersions;
+  Firestore firestore = Firestore.instance;
+  Map<String,Geschichte> stories;
+  String currentStory;
+  bool local;
   Held hero = Held.initial();
-  BuildContext context;
   ConnectionStatus connectionStatus = new ConnectionStatus();
 
+  //We want to use this all throughout the app so it should be a singleton
+  DataHandler._privateConstructor();
+
+  static final DataHandler _instance = DataHandler._privateConstructor();
+
   //fakeOnlineMode is used so we don't need to mock the http-request during testing
-  DataLoader({this.authenticator, this.context, this.firestore, this.fakeOnlineMode,
-  this.testVersionController});
+  factory DataHandler({Authenticator authenticator, Firestore firestore,
+    VersionController testVersionController}){
+    return _instance;
+  }
+
+  get getCurrentStory => stories[currentStory];
+
+  //Hero-setter also ensuring Firebase and local data are
+  //always up-to-date
+  set updateHero(Held heroIn) {
+    hero = heroIn;
+    hero.signedIn
+        ?updateCreateFirestoreUserData(firestore: firestore,
+        authenticator: authenticator, hero: hero)
+        :writeLocalUserData(hero);
+  }
+
+  //This can get more functionality later
+  //right now we only really care about te hero changing
+  set updateData(DataHandler newData){
+    this.updateHero = newData.hero;
+    generalData = newData.generalData;
+    stories = newData.stories;
+    substitution = newData.substitution;
+  }
+
+  void updateLocalStoryData(Geschichte _updatedStory){
+    //Update version-information on disk
+    writeLocalVersionData(versionController);
+    //Update data on disk
+    writeLocalStoryData(_updatedStory);
+  }
+
+  Future<void> loadLocalData() async{
+    generalData = await loadLocalGeneralData();
+    stories = await loadAllLocalStoryData();
+    hero = await hero.loadOffline();
+    //For the user we just set it to it's initial value
+    if(hero==null){
+      hero = Held.initial();
+    }
+  }
 
   Future<void> loadData() async {
     //Check if we are connected to the internet
@@ -64,70 +89,101 @@ class DataLoader {
     //If so - we can check if there are any updates available for us
     //If not we see if we have local data - if not we need to inform the user
     //that they need to go online to retrieve it
-    fakeOnlineMode
+    connectionStatus.online
         ?local = false
-        :local = !connectionStatus.online;
+        :local = await canWorkOffline();
 
     versionController = await loadLocalVersionData();
     //If we have no connection we just load the local data
     if (local) {
-      if (!(await canWorkOffline())) {
-        showConnectionNeededDialog(context);
-      }
-      else {
-        generalData = await loadLocalGeneralData();
-        hero = await hero.loadOffline();
+      await loadLocalData();
+      //If we have trouble loading local data, delete general data and
+      //Stories and load them from Firebase
+      //If one of the two is missing we re-load everything
+      //This could be more sophisticated but should not really be an issue
+      if(generalData==null || stories==null){
+        await deleteLocalGeneralData();
+        await deleteLocalStoryData();
+        await loadData();
       }
     }
     else {
         //First see if we have newer versions available on Firebase
-        //For testing we need to mock this
-        fakeOnlineMode
-            ?_firebaseVersions = testVersionController
-            :_firebaseVersions = await loadVersionInformation(firestore: firestore);
-
-        bool _offineDataAvailable = await canWorkOffline();
+      firebaseVersions = await loadVersionInformation(firestore: firestore);
         //If there is no offline data we need to load everything
-      if (!_offineDataAvailable) {
-        generalData = await loadGeneralData(firestore);
-        versionController = _firebaseVersions;
+        if (!(await canWorkOffline())) {
+          generalData = await loadGeneralData(firestore);
+          stories = await loadGeschichten(firestore: firestore);
+          versionController = firebaseVersions;
+          //Write stuff to file so it is there next time
+          //TODO: make this into an isolate
+          await writeLocalVersionData(versionController);
+          await writeLocalGeneralData(generalData);
+          await writeAllLocalStoriesData(stories);
+        }
+        //If there is, we can just update what has changed
+        else {
+          //Load current local data before updating
+          await loadLocalData();
+          if (versionController.gendering < firebaseVersions.gendering) {
+            generalData.gendering = await loadGendering(firestore);
+            versionController.gendering = firebaseVersions.gendering;
+            //Update version-information on disk
+            writeLocalVersionData(versionController);
+            //Update data on disk
+            writeLocalGenderingData(generalData);
+          }
+          if (versionController.erlebnisse < firebaseVersions.erlebnisse) {
+            generalData.erlebnisse = await loadErlebnisse(firestore);
+            versionController.erlebnisse = firebaseVersions.erlebnisse;
+            //Update version-information on disk
+            writeLocalVersionData(versionController);
+            //Update data on disk
+            writeLocalErlebnisseData(generalData);
+          }
 
-        //Write stuff to file so it is there next time
-        writeLocalVersionData(versionController);
-        writeLocalGeneralData(generalData);
-      }
-      //If there is, we can just update what has changed
-      else {
-        if (versionController.gendering < _firebaseVersions.gendering) {
-          generalData.gendering = await loadGendering(firestore);
-          versionController.gendering = _firebaseVersions.gendering;
-          //Update version-information on disk
-          writeLocalVersionData(versionController);
-          //Update data on disk
-          writeLocalGenderingData(generalData);
+          //Check all stories for updates
+          List<String> _storiesFirebase = firebaseVersions.stories.keys.toList();
+          List<String> _storiesLocal = versionController.stories.keys.toList();
+          //Update existing stories
+          for(int i=0;i<_storiesFirebase.length;i++) {
+            String _storyname = _storiesFirebase[i];
+            if(_storiesLocal.contains(_storyname)) {
+              if (versionController.stories[_storyname] <
+                  firebaseVersions.stories[_storyname]) {
+                stories[_storyname] = await loadGeschichte(firestore: firestore,
+                    story: stories[_storyname]);
+                versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
+                //Update local data
+                updateLocalStoryData(stories[_storyname]);
+              }
+            }
+            //Add missing stories
+            else{
+              //Create new story-entry and load data from firestore
+              stories[_storyname] = Geschichte(storyname: _storyname);
+              stories[_storyname] = await loadGeschichte(
+                  firestore: firestore, story: stories[_storyname]);
+              //Add version data to local version controller
+              versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
+              //Update local data
+              updateLocalStoryData(stories[_storyname]);
+            }
+          }
         }
-        if (versionController.erlebnisse < _firebaseVersions.erlebnisse) {
-          generalData.erlebnisse = await loadErlebnisse(firestore);
-          versionController.erlebnisse = _firebaseVersions.erlebnisse;
-          //Update version-information on disk
-          writeLocalVersionData(versionController);
-          //Update data on disk
-          writeLocalErlebnisseData(generalData);
-        }
-      }
     }
 
     //Here we manage user data. This is different as we might want to load local
     //data even if we are online
     //First we check if the user is currently logged-in
-    bool _signedIn = await authenticator.getUid()==null;
+    bool _signedIn = await authenticator.getUid()!=null;
     hero = await hero.load(authenticator: authenticator,
         signedIn: _signedIn,
         firestore: firestore);
     if (hero == null) {
       hero = Held.initial();
     }
-    //Check if we are already logged-in
+    //Set sign-in status for user
     hero.signedIn = _signedIn;
 
     //Generate substitutions and terminate loading animation
@@ -139,10 +195,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
   Animation<int> _characterCount;
   AnimationController _animationController;
   bool _isLoading = true;
-  Authenticator authenticator = new Authenticator(firebaseAuth: FirebaseAuth.instance);
-  DataLoader _dataLoader;
-  VersionController versionController;
-  Firestore firestore = Firestore.instance;
+  DataHandler dataHandler;
 
   int _stringIndex;
   static const List<String> _textStrings = const <String>[
@@ -176,7 +229,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
             mainAxisAlignment:MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Image.asset('images/icon.png', width: 200.0, height: 200.0),
+              Image.asset('assets/images/icon.png', width: 200.0, height: 200.0),
               Container(
                   padding: EdgeInsets.only(top: 10.0),
                   child: _characterCount == null ? null : new AnimatedBuilder(
@@ -202,21 +255,19 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
     super.initState();
     _animateText();
     SchedulerBinding.instance.addPostFrameCallback((_)=>_runDataLoaders());
-    setState(() => _isLoading = false);
   }
 
   Future<void> _runDataLoaders() async{
     //Class taking care of all data-loading logic
-    DataLoader _dataLoader = new DataLoader(firestore: firestore,
-        authenticator: authenticator, context: context);
-    await _dataLoader.loadData();
+    dataHandler = DataHandler();
+    await dataHandler.loadData();
+    setState(() => _isLoading = false);
   }
 
   Widget _showCircularProgress(){
     return _isLoading
         ?Center(child: _loadingScreen())
-        :MyApp(hero: _dataLoader.hero, authenticator: authenticator, versionController: versionController,
-        generalData: _dataLoader.generalData, substitution: _dataLoader.substitution, firestore: firestore);
+        :MyApp(dataHandler: dataHandler);
   }
 
   @override
@@ -226,50 +277,26 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
 }
 
 class MyApp extends StatefulWidget{
-  final Held hero;
-  final Authenticator authenticator;
-  final Substitution substitution;
-  final GeneralData generalData;
-  final Firestore firestore;
-  final VersionController versionController;
+  final DataHandler dataHandler;
 
-  MyApp({@required this.hero, @required this.authenticator, @required this.generalData,
-  @required this.substitution, @required this.firestore, @required this.versionController});
+  MyApp({@required this.dataHandler});
 
   @override
-  _MyAppState createState() => new _MyAppState(hero: hero, substitution: substitution,
-      generalData: generalData, firestore: firestore, authenticator: authenticator,
-      versionController: versionController);
+  _MyAppState createState() => new _MyAppState(dataHandler: dataHandler);
 }
 
 //All global should be store and kept-updated here
 class _MyAppState extends State<MyApp>{
-  Held hero;
-  Authenticator authenticator;
-  Substitution substitution;
-  GeneralData generalData;
-  Firestore firestore;
-  VersionController versionController;
+  final DataHandler dataHandler;
 
-  _MyAppState({@required this.hero, @required this.authenticator, @required this.versionController,
-  @required this.generalData, @required this.firestore, @required this.substitution});
-
-  void heroCallback({Held newHero}){
-    setState(() {hero = newHero;});
-    hero.signedIn
-        ?updateCreateFirestoreUserData(firestore: firestore,
-        authenticator: authenticator, hero: hero)
-        :writeLocalUserData(hero);
-  }
+  _MyAppState({@required this.dataHandler});
 
   @override
   Widget build(BuildContext context){
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Hundetage',
-      home: Scaffold(body: MainPage(hero: hero, versionController: versionController,
-          heroCallback: heroCallback, authenticator: authenticator,
-          generalData: generalData, substitution:substitution, firestore: firestore)),
+      home: Scaffold(body: MainPage(dataHandler: dataHandler,)),
     );
   }
 }
@@ -278,7 +305,7 @@ class Held{
   // Properties of users
   //This is being set here. As user images are stored in the assets it will
   //never change in the live app
-  int _maxImages = 7;
+  int _maxImages = 8;
   String _name, _geschlecht;
   int _iBild, _iScreen;
   List<String> _erlebnisse;
@@ -297,7 +324,7 @@ class Held{
 
   // Default values for user
   Map<String,dynamic> _defaults = {
-    'name': '??????',
+    'name': 'Mara',
     'geschlecht': 'w',
     'iBild': -1,
     'iScreen': 0,
@@ -414,13 +441,22 @@ class GeneralData{
   //gendering contains mappings for male/female versions of words
   //erlebnisse contains all possible memories that can be collected during the adventures
   Map<String,Map<String,String>> gendering;
-  Map<String,Map<String,String>> erlebnisse;
+  Map<String,Erlebniss> erlebnisse;
 
   GeneralData({@required this.gendering, @required this.erlebnisse});
 
+  erlebnisseToJSON(){
+    List<String> _keys = erlebnisse.keys.toList();
+    Map<String, Map<String,String>> _erlebnisseOut = Map<String, Map<String,String>>();
+    for(int i=0;i<_keys.length;i++){
+      _erlebnisseOut[_keys[i]] = erlebnisse[_keys[i]].toMap;
+    }
+    return _erlebnisseOut;
+  }
+
   Map<String,dynamic> get values => {
     'gendering': gendering,
-    'erlebnisse': erlebnisse
+    'erlebnisse': erlebnisseToJSON()
   };
 
   GeneralData.fromMap(Map<String,dynamic> _map){
@@ -429,7 +465,7 @@ class GeneralData{
   }
 
   set setGendering(Map<String, dynamic> _dataIn){gendering = generalDataFromDynamic(_dataIn);}
-  set setErlebnisse(Map<String, dynamic> _dataIn){erlebnisse = generalDataFromDynamic(_dataIn);}
+  set setErlebnisse(Map<String, Erlebniss> _dataIn){erlebnisse = _dataIn;}
 }
 
 //Central class to monitor version-information
@@ -441,36 +477,36 @@ class VersionController{
 
   VersionController.fromMap(Map<String,dynamic> _map){
     //Explicitly set some data
-    gendering = double.parse(_map['gendering']);
-    erlebnisse = double.parse(_map['erlebnisse']);
+    gendering = _map['gendering'];
+    erlebnisse = _map['erlebnisse'];
     //All other version-data refers to stories
     List<String> _keys = _map.keys.toList();
     stories = new Map<String,double>();
     for(int i=0;i<_keys.length;i++){
       String _key = _keys[i];
       if(!(<String>['gendering','erlebnisse'].contains(_key))){
-        stories[_key] = double.parse(_map[_key]);
+        stories[_key] = _map[_key];
       }
     }
   }
 
-  Map<String,String> getOutputData(){
+  Map<String,double> getOutputData(){
     //Used to convert map into a format that can be written to JSON
     //And Firebase in the same way
-    Map<String,String> _outputAsString = new Map<String,String>();
-    _outputAsString['gendering'] = gendering.toString();
-    _outputAsString['erlebnisse'] = erlebnisse.toString();
+    Map<String,double> _outputAsString = new Map<String,double>();
+    _outputAsString['gendering'] = gendering;
+    _outputAsString['erlebnisse'] = erlebnisse;
     List<String> _keys = stories.keys.toList();
     for(int i=0;i<_keys.length;i++){
       String _key = _keys[i];
       if(!(<String>['gendering','erlebnisse'].contains(_key))){
-        _outputAsString[_key] = stories[_key].toString();
+        _outputAsString[_key] = stories[_key];
       }
     }
     return _outputAsString;
   }
 
-  Map<String,dynamic> get values => getOutputData();
+  Map<String,double> get values => getOutputData();
 }
 
 //Helper class to check online-offline status
@@ -479,17 +515,9 @@ class ConnectionStatus{
 
   //The test to actually see if there is a connection
   Future<void> checkConnection() async {
-    try {
-      final result = await InternetAddress.lookup('http://wwww.google.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        online = true;
-      } else {
-        online = false;
-      }
-    } on SocketException
-    catch(_) {
-      online = false;
-    }
+    var connectivityResult = await Connectivity().checkConnectivity();
+    online = (connectivityResult == ConnectivityResult.mobile
+        || connectivityResult == ConnectivityResult.wifi);
   }
 }
 
@@ -525,50 +553,74 @@ class Substitution{
 
 class Geschichte {
   final String storyname;
+  String url, zusammenfassung;
   Image image;
   Held hero;
   Map<int,Map<String,dynamic>> screens;
 
+  Geschichte({this.storyname});
+
   Geschichte.fromFirebaseMap(Map<String, dynamic> map)
       : assert(map['name'] != null),
         assert(map['image'] != null),
+        assert(map['zusammenfassung'] != null),
+        assert(map['url'] != null),
         storyname = map['name'],
-        image = Image.network(map['image'], fit: BoxFit.cover);
-
-  //Used for loading from local file
-  Geschichte.fromJSONMap(Map<String, dynamic> map)
-      : assert(map['name'] != null),
-        assert(map['image'] != null),
-        storyname = map['name'],
+        url = map['url'],
+        zusammenfassung = map['zusammenfassung'],
         image = map['image'];
 
-  Geschichte.fromSnapshot(DocumentSnapshot snapshot)
-      : this.fromFirebaseMap(snapshot.data);
+  //Used to set data from local file
+  void setFromJSON({Image imageIn, Map<String,dynamic> screensJSON,
+  String summary}){
+    screens = screensFromJSON(screensJSON);
+    image = imageIn;
+    zusammenfassung = summary;
+}
 
   //Make sure all maps have the correct types
-  void setStory(Map<String,dynamic> _map){
+  void setStory(Map<dynamic,dynamic> _map){
     screens = {};
-    List<String> _keys = _map.keys.toList();
+    List<String> _keys = List<String>.from(_map.keys);
     for(int i=0;i<_keys.length;i++){
       String key = _keys[i];
-      //Exclude metadata
-      if(!<String>['name','image'].contains(key)){
-        Map<String,dynamic> _screen = {};
-        _screen['options'] = Map<String,String>.from(_map[key]['options']);
-        _screen['forwards'] = Map<String,String>.from(_map[key]['forwards']);
-        _screen['erlebnisse'] = Map<String,String>.from(_map[key]['erlebnisse']);
-        _screen['conditions'] = Map<String,String>.from(_map[key]['conditions']);
-        _screen['text'] = _map[key]['text'];
-        screens[int.parse(key)] = _screen;
-      }
+      Map<String,dynamic> _screen = {};
+      _screen['options'] = Map<String,String>.from(_map[key]['options']);
+      _screen['forwards'] = Map<String,String>.from(_map[key]['forwards']);
+      _screen['erlebnisse'] = Map<String,String>.from(_map[key]['erlebnisse']);
+      _screen['conditions'] = Map<String,String>.from(_map[key]['conditions']);
+      _screen['text'] = _map[key]['text'];
+      screens[int.parse(key)] = _screen;
     }
   }
 
-  Map<String,dynamic> get data => {
-    'screens': screens
-  };
+  Map<String,Map<String,dynamic>> allKeysToString(){
+    Map<String,Map<String,dynamic>> _screensJSON = Map<String,Map<String,dynamic>>();
+    List<int> _keys = screens.keys.toList();
+    for(int i=0;i<_keys.length;i++){
+      _screensJSON[_keys[i].toString()] = screens[_keys[i]];
+    }
+    return _screensJSON;
+  }
 
-  Map<String,dynamic> get metaData => {
-    'storyname': storyname
-  };
+  Map<int,Map<String,dynamic>> screensFromJSON(Map<String,dynamic> _screensJSON){
+    List<String> _keys = _screensJSON.keys.toList();
+    Map<int,Map<String,dynamic>> _screensInt = Map<int,Map<String,dynamic>>();
+    for(int i=0;i<_keys.length;i++){
+      _screensInt[int.parse(_keys[i])] = _screensJSON[_keys[i]];
+    }
+    return _screensInt;
+  }
+
+  Map<String,Map<String,dynamic>> get screensJSON => allKeysToString();
+}
+
+//Class for experiences
+class Erlebniss {
+  String text, url;
+  Image image;
+
+  Erlebniss({this.text, this.image, this.url});
+
+  get toMap => {'url': url, 'text': text};
 }

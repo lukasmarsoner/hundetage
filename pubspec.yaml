@@ -10,9 +10,10 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^0.1.2
   cloud_firestore: ^0.9.7
-  firebase_storage: ^2.1.0+1
-  path_provider: ^0.5.0+1
   firebase_auth: ^0.6.2+1
+  connectivity: ^0.4.3+1
+  path_provider: ^1.1.0
+  http: ^0.12.0+2
 
 dev_dependencies:
   image_test_utils: ^1.0.0
@@ -22,19 +23,42 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: IndieFlower
+      fonts:
+        - asset: assets/IndieFlower.ttf
+    - family: PatrickHand
+      fonts:
+        - asset: assets/PatrickHand-Regular.ttf
+    - family: Montserrat
+      fonts:
+        - asset: assets/Montserrat-Regular.ttf
+        - style: normal
+        - asset: assets/Montserrat-Bold.ttf
+        - weight: 600
+        - asset: assets/Montserrat-Italic.ttf
+        - style: italic
+        - asset: assets/Montserrat-BoldItalic.ttf
+        - style: italic
+        - weight: 600
+
   assets:
-    - images/symbol_m.png
-    - images/symbol_w.png
-    - images/symbol_m_b.png
-    - images/symbol_w_b.png
-    - images/icon.png
-    - images/user_screen_top_image.png
-    - images/user_images/fragezeichen.jpg
-    - images/user_images/hund_0.jpg
-    - images/user_images/hund_1.jpg
-    - images/user_images/hund_2.jpg
-    - images/user_images/hund_3.jpg
-    - images/user_images/hund_4.jpg
-    - images/user_images/hund_5.jpg
-    - images/user_images/hund_6.jpg
-    - images/user_images/hund_7.jpg
+    - assets/images/cloud.png
+    - assets/images/world.png
+    - assets/images/girl_0.png
+    - assets/images/girl_1.png
+    - assets/images/girl_2.png
+    - assets/images/boy_0.png
+    - assets/images/boy_1.png
+    - assets/images/boy_2.png
+    - assets/images/icon.png
+    - assets/images/house.png
+    - assets/images/user_images/hund_0.jpg
+    - assets/images/user_images/hund_1.jpg
+    - assets/images/user_images/hund_2.jpg
+    - assets/images/user_images/hund_3.jpg
+    - assets/images/user_images/hund_4.jpg
+    - assets/images/user_images/hund_5.jpg
+    - assets/images/user_images/hund_6.jpg
+    - assets/images/user_images/hund_7.jpg
+

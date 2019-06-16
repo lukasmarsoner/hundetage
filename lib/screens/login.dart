@@ -1,42 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:hundetage/utilities/authentication.dart';
-import 'main.dart';
+import 'package:hundetage/main.dart';
 import 'package:hundetage/utilities/firebase.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 
 class LoginSignUpPage extends StatefulWidget{
-  final Function updateHero;
-  final Authenticator authenticator;
-  final Held hero;
-  final Firestore firestore;
+  final DataHandler dataHandler;
 
-  LoginSignUpPage({@required this.updateHero, @required this.authenticator,
-  @required this.hero, @required this.firestore});
+  LoginSignUpPage({@required this.dataHandler});
 
   @override
   LoginSignUpPageState createState() => new LoginSignUpPageState(
-      authenticator: authenticator, updateHero: updateHero, hero: hero,
-      firestore: firestore);
+      dataHandler: dataHandler);
 }
 
 enum FormMode { LOGIN, SIGNUP, SIGNOUT }
 
 class LoginSignUpPageState extends State<LoginSignUpPage> {
   bool _isIos, _isLoading;
-  Function updateHero;
-  Authenticator authenticator;
   double _circleSize;
-  Held hero;
-  Firestore firestore;
+  DataHandler dataHandler;
   String _email, _password, _errorMessage;
   FormMode _formMode = FormMode.LOGIN;
 
-  LoginSignUpPageState({@required this.hero, @required this.authenticator,
-    @required this.updateHero, @required this.firestore});
+  LoginSignUpPageState({@required this.dataHandler});
 
   final _formKey = new GlobalKey<FormState>();
+
+  //Update user page and hand change to hero to main function
+  void updateData({DataHandler newData}){
+    setState(() {
+      dataHandler.updateData = newData;
+    });
+  }
 
   // Check if form is valid before perform login or sign-up
   bool _validateAndSave() {
@@ -48,17 +44,17 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     return false;
   }
 
-  void _loadAndUpdateHero() async{
-    Held _newHero = await hero.load(authenticator:authenticator, signedIn: true, firestore: firestore);
-    if(_newHero==null){_newHero=hero;}
+  void _loadAndUpdateData() async{
+    Held _newHero = await dataHandler.hero.load(signedIn: true);
+    if(_newHero==null){_newHero=dataHandler.hero;}
     setState((){
       //If we are currently logged-in we should log-out the user and set the hero
       //to it's initial values
       //If not - we get the data from the load-function
       //If we don't have anything we use default values
       //All this happens in the load function of the Held-class
-      hero = _newHero;
-      hero.signedIn = true;
+      _newHero.signedIn = true;
+      dataHandler.updateHero = _newHero;
     });
     _changeFormToSignOut();
   }
@@ -67,9 +63,9 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   //Sign user out
   _signOut() {
     setState(() {
-      authenticator.signOut();
-      hero.signedIn = false;
-      updateHero(newHero:hero);
+      dataHandler.authenticator.signOut();
+      dataHandler.hero.signedIn = false;
+      updateData(newData: dataHandler);
       _changeFormToLogin();
     });
   }
@@ -77,7 +73,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   @override
   void initState() {
     // Initial form is login form if user is not already logged-in
-    _formMode = hero.signedIn?FormMode.SIGNOUT:FormMode.LOGIN;
+    _formMode = dataHandler.hero.signedIn?FormMode.SIGNOUT:FormMode.LOGIN;
     _errorMessage = "";
     _isLoading = false;
     super.initState();
@@ -105,11 +101,11 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     setState(() {
       _formMode = FormMode.SIGNOUT;
     });
-    updateHero(newHero: hero);
+    updateData(newData: dataHandler);
   }
 
   Future<void> _deleteUserData() async{
-    FirebaseUser user = await authenticator.getCurrentUser();
+    FirebaseUser user = await dataHandler.authenticator.getCurrentUser();
     setState(() {
       _isLoading = true;
       _errorMessage = "";
@@ -118,7 +114,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       //Deleting requires the user to have logged-in only recently
       //We catch the error here and log the user out, should he/she not
       //have signed-in recently. If the user is not - we sign him/her out
-      deleteFirestoreUserData(firestore: firestore, user: user);
+      deleteFirestoreUserData(firestore: dataHandler.firestore, user: user);
       _showDeletionDialog();
       _signOut();
     }
@@ -142,12 +138,13 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
 
   void _resetPassword(){
     if(_validateAndSave()){
-      authenticator.sendPasswordReset(_email);
+      dataHandler.authenticator.sendPasswordReset(_email);
     }
   }
 
   void _createUserdataInFirebase(String uid){
-    updateCreateFirestoreUserData(firestore: firestore, uid: uid, hero: hero);
+    updateCreateFirestoreUserData(firestore: dataHandler.firestore,
+        uid: uid, hero: dataHandler.hero);
   }
 
   // Perform login or sign-up
@@ -160,17 +157,17 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       String uid = "";
       try {
         if (_formMode == FormMode.LOGIN) {
-          uid = await authenticator.signIn(_email, _password);
+          uid = await dataHandler.authenticator.signIn(_email, _password);
         }
         else {
-          uid = await authenticator.signUp(_email, _password);
-          authenticator.sendEmailVerification();
+          uid = await dataHandler.authenticator.signUp(_email, _password);
+          dataHandler.authenticator.sendEmailVerification();
           _createUserdataInFirebase(uid);
           _showVerifyEmailSentDialog();
         }
         if (uid.length > 0 && uid != null && _formMode == FormMode.LOGIN) {
-          hero.signedIn = true;
-          _loadAndUpdateHero();
+          dataHandler.hero.signedIn = true;
+          _loadAndUpdateData();
         }
       } catch (e) {
         setState(() {
@@ -344,13 +341,13 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
                         child: CircleAvatar(
                             minRadius: _circleSize,
                             maxRadius: _circleSize,
-                            backgroundColor:hero.geschlecht == 'm' ?Colors.blueAccent:Colors.redAccent,
+                            backgroundColor: Colors.black,
                             child: Center(child: new CircleAvatar(
                                 minRadius: _circleSize * 0.95,
                                 maxRadius: _circleSize * 0.95,
                                 backgroundImage: new AssetImage(
-                                    hero.iBild!=-1?'images/user_images/hund_${hero.iBild}.jpg'
-                                        :'images/user_images/fragezeichen.jpg')
+                                    dataHandler.hero.iBild!=-1?'assets/images/user_images/hund_${dataHandler.hero.iBild}.jpg'
+                                        :'assets/images/user_images/fragezeichen.jpg')
                             )
                             )
                         )
@@ -366,7 +363,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
         key: Key('username'),
         child: new
         Text(
-          hero.name,
+          dataHandler.hero.name,
           style: new TextStyle(
               fontSize: 20.0,
               color: Colors.black,
@@ -387,7 +384,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
 
   //Showes either login fields or a message that the user is already logged-in
   ListView _showInputLoginMessage(){
-    if(hero.signedIn){
+    if(dataHandler.hero.signedIn){
       return new ListView(
         shrinkWrap: true,
         children: <Widget>[
@@ -423,7 +420,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
         _errorMessage,
         style: TextStyle(
             fontSize: 20.0,
-            color: hero.geschlecht == 'm' ? Colors.blueAccent : Colors.redAccent,
+            color: Colors.blue,
             height: 1.0,
             fontWeight: FontWeight.w300),
       );
@@ -478,7 +475,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(Icons.cloud_done),
+            Image.asset('assets/images/cloud.png', height: 55.0, width: 55.0),
             Container(
                 padding: EdgeInsets.all(10.0),
                 child: Text('Du bist jetzt eingelogged',
@@ -504,21 +501,21 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showResetDeleteButton() {
-    double topPadding = hero.signedIn?30.0:0.0;
+    double topPadding = dataHandler.hero.signedIn?30.0:0.0;
     double _iconSize = 40.0;
     IconData _buttonIcon;
-    hero.signedIn?_buttonIcon = Icons.delete:_buttonIcon = Icons.cached;
+    dataHandler.hero.signedIn?_buttonIcon = Icons.delete:_buttonIcon = Icons.cached;
     return new IconButton(
         key: Key('resetDelete'),
         padding: EdgeInsets.only(top:topPadding),
         icon: Icon(_buttonIcon, size: _iconSize),
-        onPressed:hero.signedIn?_showDeleteUserDialog:_showResetMailDialog
+        onPressed:dataHandler.hero.signedIn?_showDeleteUserDialog:_showResetMailDialog
     );
   }
 
   Widget _showPrimaryButton() {
     Text _buttonText = Text('');
-    if(hero.signedIn){
+    if(dataHandler.hero.signedIn){
       _buttonText = new Text('Abmelden',
           style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));
     }
@@ -540,7 +537,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
             key: Key('primaryButton'),
             elevation: 5.0,
             shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-            color: hero.geschlecht == 'm' ? Colors.blueAccent : Colors.redAccent,
+            color: Colors.blue,
             child: _buttonText,
             onPressed:_formMode==FormMode.SIGNOUT?_signOut:_validateAndSubmit
           ),

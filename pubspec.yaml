@@ -44,7 +44,15 @@ flutter:
 
   assets:
     - assets/images/cloud.png
+    - assets/images/cloud_logout_w.png
+    - assets/images/cloud_logout_m.png
+    - assets/images/cloud_reset_w.png
+    - assets/images/cloud_reset_m.png
+    - assets/images/register_user_m.png
+    - assets/images/register_user_w.png
+    - assets/images/cloud_login.png
     - assets/images/world.png
+    - assets/images/user_settings.png
     - assets/images/girl_0.png
     - assets/images/girl_1.png
     - assets/images/girl_2.png
@@ -53,6 +61,7 @@ flutter:
     - assets/images/boy_2.png
     - assets/images/icon.png
     - assets/images/house.png
+    - assets/images/logout.png
     - assets/images/user_images/hund_0.jpg
     - assets/images/user_images/hund_1.jpg
     - assets/images/user_images/hund_2.jpg

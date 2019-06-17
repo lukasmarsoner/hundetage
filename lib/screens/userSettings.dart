@@ -17,6 +17,76 @@ class UserPage extends StatefulWidget {
       dataHandler: dataHandler);
 }
 
+class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
+  DataHandler dataHandler;
+  double get getHeight => MediaQuery.of(context).size.height;
+  double get getWidth => MediaQuery.of(context).size.width;
+
+  UserPageState({@required this.dataHandler});
+
+  //Update user page and hand change to hero to main function
+  void updateData({DataHandler newData}){
+    setState(() => dataHandler.updateData = newData);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    //Dialog for entering user name
+    Dialog userNameDialog = Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)), //this right here
+      child: Container(
+        height: 200.0,
+        width: 140.0,
+
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding:  EdgeInsets.only(top: 15.0),
+              child: Text('Gib einen Namen ein',
+                  style: titleBlackStyle),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 15.0),
+              child: UserNameField(dataHandler: dataHandler, updateData: updateData),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+            resizeToAvoidBottomPadding: false,
+            body: Stack(children: <Widget>[
+              SafeArea(
+                child: Stack(children: <Widget>[
+                  Background(getHeight: getHeight, getWidth: getWidth),
+                  new Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                      SizedBox(height: 10),
+                        Header(dataHandler: dataHandler, getWidth: getWidth,
+                            userNameDialog: userNameDialog),
+                        SizedBox(height: 30),
+                        HeldAuswahl(dataHandler: dataHandler, getHeight: getHeight,
+                            getWidth: getWidth, updateData: updateData),
+                        SizedBox(height: minHeightBottomSheet)
+                    ]
+                  )
+                ])
+              ),
+              MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+                  getWidth: getWidth, icon: 'assets/images/house.png',
+                  homeButtonFunction: () => Navigator.pop(context))
+            ])
+        )
+    );
+  }
+
+}
+
 class Header extends StatelessWidget {
   final DataHandler dataHandler;
   final double getWidth;
@@ -37,24 +107,24 @@ class Header extends StatelessWidget {
     return GestureDetector(
       onTap: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog),
       child: Padding(
-        padding: const EdgeInsets.only(left: 15.0),
+        padding: const EdgeInsets.only(left: 10),
         child: Row(
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () => _gotoLoginScreen(context: context, dataHandler: dataHandler),
-                  child: Container(
-                      height: 75.0,
-                      width: 75.0,
-                      child:Image.asset(dataHandler.hero.signedIn
-                          ?'assets/images/cloud.png'
-                          :'assets/images/world.png')
-                  ),
+            children: <Widget>[
+              GestureDetector(
+                onTap: () => _gotoLoginScreen(context: context, dataHandler: dataHandler),
+                child: Container(
+                    height: 75.0,
+                    width: 75.0,
+                    child:Image.asset(dataHandler.hero.signedIn
+                        ?'assets/images/cloud.png'
+                        :'assets/images/world.png')
                 ),
-                Padding(
-                  padding: EdgeInsets.only(left: 10.0),
-                  child: GestureDetector(
-                    onTap: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog),
-                    child: Column(
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 10.0),
+                child: GestureDetector(
+                  onTap: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog),
+                  child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
@@ -74,86 +144,14 @@ class Header extends StatelessWidget {
                             'Oder log dich über das Bild ein',
                             style: subTitleStyle)
                       ]
-                    ),
                   ),
                 ),
-              ]
-            ),
-          ),
-    );
-  }
-}
-
-class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
-  DataHandler dataHandler;
-  double get getHeight => MediaQuery.of(context).size.height;
-  double get getWidth => MediaQuery.of(context).size.width;
-
-  UserPageState({@required this.dataHandler});
-
-  //Update user page and hand change to hero to main function
-  void updateData({DataHandler newData}){
-    setState(() => dataHandler.updateData = newData);
-  }
-
-  _gotoHomeScreen({BuildContext context}){
-    Navigator.pop(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    //Dialog for entering user name
-    Dialog userNameDialog = Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)), //this right here
-      child: Container(
-        height: 160.0,
-        width: 160.0,
-
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding:  EdgeInsets.only(top: 15.0),
-              child: Text('Gib einen Namen ein',
-                  style: subTitleStyle),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 15.0),
-              child: UserNameField(dataHandler: dataHandler, updateData: updateData),
-            ),
-          ],
+              ),
+            ]
         ),
       ),
     );
-
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-            body: Stack(children: <Widget>[
-              SafeArea(
-                child: Stack(children: <Widget>[
-                  Background(getHeight: getHeight, getWidth: getWidth),
-                  new Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Header(dataHandler: dataHandler, getWidth: getWidth,
-                            userNameDialog: userNameDialog),
-                        SizedBox(height: 30),
-                        HeldAuswahl(dataHandler: dataHandler, getHeight: getHeight,
-                            getWidth: getWidth, updateData: updateData),
-                        SizedBox(height: minHeightBottomSheet)
-                    ]
-                  )
-                ])
-              ),
-              MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
-                  getWidth: getWidth,
-                  homeButtonFunction: () => _gotoHomeScreen(context: context))
-            ])
-        )
-    );
   }
-
 }
 
 class HeldAuswahl extends StatefulWidget{
@@ -223,12 +221,41 @@ class HeldAuswahlState extends State<HeldAuswahl> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
+
+    Dialog userNameDialog = Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)), //this right here
+      child: Container(
+        height: 200.0,
+        width: 140.0,
+
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding:  EdgeInsets.only(top: 15.0),
+              child: Text('Gib einen Namen ein',
+                  style: titleBlackStyle),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 15.0),
+              child: UserNameField(dataHandler: dataHandler, updateData: updateData),
+            ),
+          ],
+        ),
+      ),
+    );
+
     return Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Container(height: getHeight - 290.0,
-              child: _buildTiledSelection(context: context,
-                  imageList: Iterable.generate(dataHandler.hero.maxImages).toList())),
+          GestureDetector(
+              onTap: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog),
+              child: Container(height: getHeight - 290.0,
+                  child: _buildTiledSelection(context: context,
+                      imageList: Iterable.generate(dataHandler.hero.maxImages).toList()
+                  )
+              )
+          ),
           Row(mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Container(
@@ -313,7 +340,7 @@ class RotatedGenderIcon extends AnimatedWidget {
         angle: _angle,
         child: GestureDetector(
             onTap: () => changeGender(geschlecht),
-            child: Image.asset('assets/images/${geschlecht=='w'?'girl':'boy'}_$iconIndex.png'),
+            child: Image.asset('assets/images/${geschlecht=='m'?'girl':'boy'}_$iconIndex.png'),
         )
     );
   }
@@ -405,7 +432,7 @@ class UserNameFieldState extends State<UserNameField>{
               labelText: 'Name',
           ),
           maxLength: 15,
-          style: titleStyle,
+          style: textStyle,
           maxLengthEnforced: true,
           controller: _controller,
           onChanged: (name){

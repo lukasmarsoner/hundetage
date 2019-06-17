@@ -44,11 +44,12 @@ class MainPageState extends State<MainPage> {
               children: <Widget>[
                 Background(getWidth: getWidth, getHeight: getHeight),
                 Column(children: <Widget>[
-                  ProfileRow(dataHandler: dataHandler),
+                  ProfileRow(dataHandler: dataHandler, login: false),
                   AbenteuerAuswahl(dataHandler: dataHandler, getHeight: getHeight),
                 ]),
                 MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
-                    getWidth: getWidth, homeButtonFunction: () => null)
+                    getWidth: getWidth, icon: 'assets/images/logout.png',
+                    homeButtonFunction: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'))
               ],
             ),
           ),
@@ -60,15 +61,16 @@ class MainPageState extends State<MainPage> {
 
 class ProfileRow extends StatelessWidget{
   final DataHandler dataHandler;
+  final bool login;
 
-  ProfileRow({@required this.dataHandler});
+  ProfileRow({@required this.dataHandler, @required this.login});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.push(context,
           MaterialPageRoute(builder: (context) => UserPage(dataHandler: dataHandler))),
-      child: Padding(padding: EdgeInsets.only(left: 20.0, top: 20.0),
+      child: Padding(padding: EdgeInsets.only(left: 20.0, top: 30.0),
         child: Row(
             children: <Widget>[
               dataHandler.hero.iBild!=-1
@@ -83,17 +85,17 @@ class ProfileRow extends StatelessWidget{
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      new Text(
-                        dataHandler.hero.iBild==-1
-                            ?'Wilkommen bei Hundetage!'
-                            :'Willkommen zurück!',
-                        style: titleStyle,
-                      ),
+                    children: login
+                        ?<Widget>[new Text(dataHandler.hero.signedIn
+                        ?'Du bist eingeloggt'
+                        :'Erstelle ein Profil', style: titleStyle)]
+                        :<Widget>[
+                          new Text(
+                            dataHandler.hero.iBild==-1
+                                ?'Wilkommen bei Hundetage!'
+                                :'Willkommen zurück!', style: titleStyle),
                       dataHandler.hero.iBild==-1
-                          ?new Text(
-                          'Tippe hier um deinen Helden zu erstellen',
-                          style: subTitleStyle)
+                          ?new Text('Tippe hier um deinen Helden zu erstellen',style: subTitleStyle)
                           :Container()
                     ]
                 ),
@@ -116,7 +118,7 @@ class AbenteuerAuswahl extends StatelessWidget{
   Widget build(BuildContext context) {
     return Container(
       height: getHeight - 220.0,
-        padding: EdgeInsets.only(left: 20.0, right: 20.0),
+        padding: EdgeInsets.only(left: 15, right: 15),
         child: _buildTiledSelection(context: context,
             storyList: dataHandler.stories.keys.toList())
         );
@@ -134,7 +136,7 @@ class AbenteuerAuswahl extends StatelessWidget{
     dataHandler.currentStory = storyname;
     return new GestureDetector(
         onTap: () => _gotoAdventureScreen(context: context, dataHandler: dataHandler),
-        child: new Card(margin: EdgeInsets.only(left: 8, right: 8, top: 25),
+        child: new Card(margin: EdgeInsets.only(left: 8, right: 8, top: 15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

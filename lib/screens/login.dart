@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
+import 'package:hundetage/menuBottomSheet.dart';
+import 'package:hundetage/utilities/styles.dart';
+import 'package:hundetage/screens/mainScreen.dart';
 import 'package:hundetage/utilities/firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -18,10 +21,12 @@ enum FormMode { LOGIN, SIGNUP, SIGNOUT }
 
 class LoginSignUpPageState extends State<LoginSignUpPage> {
   bool _isIos, _isLoading;
-  double _circleSize;
   DataHandler dataHandler;
   String _email, _password, _errorMessage;
   FormMode _formMode = FormMode.LOGIN;
+
+  double get getWidth => MediaQuery.of(context).size.width;
+  double get getHeight => MediaQuery.of(context).size.height;
 
   LoginSignUpPageState({@required this.dataHandler});
 
@@ -186,10 +191,10 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    _circleSize = 80.0;
 
     _isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return new Scaffold(
+        resizeToAvoidBottomPadding: false,
         body: Stack(
                   children: <Widget>[
                     _showBody(),
@@ -210,6 +215,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           title: new Text("Bitte bestätige deinen Account"),
           content: new Text("Eine Bestätigungsmail wurde verschickt"),
           actions: <Widget>[
@@ -217,7 +223,9 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
               child: new Text("Schließen"),
               onPressed: () {
                 _changeFormToLogin();
-                Navigator.of(context).pop();
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => MainPage(dataHandler: dataHandler))
+                );
               },
             ),
           ],
@@ -232,6 +240,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           title: new Text("Held löschen"),
           content: new Text("Bist du dir sicher, dass du deinen Helden löschen möchtest?"
           "All dein Fortschritt geht dadurch verlohren."),
@@ -263,6 +272,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           title: new Text("Passwort zurücksetzen"),
           content: new Text("Möchtest du dein Passwort zurücksetzen?"),
           actions: <Widget>[
@@ -293,6 +303,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           title: new Text("Account gelöscht"),
           content: new Text("Dein Account wurde erfogreich gelöscht."),
           actions: <Widget>[
@@ -315,6 +326,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           title: new Text("Bitte logge dich erneut ein"),
           content: new Text("Dein letzter Login ist zu lange her."
               "Bitte logge dich erneut ein um deinen Account zu löschen"),
@@ -332,85 +344,56 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     );
   }
 
-  Widget _showUser(){
-    return new Hero(
-                tag: 'userImage',
-                child: new Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                        child: CircleAvatar(
-                            minRadius: _circleSize,
-                            maxRadius: _circleSize,
-                            backgroundColor: Colors.black,
-                            child: Center(child: new CircleAvatar(
-                                minRadius: _circleSize * 0.95,
-                                maxRadius: _circleSize * 0.95,
-                                backgroundImage: new AssetImage(
-                                    dataHandler.hero.iBild!=-1?'assets/images/user_images/hund_${dataHandler.hero.iBild}.jpg'
-                                        :'assets/images/user_images/fragezeichen.jpg')
-                            )
-                            )
-                        )
-                    ),
-                )
-    );
-  }
-
-  Widget _showUsername() {
-    return Center(
-        child: new Container(
-        padding: EdgeInsets.only(top: 20.0),
-        key: Key('username'),
-        child: new
-        Text(
-          dataHandler.hero.name,
-          style: new TextStyle(
-              fontSize: 20.0,
-              color: Colors.black,
-              fontWeight: FontWeight.w500),
-        )
-        )
-    );
-  }
-
   Widget _showBody(){
     return new Container(
-        padding: EdgeInsets.all(16.0),
         child: new Form(
-          key: _formKey,
-          child: _showInputLoginMessage()
+            key: _formKey,
+            child: _showInputLoginMessage()
         ));
   }
 
   //Showes either login fields or a message that the user is already logged-in
-  ListView _showInputLoginMessage(){
+  Widget _showInputLoginMessage(){
     if(dataHandler.hero.signedIn){
-      return new ListView(
-        shrinkWrap: true,
-        children: <Widget>[
-          _showUser(),
-          _showUsername(),
-          _showLogedInMessage(),
-          _showPrimaryButton(),
-          _showErrorMessage(),
-          _showResetDeleteButton()
-        ],
-      );
+      return Stack(children: <Widget>[
+        Background(getWidth: getWidth, getHeight: getHeight),
+        ListView(
+            children: <Widget>[
+              ProfileRow(dataHandler: dataHandler, login: true),
+              _showLogedInMessage(),
+              _showPrimaryButton(),
+              _showErrorMessage(),
+              _showResetDeleteButton()
+            ]
+        ),
+        MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+            getWidth: getWidth, icon: 'assets/images/user_settings.png',
+            homeButtonFunction: () => Navigator.pop(context))
+      ]);
     }
     else{
-      return new ListView(
-        shrinkWrap: true,
-        children: <Widget>[
-          _showUser(),
-          _showUsername(),
-          _showEmailInput(),
-          _showPasswordInput(),
-          _showPrimaryButton(),
-          _showSecondaryButton(),
-          _showErrorMessage(),
-          _showResetDeleteButton()
-        ],
-      );
+      return Stack(children: <Widget>[
+        Background(getWidth: getWidth, getHeight: getHeight),
+        ListView(
+            children: <Widget>[
+              ProfileRow(dataHandler: dataHandler, login: true),
+              _showEmailInput(),
+              _showPasswordInput(),
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    _showPrimaryButton(),
+                    SizedBox(width: 40),
+                    _showSecondaryButton()]),
+              _showErrorMessage(),
+              SizedBox(height: 40),
+              _showResetDeleteButton()
+            ]
+        ),
+        MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+            getWidth: getWidth, icon: 'assets/images/user_settings.png',
+            homeButtonFunction: () => Navigator.pop(context))
+      ]);
     }
   }
 
@@ -418,11 +401,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     if (_errorMessage.length > 0 && _errorMessage != null) {
       return new Text(
         _errorMessage,
-        style: TextStyle(
-            fontSize: 20.0,
-            color: Colors.blue,
-            height: 1.0,
-            fontWeight: FontWeight.w300),
+        style: subTitleBlackStyle,
       );
     } else {
       return new Container(
@@ -433,9 +412,9 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showEmailInput() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(0.0, 75.0, 0.0, 0.0),
+      padding: const EdgeInsets.fromLTRB(45, 45, 45, 0),
       child: new TextFormField(
-        key: Key('email'),
+        style: subTitleStyle,
         maxLines: 1,
         keyboardType: TextInputType.emailAddress,
         autofocus: false,
@@ -443,18 +422,20 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
             hintText: 'E-Mail',
             icon: new Icon(
               Icons.mail,
+              color: Colors.black,
             )),
         validator: (value) => value.isEmpty ? 'E-Mail Adresse darf nicht leer sein' : null,
         onSaved: (value) => _email = value,
-      ),
+      )
     );
   }
 
   Widget _showPasswordInput() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
+      padding: const EdgeInsets.fromLTRB(45, 15, 45, 0),
       child: new TextFormField(
-        key: Key('password'),
+        //focusNode: _focusNode,
+        style: subTitleStyle,
         maxLines: 1,
         obscureText: true,
         autofocus: false,
@@ -462,6 +443,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
             hintText: 'Passwort',
             icon: new Icon(
               Icons.lock,
+              color: Colors.black,
             )),
         validator: (value) => value.isEmpty ? 'Passwort darf nicht leer sein' : null,
         onSaved: (value) => _password = value,
@@ -486,61 +468,51 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Widget _showSecondaryButton() {
-    Text _buttonText = Text('');
-    if(_formMode != FormMode.SIGNUP){
-      _buttonText = new Text('Registrieren',
-          style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));}
-    else{
-      _buttonText = new Text('Anmelden',
-          style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));}
-    return new FlatButton(
-      key: Key('secondaryButton'),
-      child: _buttonText,
-      onPressed:_formMode==FormMode.SIGNUP?_changeFormToLogin:_changeFormToSignUp
-    );
-  }
-
-  Widget _showResetDeleteButton() {
-    double topPadding = dataHandler.hero.signedIn?30.0:0.0;
-    double _iconSize = 40.0;
-    IconData _buttonIcon;
-    dataHandler.hero.signedIn?_buttonIcon = Icons.delete:_buttonIcon = Icons.cached;
-    return new IconButton(
-        key: Key('resetDelete'),
-        padding: EdgeInsets.only(top:topPadding),
-        icon: Icon(_buttonIcon, size: _iconSize),
-        onPressed:dataHandler.hero.signedIn?_showDeleteUserDialog:_showResetMailDialog
-    );
-  }
-
-  Widget _showPrimaryButton() {
-    Text _buttonText = Text('');
+    Image _buttonImage;
     if(dataHandler.hero.signedIn){
-      _buttonText = new Text('Abmelden',
-          style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));
+      _buttonImage = Image.asset('assets/images/cloud_logout_${dataHandler.hero.geschlecht}.png');
     }
     else {
-      if (_formMode == FormMode.SIGNUP) {
-        _buttonText = new Text('Neu registrieren',
-            style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));
-      }
-      else {
-        _buttonText = new Text('Anmelden',
-            style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300));
-      }
+      _buttonImage = Image.asset('assets/images/register_user_${dataHandler.hero.geschlecht}.png');
     }
     return new Padding(
         padding: EdgeInsets.only(top: 50.0),
         child: SizedBox(
-          height: 40.0,
-          child: new RaisedButton(
-            key: Key('primaryButton'),
-            elevation: 5.0,
-            shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-            color: Colors.blue,
-            child: _buttonText,
-            onPressed:_formMode==FormMode.SIGNOUT?_signOut:_validateAndSubmit
+          height: 75.0,
+          child: new GestureDetector(
+              child: _buttonImage,
+              onTap: _formMode==FormMode.SIGNOUT?_signOut:_validateAndSubmit
           ),
         ));
+  }
+
+  Widget _showPrimaryButton() {
+    Image _buttonImage;
+    _buttonImage = Image.asset('assets/images/cloud_login.png');
+    return new Padding(
+        padding: EdgeInsets.only(top: 50.0),
+        child: SizedBox(
+          height: 70.0,
+          child: new GestureDetector(
+              child: _buttonImage,
+              onTap: _formMode==FormMode.SIGNUP?_changeFormToLogin:_changeFormToSignUp
+          ),
+        )
+    );
+  }
+
+  Widget _showResetDeleteButton() {
+    Image _buttonImage;
+    dataHandler.hero.signedIn
+    //TODO: Add correct image
+        ?_buttonImage = Image.asset('assets/images/cloud_logout_${dataHandler.hero.geschlecht}.png')
+        :_buttonImage = Image.asset('assets/images/cloud_reset_${dataHandler.hero.geschlecht}.png');
+    return SizedBox(
+        height: 75.0,
+        child: new GestureDetector(
+            child: _buttonImage,
+            onTap:dataHandler.hero.signedIn?_showDeleteUserDialog:_showResetMailDialog
+        )
+    );
   }
 }

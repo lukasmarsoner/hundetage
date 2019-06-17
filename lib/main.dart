@@ -323,7 +323,7 @@ class Held{
     1: {'m': 'Der stärkste Hund im Land', 'w': 'Die stärkste Hündin im Land'},
     2: {'m': 'Hat schon alles gesehen', 'w': 'Hat schon alles gesehen'},
     3: {'m': 'Nichts kann ihn aufhalten', 'w': 'Nichts kann sie aufhalten'},
-    4: {'m': 'Der neugierigste Hund der Stadt', 'w': 'Die neugierigste Hündin der Stadt'},
+    4: {'m': 'Der neugierigste Hund im Land', 'w': 'Die neugierigste Hündin im Land'},
     5: {'m': 'Ihm kann man nichts vormachen', 'w': 'Ihr kann man nichts vormachen'},
     6: {'m': 'Genauso wuschelig wie tapfer', 'w': 'Genauso wuschelig wie tapfer'},
     7: {'m': 'Dein bester Freund', 'w': 'Deine beste Freundin'}};

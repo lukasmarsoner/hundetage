@@ -10,26 +10,28 @@ const double minHeightBottomSheet = 60;
 class MenuBottomSheet extends StatefulWidget {
   final double getHeight, getWidth;
   final DataHandler dataHandler;
+  final String icon;
   final Function homeButtonFunction;
 
   MenuBottomSheet({@required this.getHeight, @required this.dataHandler,
-  @required this.homeButtonFunction, @required this.getWidth});
+  @required this.homeButtonFunction, @required this.getWidth, @required this.icon});
 
   @override
   MenuBottomSheetState createState() => MenuBottomSheetState(getHeight: getHeight,
   dataHandler: dataHandler, homeButtonFunction: homeButtonFunction,
-  getWidth: getWidth);
+  getWidth: getWidth, icon: icon);
 }
 
 class MenuBottomSheetState extends State<MenuBottomSheet>
     with SingleTickerProviderStateMixin {
   AnimationController _controller;
   double getHeight, getWidth;
+  String icon;
   Function homeButtonFunction;
   DataHandler dataHandler;
 
   MenuBottomSheetState({@required this.getHeight, @required this.dataHandler,
-  @required this.homeButtonFunction, @required this.getWidth});
+  @required this.homeButtonFunction, @required this.getWidth, @required this.icon});
 
   double get headerTopMargin =>
       lerp(8, 8 + MediaQuery.of(context).padding.top);
@@ -56,37 +58,40 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Positioned(
-          height: lerp(minHeightBottomSheet, getHeight),
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: GestureDetector(
-            onTap: _toggle,
-            onVerticalDragUpdate: _handleDragUpdate,
-            onVerticalDragEnd: _handleDragEnd,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              decoration: const BoxDecoration(
-                color: Colors.blueAccent,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Stack(
-                children: <Widget>[
-                  _buildErlebnisseList(),
-                  Padding(padding: EdgeInsets.only(top: headerTopMargin),
-                      child: Row(children: <Widget>[
-                        HomeButton(homeButtonFunction: homeButtonFunction),
-                        SheetHeader(fontStyle: headerTextStyle),
-                        Spacer(),
-                        MenuButton()
-                      ]))],
+    return new AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Positioned(
+            height: lerp(minHeightBottomSheet, getHeight),
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onTap: _toggle,
+              onVerticalDragUpdate: _handleDragUpdate,
+              onVerticalDragEnd: _handleDragEnd,
+          child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: const BoxDecoration(
+                  color: Colors.blueAccent,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Stack(
+                  children: <Widget>[
+                    _buildErlebnisseList(),
+                    Padding(padding: EdgeInsets.only(top: headerTopMargin),
+                        child: Row(children: <Widget>[
+                          HomeButton(homeButtonFunction: homeButtonFunction, icon: icon),
+                          SheetHeader(fontStyle: headerTextStyle),
+                          Spacer(),
+                          MenuButton()
+                        ]
+                        )
+                    )
+                  ],
               ),
             ),
-          ),
+          )
         );
       },
     );
@@ -253,14 +258,15 @@ class MenuButton extends StatelessWidget {
 
 class HomeButton extends StatelessWidget {
   final Function homeButtonFunction;
+  final String icon;
 
-  HomeButton({@required this.homeButtonFunction});
+  HomeButton({@required this.homeButtonFunction, @required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => homeButtonFunction(),
-      child: Image.asset('assets/images/house.png',
+      child: Image.asset(icon,
         height: 45,
         width: 45,
       )

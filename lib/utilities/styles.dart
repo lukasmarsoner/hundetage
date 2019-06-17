@@ -31,12 +31,39 @@ final TextStyle subTitleBlackBoldStyle = new TextStyle(
     fontWeight: FontWeight.w600);
 
 final TextStyle textStyle = new TextStyle(
-    fontSize: 16,
+    fontSize: 18,
+    fontFamily: 'Montserrat');
+
+final TextStyle textItalicStyle = new TextStyle(
+    fontSize: 18,
+    fontStyle: FontStyle.italic,
+    fontFamily: 'Montserrat');
+
+final TextStyle textBoldStyle = new TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Montserrat');
+
+final TextStyle textBoldItalicStyle = new TextStyle(
+    fontSize: 18,
+    fontStyle: FontStyle.italic,
+    fontWeight: FontWeight.w600,
     fontFamily: 'Montserrat');
 
 final Color red = Color(0xc8B02302);
 final Color orange = Color(0xc8D95F11);
 final Color yellow = Color(0xc8F19421);
+final LinearGradient gradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  // Add one stop for each color. Stops should increase from 0 to 1
+  stops: [0.05, 0.3, 0.9],
+  colors: [
+    red,
+    orange,
+    yellow
+  ],
+);
 
 class Background extends StatelessWidget {
   final double getWidth, getHeight;
@@ -49,19 +76,7 @@ class Background extends StatelessWidget {
       width: getWidth,
       height: getHeight,
       decoration: new BoxDecoration(
-        gradient: LinearGradient(
-          // Where the linear gradient begins and ends
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          // Add one stop for each color. Stops should increase from 0 to 1
-          stops: [0.05, 0.3, 0.9],
-          colors: [
-            red,
-            orange,
-            yellow
-          ],
-        ),
-      ),
+        gradient: gradient),
     );
   }
 }

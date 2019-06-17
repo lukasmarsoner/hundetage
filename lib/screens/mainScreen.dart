@@ -22,7 +22,6 @@ class MainPageState extends State<MainPage> {
   DataHandler dataHandler;
   double get getWidth => MediaQuery.of(context).size.width;
   double get getHeight => MediaQuery.of(context).size.height;
-  Rect rect;
 
   MainPageState({@required this.dataHandler});
 
@@ -39,19 +38,17 @@ class MainPageState extends State<MainPage> {
     return Scaffold(
       body: Stack(
         children: <Widget>[
-          SafeArea(
-            child: Stack(
-              children: <Widget>[
-                Background(getWidth: getWidth, getHeight: getHeight),
-                Column(children: <Widget>[
-                  ProfileRow(dataHandler: dataHandler, login: false),
-                  AbenteuerAuswahl(dataHandler: dataHandler, getHeight: getHeight),
-                ]),
-                MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
-                    getWidth: getWidth, icon: 'assets/images/logout.png',
-                    homeButtonFunction: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'))
-              ],
-            ),
+          Stack(
+            children: <Widget>[
+              Background(getWidth: getWidth, getHeight: getHeight),
+              Column(children: <Widget>[
+                ProfileRow(dataHandler: dataHandler, login: false),
+                AbenteuerAuswahl(dataHandler: dataHandler, getHeight: getHeight),
+              ]),
+              MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+                  getWidth: getWidth, icon: 'assets/images/logout.png',
+                  homeButtonFunction: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'))
+            ],
           ),
         ],
       ),

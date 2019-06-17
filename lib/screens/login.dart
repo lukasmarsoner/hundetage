@@ -17,13 +17,10 @@ class LoginSignUpPage extends StatefulWidget{
       dataHandler: dataHandler);
 }
 
-enum FormMode { LOGIN, SIGNUP, SIGNOUT }
-
 class LoginSignUpPageState extends State<LoginSignUpPage> {
   bool _isIos, _isLoading;
   DataHandler dataHandler;
   String _email, _password, _errorMessage;
-  FormMode _formMode = FormMode.LOGIN;
 
   double get getWidth => MediaQuery.of(context).size.width;
   double get getHeight => MediaQuery.of(context).size.height;
@@ -61,9 +58,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       _newHero.signedIn = true;
       dataHandler.updateHero = _newHero;
     });
-    _changeFormToSignOut();
   }
-
 
   //Sign user out
   _signOut() {
@@ -71,42 +66,15 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       dataHandler.authenticator.signOut();
       dataHandler.hero.signedIn = false;
       updateData(newData: dataHandler);
-      _changeFormToLogin();
     });
   }
 
   @override
   void initState() {
     // Initial form is login form if user is not already logged-in
-    _formMode = dataHandler.hero.signedIn?FormMode.SIGNOUT:FormMode.LOGIN;
     _errorMessage = "";
     _isLoading = false;
     super.initState();
-  }
-
-  void _changeFormToSignUp() {
-    _formKey.currentState.reset();
-    _errorMessage = "";
-    setState(() {
-      _formMode = FormMode.SIGNUP;
-    });
-  }
-
-  void _changeFormToLogin() {
-    _formKey.currentState.reset();
-    _errorMessage = "";
-    setState(() {
-      _formMode = FormMode.LOGIN;
-    });
-  }
-
-  void _changeFormToSignOut() {
-    _formKey.currentState.reset();
-    _errorMessage = "";
-    setState(() {
-      _formMode = FormMode.SIGNOUT;
-    });
-    updateData(newData: dataHandler);
   }
 
   Future<void> _deleteUserData() async{
@@ -127,11 +95,9 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       setState(() {
       _isLoading = false;
       if (_isIos) {
-        _changeFormToLogin();
         _showDeletionLogoutDialog();
         _errorMessage = e.details;
       } else
-        _changeFormToLogin();
         _showDeletionLogoutDialog();
         _errorMessage = e.message;
       });
@@ -153,7 +119,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   // Perform login or sign-up
-  void _validateAndSubmit() async {
+  void _signUp() async {
     setState(() {
       _errorMessage = "";
       _isLoading = true;
@@ -161,16 +127,39 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     if (_validateAndSave()) {
       String uid = "";
       try {
-        if (_formMode == FormMode.LOGIN) {
-          uid = await dataHandler.authenticator.signIn(_email, _password);
+        uid = await dataHandler.authenticator.signUp(_email, _password);
+        dataHandler.authenticator.sendEmailVerification();
+        _createUserdataInFirebase(uid);
+        _showVerifyEmailSentDialog();
+        if (uid.length > 0 && uid != null) {
+          dataHandler.hero.signedIn = true;
+          _loadAndUpdateData();
         }
-        else {
-          uid = await dataHandler.authenticator.signUp(_email, _password);
-          dataHandler.authenticator.sendEmailVerification();
-          _createUserdataInFirebase(uid);
-          _showVerifyEmailSentDialog();
-        }
-        if (uid.length > 0 && uid != null && _formMode == FormMode.LOGIN) {
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          if (_isIos) {
+            _errorMessage = e.details;
+          } else
+            _errorMessage = e.message;
+        });
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _logIn() async {
+    setState(() {
+      _errorMessage = "";
+      _isLoading = true;
+    });
+    if (_validateAndSave()) {
+      String uid = "";
+      try {
+        uid = await dataHandler.authenticator.signIn(_email, _password);
+        if (uid.length > 0 && uid != null) {
           dataHandler.hero.signedIn = true;
           _loadAndUpdateData();
         }
@@ -222,7 +211,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
             new FlatButton(
               child: new Text("Schließen"),
               onPressed: () {
-                _changeFormToLogin();
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => MainPage(dataHandler: dataHandler))
                 );
@@ -246,14 +234,12 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
           "All dein Fortschritt geht dadurch verlohren."),
           actions: <Widget>[
             new RaisedButton(
-              key: Key('zurück'),
               child: new Text("Zurück", style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             new FlatButton(
-              key: Key('Löschen'),
               child: new Text("Löschen"),
               onPressed: () {
                 _deleteUserData();
@@ -277,7 +263,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
           content: new Text("Möchtest du dein Passwort zurücksetzen?"),
           actions: <Widget>[
             new RaisedButton(
-              key: Key('zurücksetzen'),
               child: new Text("Zurücksetzen", style: TextStyle(color: Colors.white)),
               onPressed: () {
                 _resetPassword();
@@ -285,7 +270,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
               },
             ),
             new FlatButton(
-              key: Key('Schließen'),
               child: new Text("Schließen"),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -310,7 +294,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
             new FlatButton(
               child: new Text("Schließen"),
               onPressed: () {
-                _changeFormToLogin();
                 Navigator.of(context).pop();
               },
             ),
@@ -334,7 +317,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
             new FlatButton(
               child: new Text("Schließen"),
               onPressed: () {
-                _changeFormToLogin();
                 Navigator.of(context).pop();
               },
             ),
@@ -354,47 +336,30 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
 
   //Showes either login fields or a message that the user is already logged-in
   Widget _showInputLoginMessage(){
-    if(dataHandler.hero.signedIn){
-      return Stack(children: <Widget>[
+    return Stack(children: <Widget>[
         Background(getWidth: getWidth, getHeight: getHeight),
-        ListView(
+      Column(
+          mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               ProfileRow(dataHandler: dataHandler, login: true),
-              _showLogedInMessage(),
-              _showPrimaryButton(),
-              _showErrorMessage(),
-              _showResetDeleteButton()
-            ]
-        ),
-        MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
-            getWidth: getWidth, icon: 'assets/images/user_settings.png',
-            homeButtonFunction: () => Navigator.pop(context))
-      ]);
-    }
-    else{
-      return Stack(children: <Widget>[
-        Background(getWidth: getWidth, getHeight: getHeight),
-        ListView(
-            children: <Widget>[
-              ProfileRow(dataHandler: dataHandler, login: true),
-              _showEmailInput(),
-              _showPasswordInput(),
+              dataHandler.hero.signedIn?Container():_showEmailInput(),
+              dataHandler.hero.signedIn?Container():_showPasswordInput(),
+              dataHandler.hero.signedIn?SizedBox(height: getHeight/4):SizedBox(height: getHeight/6),
               Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    _showPrimaryButton(),
-                    SizedBox(width: 40),
-                    _showSecondaryButton()]),
+                    _showSecondaryButton(),
+                    SizedBox(width: 20),
+                    dataHandler.hero.signedIn?Container():_showPrimaryButton(),
+                    SizedBox(width: 20),
+                    _showResetDeleteButton()]),
               _showErrorMessage(),
-              SizedBox(height: 40),
-              _showResetDeleteButton()
             ]
         ),
         MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
             getWidth: getWidth, icon: 'assets/images/user_settings.png',
             homeButtonFunction: () => Navigator.pop(context))
       ]);
-    }
   }
 
   Widget _showErrorMessage() {
@@ -451,22 +416,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     );
   }
 
-  Widget _showLogedInMessage() {
-    return new Container(
-        padding: EdgeInsets.only(top: 50.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Image.asset('assets/images/cloud.png', height: 55.0, width: 55.0),
-            Container(
-                padding: EdgeInsets.all(10.0),
-                child: Text('Du bist jetzt eingelogged',
-                    style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.w300)))
-          ]
-        )
-    );
-  }
-
   Widget _showSecondaryButton() {
     Image _buttonImage;
     if(dataHandler.hero.signedIn){
@@ -475,28 +424,22 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     else {
       _buttonImage = Image.asset('assets/images/register_user_${dataHandler.hero.geschlecht}.png');
     }
-    return new Padding(
-        padding: EdgeInsets.only(top: 50.0),
-        child: SizedBox(
-          height: 75.0,
+    return SizedBox(
+          height: 85.0,
           child: new GestureDetector(
               child: _buttonImage,
-              onTap: _formMode==FormMode.SIGNOUT?_signOut:_validateAndSubmit
-          ),
+              onTap: dataHandler.hero.signedIn?_signOut:_signUp
         ));
   }
 
   Widget _showPrimaryButton() {
     Image _buttonImage;
     _buttonImage = Image.asset('assets/images/cloud_login.png');
-    return new Padding(
-        padding: EdgeInsets.only(top: 50.0),
-        child: SizedBox(
-          height: 70.0,
+    return SizedBox(
+          height: 80.0,
           child: new GestureDetector(
               child: _buttonImage,
-              onTap: _formMode==FormMode.SIGNUP?_changeFormToLogin:_changeFormToSignUp
-          ),
+              onTap: _logIn
         )
     );
   }
@@ -504,11 +447,10 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   Widget _showResetDeleteButton() {
     Image _buttonImage;
     dataHandler.hero.signedIn
-    //TODO: Add correct image
-        ?_buttonImage = Image.asset('assets/images/cloud_logout_${dataHandler.hero.geschlecht}.png')
+        ?_buttonImage = Image.asset('assets/images/delete.png')
         :_buttonImage = Image.asset('assets/images/cloud_reset_${dataHandler.hero.geschlecht}.png');
     return SizedBox(
-        height: 75.0,
+        height: 85.0,
         child: new GestureDetector(
             child: _buttonImage,
             onTap:dataHandler.hero.signedIn?_showDeleteUserDialog:_showResetMailDialog

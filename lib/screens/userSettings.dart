@@ -60,23 +60,21 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
         home: Scaffold(
             resizeToAvoidBottomPadding: false,
             body: Stack(children: <Widget>[
-              SafeArea(
-                child: Stack(children: <Widget>[
-                  Background(getHeight: getHeight, getWidth: getWidth),
-                  new Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
+              Stack(children: <Widget>[
+                Background(getHeight: getHeight, getWidth: getWidth),
+                Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
                       SizedBox(height: 10),
-                        Header(dataHandler: dataHandler, getWidth: getWidth,
-                            userNameDialog: userNameDialog),
-                        SizedBox(height: 30),
-                        HeldAuswahl(dataHandler: dataHandler, getHeight: getHeight,
-                            getWidth: getWidth, updateData: updateData),
-                        SizedBox(height: minHeightBottomSheet)
+                      Header(dataHandler: dataHandler, getWidth: getWidth,
+                          userNameDialog: userNameDialog),
+                      SizedBox(height: 30),
+                      HeldAuswahl(dataHandler: dataHandler, getHeight: getHeight,
+                          getWidth: getWidth, updateData: updateData),
+                      SizedBox(height: minHeightBottomSheet)
                     ]
-                  )
-                ])
-              ),
+                )
+              ]),
               MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
                   getWidth: getWidth, icon: 'assets/images/house.png',
                   homeButtonFunction: () => Navigator.pop(context))
@@ -135,13 +133,11 @@ class Header extends StatelessWidget {
                           style: titleStyle,
                         ),
                         new Text(
-                            'Ändere ' + (dataHandler.hero.geschlecht=='m'
+                            dataHandler.hero.signedIn
+                                ?'Du bist eingeloggt!'
+                                :'Ändere ' + (dataHandler.hero.geschlecht=='m'
                                 ?'seinen'
-                                :'ihren') + ' Namen hier',
-                            style: subTitleStyle)
-                        ,
-                        new Text(
-                            'Oder log dich über das Bild ein',
+                                :'ihren') + ' Namen hier\nOder log dich über das Bild ein',
                             style: subTitleStyle)
                       ]
                   ),

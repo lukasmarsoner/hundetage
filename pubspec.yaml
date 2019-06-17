@@ -52,6 +52,8 @@ flutter:
     - assets/images/register_user_w.png
     - assets/images/cloud_login.png
     - assets/images/world.png
+    - assets/images/delete.png
+    - assets/images/forward.png
     - assets/images/user_settings.png
     - assets/images/girl_0.png
     - assets/images/girl_1.png

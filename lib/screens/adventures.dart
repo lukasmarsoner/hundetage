@@ -1,74 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/main.dart';
-
-//Cuts the square box on the top of the screen diagonally
-class _DiagonalAdventureClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = new Path();
-    path.lineTo(0.0, size.height - 20.0);
-    path.lineTo(size.width, size.height);
-    path.lineTo(size.width, 0.0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
-}
-
-//Builds empty panel on top of the screen
-class TopAdventurePanel extends StatelessWidget {
-  final double imageHeight;
-  final Held hero;
-
-  TopAdventurePanel({@required this.imageHeight, @required this.hero});
-  @override
-  Widget build(BuildContext context) {
-    return new Positioned.fill(
-      bottom: null,
-      child: new ClipPath(
-          clipper: new _DiagonalAdventureClipper(),
-          child: Container(
-              height: imageHeight,
-              width: MediaQuery.of(context).size.width,
-              color: Colors.blue)
-      ),
-    );
-  }
-}
-
-//Builds the user image and name to show in top panel
-class ProfileAdventureRow extends StatelessWidget {
-  final Held hero;
-  final double imageHeight;
-
-  ProfileAdventureRow({@required this.imageHeight, @required this.hero});
-
-  @override
-  Widget build(BuildContext context) {
-    return new Padding(
-        padding: new EdgeInsets.only(left: 16.0, top: 30.0),
-        child: new Row(
-          children: [
-            //Here we set the avatar image - the image is taken from hero
-            new CircleAvatar(
-                minRadius: 64.0,
-                maxRadius: 64.0,
-                backgroundColor: Colors.black,
-                //Used to transition the image to other screens
-                child: new Hero(
-                    tag: 'userImage',
-                    child: new Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                            child: Center(child: new CircleAvatar(
-                                backgroundImage: new AssetImage(
-                                    'assets/images/user_images/hund_${hero.iBild}.jpg'),
-                                minRadius: 60.0,
-                                maxRadius: 60.0))))))]));
-  }
-}
+import 'package:hundetage/menuBottomSheet.dart';
+import 'package:hundetage/utilities/styles.dart';
 
 class GeschichteMainScreen extends StatefulWidget{
   final DataHandler dataHandler;
@@ -82,6 +15,8 @@ class GeschichteMainScreen extends StatefulWidget{
 class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   DataHandler dataHandler;
   double imageHeight = 100.0;
+  double get getWidth => MediaQuery.of(context).size.width;
+  double get getHeight => MediaQuery.of(context).size.height;
 
   void updateDataStory({DataHandler newData}){
     setState(() {
@@ -98,10 +33,13 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
         home: Scaffold(
             body: new Stack(
               children: <Widget>[
-                StoryText(dataHandler: dataHandler, imageHeight: imageHeight),
-                TopAdventurePanel(imageHeight: imageHeight, hero: dataHandler.hero),
-                ProfileAdventureRow(imageHeight: imageHeight, hero: dataHandler.hero),
-                ],
+                Padding(
+                    padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
+                    child: StoryText(dataHandler: dataHandler, imageHeight: imageHeight)),
+                MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+                    getWidth: getWidth, icon: 'assets/images/house.png',
+                    homeButtonFunction: () => Navigator.pop(context))
+              ],
             )
     ));
   }
@@ -135,6 +73,7 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
   Animation<int> _characterCount;
   List<String> _textStrings;
   int _stringIndex;
+  double get getWidth => MediaQuery.of(context).size.width;
   AnimationController animationText, animationNextScreen;
 
   StringAnimationState({@required this.animatedString, @required this.delay,
@@ -187,37 +126,30 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
   }
 
   Widget _buildStaticText(text){
-    return new Text(
-                  text,
-                  style: new TextStyle(
-                      fontSize: 20.0,
-                      fontStyle: italic == null
-                          ? FontStyle.normal
-                          : FontStyle.italic,
-                      color: Colors.black,
-                      fontWeight: bold == null
-                          ? FontWeight.w300
-                          : FontWeight.w500)
-              );
+    return Text(text,
+        style: italic==null
+            ?bold==null?textStyle:textBoldStyle
+            :bold==null?textItalicStyle:textBoldItalicStyle);
   }
 
   Widget _buildTextWithFadeOut({String text, BuildContext context}){
     return new AnimatedBuilder(animation: opacity,
         builder: (BuildContext context, Widget child) {
           return new Opacity(opacity: 1.0 - opacity.value,
-              child: new Text(
-                  text,
-                  style: new TextStyle(
-                      fontSize: 20.0,
-                      fontStyle: italic == null
-                          ? FontStyle.normal
-                          : FontStyle.italic,
-                      color: Colors.black,
-                      fontWeight: bold == null
-                          ? FontWeight.w300
-                          : FontWeight.w500)
-              )
-          );});
+              child: Row(children: <Widget>[
+                _characterCount.isCompleted
+                    ?Image.asset('assets/images/forward.png', height: 20, width: 20)
+                    :Container(),
+                SizedBox(width: 10),
+                Flexible(fit: FlexFit.loose,
+                    child: Text(text,
+                        softWrap: true,
+                        style: italic==null
+                            ?bold==null?textStyle:textBoldStyle
+                            :bold==null?textItalicStyle:textBoldItalicStyle))
+              ])
+          );
+    });
   }
 
   @override
@@ -225,8 +157,7 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
     _textStrings = <String>[animatedString];
     _animateText();
     if(!(animationNextScreen==null)){_fadeOut();}
-    return _characterCount == null ? Container(key: key) : new AnimatedBuilder(
-        key: key,
+    return _characterCount == null ? Container() : new AnimatedBuilder(
         animation: _characterCount,
         builder: (BuildContext context, Widget child){
           String text = _currentString.substring(0, _characterCount.value);
@@ -235,7 +166,8 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
               child: opacity == null
                   ?_buildStaticText(text)
                   :_buildTextWithFadeOut(text: text, context: context)
-          );});
+          );
+        });
   }
 }
 
@@ -285,15 +217,25 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     animationText.dispose();
     super.dispose();
   }
+
+  _openDialog(Widget _dialog, BuildContext context){
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return _dialog;
+        }
+    );
+  }
   
   //Function moving user to next screen
-  _textCallback(String iNext, String erlebniss){
+  _textCallback(String iNext, String erlebniss, String option){
+    //Update last option in hero
+    dataHandler.hero.lastOption = option;
 
     //Show pop-up if user encounters a new event
-    //if(erlebniss!='' && !(dataHandler.hero.erlebnisse.contains(erlebniss))){
-    //  _openDialog(ShowErlebniss(image: dataHandler.generalData.erlebnisse[erlebniss].image,
-    //      text: convertText(dataHandler: dataHandler, textIn:dataHandler.generalData.erlebnisse[erlebniss].text)
-    //  ), context);}
+    if(erlebniss!='' && !(dataHandler.hero.erlebnisse.contains(erlebniss))){
+      _openDialog(ShowErlebniss(erlebniss: dataHandler.generalData.erlebnisse[erlebniss],
+          dataHandler: dataHandler), context);}
     setState((){
       dataHandler.hero.iScreen = int.parse(iNext);
       dataHandler.hero.addScreen = int.parse(iNext);
@@ -306,18 +248,20 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
 
   Widget _buildOption({int iOption}){
     return Container(
-      padding: EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(25),
       child: StringAnimation(animatedString: optionTexts[iOption], totalLength: totalTextLength,
           delay: delays[iOption], animationText: animationText,
           key: Key(dataHandler.hero.iScreen.toString()+iOption.toString()), italic: true,
-          textCallback: () => _textCallback(forwards[iOption], _erlebnisse[iOption])),
+          textCallback: () => _textCallback(forwards[iOption], _erlebnisse[iOption], optionTexts[iOption])),
     );
   }
 
   @override
   Widget build(BuildContext context){
+    //Add previous option to story text
     storyText = convertText(dataHandler: dataHandler,
-        textIn: dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['text']);
+        textIn: dataHandler.hero.lastOption +
+            dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['text']);
     totalTextLength = storyText.length;
 
     delays = <int>[];
@@ -348,7 +292,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     //Create widget for main text
     animatedTexts = <Widget>[];
     animatedTexts.add(Container(
-      padding: EdgeInsets.fromLTRB(20.0, imageHeight+50.0, 20.0, 20.0),
+      padding: EdgeInsets.fromLTRB(25,40,25,15),
       child: StringAnimation(animatedString: storyText, delay: 0, key: Key(dataHandler.hero.iScreen.toString()),
         totalLength:totalTextLength, animationText: animationText),
     ));

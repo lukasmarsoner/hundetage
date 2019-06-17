@@ -313,6 +313,7 @@ class Held{
   //never change in the live app
   int _maxImages = 8;
   String _name, _geschlecht;
+  String _lastOption = '';
   int _iBild, _iScreen;
   List<String> _erlebnisse;
   List<int> _screens;
@@ -418,7 +419,15 @@ class Held{
     if(valIn != null && valIn >=0){_iScreen = valIn;}
   }
   set addScreen(int valIn){
-    if(valIn != null && valIn >=0 && !_screens.contains(valIn)){_screens.add(valIn);}
+    if(valIn != null && valIn >=0){_screens.add(valIn);}
+  }
+  set lastOption(String valIn){
+    valIn==null
+        ?_lastOption=''
+        //Remove leading dots if we have any...
+        :valIn.substring(0,3)=='...'
+        ?_lastOption=valIn.substring(4)
+        :_lastOption=valIn;
   }
 
   // Getters
@@ -430,6 +439,7 @@ class Held{
   List<String> get erlebnisse => _erlebnisse;
   List<int> get screens => _screens;
   Map<int,Map<String,String>> get berufe => _berufe;
+  String get lastOption => (iScreen!=0 && iScreen!=888)?_lastOption+' ':'';
   // This getter is only for testing
   Map<String,dynamic> get defaults => _defaults;
   Map<String,dynamic> get values => {

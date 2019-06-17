@@ -312,8 +312,7 @@ class Held{
   //This is being set here. As user images are stored in the assets it will
   //never change in the live app
   int _maxImages = 8;
-  String _name, _geschlecht;
-  String _lastOption = '';
+  String _name, _geschlecht, _lastOption;
   int _iBild, _iScreen;
   List<String> _erlebnisse;
   List<int> _screens;
@@ -334,6 +333,7 @@ class Held{
     'name': 'Mara',
     'geschlecht': 'w',
     'iBild': -1,
+    '_lastOption': '',
     'iScreen': 0,
     'signedIn': false,
     'screens': <int>[],
@@ -344,6 +344,7 @@ class Held{
     'name': 'Mara',
     'geschlecht': 'w',
     'iBild': 0,
+    '_lastOption': 'Last option',
     'iScreen': 0,
     'signedIn': false,
     'screens': <int>[0,1,2,3],
@@ -354,6 +355,7 @@ class Held{
     _name = _defaults['name'];
     _geschlecht = _defaults['geschlecht'];
     _iBild = _defaults['iBild'];
+    _lastOption = _defaults['lastOption'];
     _erlebnisse = _defaults['erlebnisse'];
     _screens = _defaults['screens'];
     _iScreen = _defaults['iScreen'];
@@ -365,6 +367,7 @@ class Held{
     _name = _testing['name'];
     _geschlecht = _testing['geschlecht'];
     _iBild = _testing['iBild'];
+    _lastOption = _defaults['lastOption'];
     _erlebnisse = _testing['erlebnisse'];
     _screens = _testing['screens'];
     _iScreen = _testing['iScreen'];
@@ -374,6 +377,7 @@ class Held{
   //Generate Hero from map
   Held.fromMap(Map<String,dynamic> _map){
     _name = _map['name'];
+    _lastOption = _map['lastOption'];
     _geschlecht = _map['geschlecht'];
     _iBild = _map['iBild'];
     _erlebnisse = _map['erlebnisse'];
@@ -440,10 +444,13 @@ class Held{
   List<int> get screens => _screens;
   Map<int,Map<String,String>> get berufe => _berufe;
   String get lastOption => (iScreen!=0 && iScreen!=888)?_lastOption+' ':'';
+
   // This getter is only for testing
   Map<String,dynamic> get defaults => _defaults;
+
   Map<String,dynamic> get values => {
     'name': name,
+    'lastOption': lastOption,
     'geschlecht': geschlecht,
     'iBild': iBild,
     'erlebnisse': erlebnisse,

@@ -300,7 +300,8 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     //Create widgets for options
     for(int i=0;i<_optionKeys.length;i++){if(_validForward[i]){animatedTexts.add(_buildOption(iOption: i));}}
 
-    return new Scrollbar(child: new ListView(
+    return new Scrollbar(
+        child: new ListView(
             children: animatedTexts
     ));
   }

@@ -60,21 +60,19 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
         home: Scaffold(
             resizeToAvoidBottomPadding: false,
             body: Stack(children: <Widget>[
-              Stack(children: <Widget>[
-                Background(getHeight: getHeight, getWidth: getWidth),
-                Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      SizedBox(height: 10),
-                      Header(dataHandler: dataHandler, getWidth: getWidth,
-                          userNameDialog: userNameDialog),
-                      SizedBox(height: 30),
-                      HeldAuswahl(dataHandler: dataHandler, getHeight: getHeight,
-                          getWidth: getWidth, updateData: updateData),
-                      SizedBox(height: minHeightBottomSheet)
-                    ]
-                )
-              ]),
+              Background(getHeight: getHeight, getWidth: getWidth),
+              Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    SizedBox(height: 10),
+                    Header(dataHandler: dataHandler, getWidth: getWidth,
+                        userNameDialog: userNameDialog),
+                    SizedBox(height: 30),
+                    HeldAuswahl(dataHandler: dataHandler, getHeight: getHeight,
+                        getWidth: getWidth, updateData: updateData),
+                    SizedBox(height: minHeightBottomSheet)
+                  ]
+              ),
               MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
                   getWidth: getWidth, icon: 'assets/images/house.png',
                   homeButtonFunction: () => Navigator.pop(context))
@@ -85,12 +83,30 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
 
 }
 
-class Header extends StatelessWidget {
+class Header extends StatefulWidget {
   final DataHandler dataHandler;
   final double getWidth;
   final Dialog userNameDialog;
 
   Header({@required this.dataHandler, @required this.getWidth, @required this.userNameDialog});
+
+  @override
+  HeaderState createState() => new HeaderState(dataHandler: dataHandler,
+      getWidth: getWidth, userNameDialog: userNameDialog);
+}
+
+class HeaderState extends State<Header> {
+  DataHandler dataHandler;
+  double getWidth;
+  Dialog userNameDialog;
+
+  HeaderState({@required this.dataHandler, @required this.getWidth, @required this.userNameDialog});
+
+  @override
+  void initState() {
+    super.initState();
+    dataHandler = dataHandler;
+  }
 
   _gotoLoginScreen({BuildContext context, DataHandler dataHandler}){
     Navigator.push(

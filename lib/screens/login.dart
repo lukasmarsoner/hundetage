@@ -31,9 +31,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
 
   //Update user page and hand change to hero to main function
   void updateData({DataHandler newData}){
-    setState(() {
-      dataHandler.updateData = newData;
-    });
+    setState(() => dataHandler.updateData = newData);
   }
 
   // Check if form is valid before perform login or sign-up
@@ -60,15 +58,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     });
   }
 
-  //Sign user out
-  _signOut() {
-    setState(() {
-      dataHandler.authenticator.signOut();
-      dataHandler.hero.signedIn = false;
-      updateData(newData: dataHandler);
-    });
-  }
-
   @override
   void initState() {
     // Initial form is login form if user is not already logged-in
@@ -78,7 +67,6 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
   }
 
   Future<void> _deleteUserData() async{
-    FirebaseUser user = await dataHandler.authenticator.getCurrentUser();
     setState(() {
       _isLoading = true;
       _errorMessage = "";
@@ -87,7 +75,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       //Deleting requires the user to have logged-in only recently
       //We catch the error here and log the user out, should he/she not
       //have signed-in recently. If the user is not - we sign him/her out
-      deleteFirestoreUserData(firestore: dataHandler.firestore, user: user);
+      deleteFirestoreUserData(dataHandler: dataHandler);
       _showDeletionDialog();
       _signOut();
     }
@@ -148,6 +136,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
         _isLoading = false;
       });
     }
+    updateData(newData: dataHandler);
   }
 
   void _logIn() async {
@@ -176,6 +165,16 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
         _isLoading = false;
       });
     }
+    updateData(newData: dataHandler);
+  }
+
+  //Sign user out
+  void _signOut() {
+    setState(() {
+      dataHandler.authenticator.signOut();
+      dataHandler.hero.signedIn = false;
+      updateData(newData: dataHandler);
+    });
   }
 
   @override
@@ -425,7 +424,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
       _buttonImage = Image.asset('assets/images/register_user_${dataHandler.hero.geschlecht}.png');
     }
     return SizedBox(
-          height: 85.0,
+          height: 75.0,
           child: new GestureDetector(
               child: _buttonImage,
               onTap: dataHandler.hero.signedIn?_signOut:_signUp
@@ -436,7 +435,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
     Image _buttonImage;
     _buttonImage = Image.asset('assets/images/cloud_login.png');
     return SizedBox(
-          height: 80.0,
+          height: 70.0,
           child: new GestureDetector(
               child: _buttonImage,
               onTap: _logIn
@@ -450,7 +449,7 @@ class LoginSignUpPageState extends State<LoginSignUpPage> {
         ?_buttonImage = Image.asset('assets/images/delete.png')
         :_buttonImage = Image.asset('assets/images/cloud_reset_${dataHandler.hero.geschlecht}.png');
     return SizedBox(
-        height: 85.0,
+        height: 75.0,
         child: new GestureDetector(
             child: _buttonImage,
             onTap:dataHandler.hero.signedIn?_showDeleteUserDialog:_showResetMailDialog

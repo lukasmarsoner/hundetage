@@ -50,8 +50,7 @@ class MainPageState extends State<MainPage> {
                   homeButtonFunction: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'))
             ],
           ),
-        ],
-      ),
+        ]),
     );
   }
 }

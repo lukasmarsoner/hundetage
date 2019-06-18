@@ -130,12 +130,15 @@ Held hero, String uid}) async {
 }
 
 //Deletes entry from firebase
-void deleteFirestoreUserData({Firestore firestore, FirebaseUser user}) async {
+void deleteFirestoreUserData({DataHandler dataHandler}) async {
+  FirebaseUser user = await dataHandler.authenticator.getCurrentUser();
   String uid = user.uid;
 
-  CollectionReference _collectionReference = firestore.collection('user_data');
+  CollectionReference _collectionReference = dataHandler.firestore.collection('user_data');
 
   DocumentReference _documentReference = _collectionReference.document(uid);
   await _documentReference.delete();
   await user.delete();
+  print('hier');
+  print(user);
 }

@@ -100,7 +100,6 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   Widget _buildErlebnisseList(){
     List<Widget> _erlebnisseList = new List<Widget>();
 
-    print(dataHandler.hero.erlebnisse);
     for(String title in dataHandler.hero.erlebnisse){
       _erlebnisseList.add(_buildItem(erlebniss: dataHandler.generalData.erlebnisse[title]));
     }

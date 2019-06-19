@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
-import 'main.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/utilities/styles.dart';
 
 import 'package:flutter/material.dart';
@@ -173,23 +173,13 @@ class ExpandedErlebniss extends StatelessWidget {
           onTap: () => onTap(),
             child: Container(
               decoration: BoxDecoration(
+                  color: yellow,
                   borderRadius: BorderRadius.circular(10)),
-              child: _buildContent(),
+              child: ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: erlebniss.image),
         )
         )
-    );
-  }
-
-  Widget _buildContent() {
-    return Container(
-      decoration: BoxDecoration(color: yellow,
-          borderRadius: BorderRadius.all(Radius.circular(10))),
-      padding: EdgeInsets.all(3.0),
-      child: ClipRRect(
-          borderRadius: BorderRadius.horizontal(
-              left: Radius.circular(10),
-              right: Radius.circular(10)),
-          child: erlebniss.image)
     );
   }
 }
@@ -209,7 +199,7 @@ class ShowErlebniss extends StatelessWidget{
         elevation: 5.0,
         child: Container(
             width: 120,
-            height: 340,
+            height: 440,
             child: ListView(
                 children: <Widget>[
                   Container(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hundetage/screens/userSettings.dart';
 import 'package:flutter/services.dart';
-import 'package:hundetage/main.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'package:hundetage/screens/adventures.dart';
@@ -37,8 +37,6 @@ class MainPageState extends State<MainPage> {
     SystemChrome.setEnabledSystemUIOverlays([]);
     return Scaffold(
       body: Stack(
-        children: <Widget>[
-          Stack(
             children: <Widget>[
               Background(getWidth: getWidth, getHeight: getHeight),
               Column(children: <Widget>[
@@ -50,7 +48,6 @@ class MainPageState extends State<MainPage> {
                   homeButtonFunction: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'))
             ],
           ),
-        ]),
     );
   }
 }
@@ -82,9 +79,8 @@ class ProfileRow extends StatelessWidget{
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: login
-                        ?<Widget>[new Text(dataHandler.hero.signedIn
-                        ?'Du bist eingeloggt'
-                        :'Erstelle ein Profil', style: titleStyle)]
+                        ?<Widget>[new Text(
+                        'Erstelle ein Profil', style: titleStyle)]
                         :<Widget>[
                           new Text(
                             dataHandler.hero.iBild==-1

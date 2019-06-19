@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:hundetage/main.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future<File> saveImageToFile({String url, String filename}) async{
@@ -228,7 +228,7 @@ Future<GeneralData> loadLocalErlebnisseData(GeneralData generalData) async {
     List<String> _keys = _map.keys.toList();
     for(String _key in _keys){
       _mapOut[_key] = Erlebniss(image:await loadImageFromFile(_key),
-      text: _map[_key]['text'], url: _map[_key]['image']);
+      text: _map[_key]['text'], url: _map[_key]['image'], title: _map[_key]['title']);
     }
     generalData.setErlebnisse = _mapOut;
     return generalData;

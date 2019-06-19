@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hundetage/main.dart';
 import 'package:hundetage/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 
 class GeschichteMainScreen extends StatefulWidget{
   final DataHandler dataHandler;
@@ -259,8 +259,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   @override
   Widget build(BuildContext context){
     //Add previous option to story text
-    storyText = convertText(dataHandler: dataHandler,
-        textIn: dataHandler.hero.lastOption +
+    storyText = dataHandler.substitution.applyAllSubstitutions(dataHandler.hero.lastOption +
             dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['text']);
     totalTextLength = storyText.length;
 
@@ -273,8 +272,8 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     _erlebnisse = <String>[];
     _validForward = <bool>[];
     for(int i=0; i<_optionKeys.length;i++){
-      String _text = convertText(dataHandler: dataHandler,
-          textIn: dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['options'][i.toString()]);
+      String _text = dataHandler.substitution.applyAllSubstitutions(
+          dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['options'][i.toString()]);
       optionTexts.add(_text);
       totalTextLength += _text.length;
       delays.add(totalTextLength);

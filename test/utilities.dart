@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hundetage/main.dart';
-import 'package:hundetage/utilities/authentication.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 
 class StaticTestWidget extends StatelessWidget{
   final Widget returnWidget;
@@ -68,11 +67,14 @@ Map<String, dynamic> versionDataLower = {
 
 final testHeld = new Held.test();
 final testGeschichte = new Geschichte.fromFirebaseMap(adventureMetadata);
+
 final generalData = new GeneralData(erlebnisse: {'alteFrau':
-Erlebniss(text: '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',image: Image.asset('images/icon.png')),
+Erlebniss(text: '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+    image: Image.asset('images/icon.png'), title: 'Ein wahrer Held'),
 'besteFreunde':
-Erlebniss(text: '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',image: Image.asset('images/icon.png'))}
+Erlebniss(text: '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+    image: Image.asset('images/icon.png'), title: 'Ein wahrer Held')}
 ,gendering: genderingTestData);
+
 final substitutions = new Substitution(hero: testHeld, generalData: generalData);
-final authenticator = new Authenticator();
 final versionController = new VersionController.fromMap(versionData);

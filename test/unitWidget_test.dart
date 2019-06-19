@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:hundetage/main.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 import 'utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hundetage/utilities/authentication.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 
@@ -15,9 +13,6 @@ class MockFirestore extends Mock implements Firestore {}
 class MockCollectionReference extends Mock implements CollectionReference {}
 class MockDocumentSnapshot extends Mock implements DocumentSnapshot {}
 class MockQuerySnapshot extends Mock implements QuerySnapshot {}
-
-class MockAuthenticator extends Mock implements FirebaseAuth {}
-class MockFireUser extends Mock implements FirebaseUser {}
 
 void main() {
   //Mocks calls to the application directory
@@ -57,9 +52,6 @@ void main() {
 
     //Mock class-instances needed in all tests involving classes initialized from Firebase
     final Firestore mockFirestore = MockFirestore();
-    final MockFireUser mockFireUser = MockFireUser();
-    final MockAuthenticator mockFireAuth = MockAuthenticator();
-    final Authenticator _testAuth = new Authenticator(firebaseAuth: mockFireAuth);
 
     final CollectionReference mockCollectionReference = MockCollectionReference();
 
@@ -81,8 +73,7 @@ void main() {
     geschichten['Raja'].url = 'http://test.de';
     geschichten['Raja'].image = null;
     //Mock data handler
-    final DataHandler dataHandler = DataHandler(authenticator: _testAuth,
-        firestore: mockFirestore);
+    final DataHandler dataHandler = DataHandler(firestore: mockFirestore);
     dataHandler.hero = testHeld;
     dataHandler.substitution = substitutions;
     dataHandler.generalData = generalData;
@@ -116,19 +107,6 @@ void main() {
     when(mockDocumentReferenceAbenteuer.get()).thenAnswer((_) async => mockDocumentSnapshotAbenteuer);
     when(mockDocumentSnapshotAbenteuer.data).thenReturn(screensFirebase);
     when(mockDocumentSnapshotAbenteuerMetadata.data).thenReturn(adventureMetadata);
-
-    when(mockFireUser.uid).thenReturn('hQtzTZdHkQde3dUxyZQ3EkzxYYn1');
-    when(mockFireUser.isEmailVerified).thenReturn(true);
-    when(mockFireUser.displayName).thenReturn('Mara');
-    
-    when(mockFireAuth.sendPasswordResetEmail(email: 'test@test.de')).thenReturn(null);
-    when(mockFireAuth.createUserWithEmailAndPassword(email: 'test@test.de', password: 'test'))
-        .thenAnswer((_) async => mockFireUser);
-    when(mockFireAuth.signInWithEmailAndPassword(email: 'test@test.de', password: 'test'))
-        .thenAnswer((_) async => mockFireUser);
-    when(mockFireAuth.currentUser())
-        .thenAnswer((_) async => mockFireUser);
-    when(mockFireAuth.signOut()).thenReturn(null);
 
     //Group ends here
   });

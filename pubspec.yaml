@@ -9,8 +9,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^0.1.2
-  cloud_firestore: ^0.9.7
-  firebase_auth: ^0.6.2+1
+  cloud_firestore: ^0.12.5+1
+  firebase_analytics: ^3.0.2
   connectivity: ^0.4.3+1
   path_provider: ^1.1.0
   http: ^0.12.0+2
@@ -43,18 +43,7 @@ flutter:
           weight: 600
 
   assets:
-    - assets/images/cloud.png
-    - assets/images/cloud_logout_w.png
-    - assets/images/cloud_logout_m.png
-    - assets/images/cloud_reset_w.png
-    - assets/images/cloud_reset_m.png
-    - assets/images/register_user_m.png
-    - assets/images/register_user_w.png
-    - assets/images/cloud_login.png
-    - assets/images/world.png
-    - assets/images/delete.png
     - assets/images/forward.png
-    - assets/images/user_settings.png
     - assets/images/girl_0.png
     - assets/images/girl_1.png
     - assets/images/girl_2.png

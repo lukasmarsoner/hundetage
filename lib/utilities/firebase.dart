@@ -1,10 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:hundetage/main.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/utilities/json.dart';
-import 'package:hundetage/utilities/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:connectivity/connectivity.dart';
+
+//Helper class to check online-offline status
+class ConnectionStatus{
+  bool online = false;
+
+  //The test to actually see if there is a connection
+  Future<void> checkConnection() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    online = (connectivityResult == ConnectivityResult.mobile
+        || connectivityResult == ConnectivityResult.wifi);
+  }
+}
 
 //Loads current version information from firebase
 Future<VersionController> loadVersionInformation({Firestore firestore}) async {
@@ -49,6 +60,7 @@ Map<String,Erlebniss> transformErlebnisse(Map<String,dynamic> data){
 
   for(String _key in _keys){
     _erlebnisseOut[_key] = Erlebniss(text: _erlebnisseIn[_key]['text'],
+        title: _erlebnisseIn[_key]['title'],
         image: Image.network(_erlebnisseIn[_key]['image']),
         url: _erlebnisseIn[_key]['image']);
   }
@@ -60,25 +72,6 @@ Future<Map<String,Map<String,String>>> loadGendering(Firestore firestore) async 
   DocumentReference _documentReference = _collectionReference.document('gendering');
   DocumentSnapshot _documentSnapshot = await _documentReference.get();
   return generalDataFromDynamic(_documentSnapshot.data);
-}
-
-//Loads user data from firestore
-Future<Held> loadFirestoreUserData({Firestore firestore, Authenticator authenticator}) async {
-  String uid = await authenticator.getUid();
-
-  CollectionReference _collectionReference = firestore.collection('user_data');
-
-  DocumentReference _documentReference = _collectionReference.document(uid);
-  DocumentSnapshot _documentSnapshot = await _documentReference.get();
-
-  if(_documentSnapshot == null)
-  {return null;}
-  else{
-  Map<String,dynamic> _userData = _documentSnapshot.data;
-  _userData['erlebnisse'] = List<String>.from(_userData['erlebnisse']);
-  _userData['screens'] = List<int>.from(_userData['screens']);
-  return new Held.fromMap(_userData);
-  }
 }
 
 //Loads story from firestore
@@ -113,32 +106,4 @@ Future<Map<String,Geschichte>> loadGeschichten({Firestore firestore}) async {
     _stories[_storyname].setStory(_story.data['screens']);
   }
   return _stories;
-}
-
-
-//Updates user data in firestore
-//If the file does not exist - create a new entry
-void updateCreateFirestoreUserData({Firestore firestore, Authenticator authenticator,
-Held hero, String uid}) async {
-  if(uid==null){uid = await authenticator.getUid();}
-
-  CollectionReference _collectionReference = firestore.collection('user_data');
-
-  DocumentReference _documentReference = _collectionReference.document(uid);
-
-  _documentReference.setData(hero.values);
-}
-
-//Deletes entry from firebase
-void deleteFirestoreUserData({DataHandler dataHandler}) async {
-  FirebaseUser user = await dataHandler.authenticator.getCurrentUser();
-  String uid = user.uid;
-
-  CollectionReference _collectionReference = dataHandler.firestore.collection('user_data');
-
-  DocumentReference _documentReference = _collectionReference.document(uid);
-  await _documentReference.delete();
-  await user.delete();
-  print('hier');
-  print(user);
 }

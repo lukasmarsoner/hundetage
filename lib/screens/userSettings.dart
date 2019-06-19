@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:hundetage/main.dart';
+import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/menuBottomSheet.dart';
-import 'package:hundetage/screens/login.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'dart:math' as math;
 
@@ -33,7 +32,7 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
   Widget build(BuildContext context) {
     //Dialog for entering user name
     Dialog userNameDialog = Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)), //this right here
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       child: Container(
         height: 200.0,
         width: 140.0,
@@ -64,10 +63,9 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
               Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    SizedBox(height: 10),
                     Header(dataHandler: dataHandler, getWidth: getWidth,
-                        userNameDialog: userNameDialog),
-                    SizedBox(height: 30),
+                        userNameDialog: userNameDialog, updateData: updateData),
+                    SizedBox(height: 50),
                     HeldAuswahl(dataHandler: dataHandler, getHeight: getHeight,
                         getWidth: getWidth, updateData: updateData),
                     SizedBox(height: minHeightBottomSheet)
@@ -86,34 +84,60 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
 class Header extends StatefulWidget {
   final DataHandler dataHandler;
   final double getWidth;
+  final Function updateData;
   final Dialog userNameDialog;
 
-  Header({@required this.dataHandler, @required this.getWidth, @required this.userNameDialog});
+  Header({@required this.dataHandler, @required this.getWidth,
+    @required this.userNameDialog, @required this.updateData});
 
   @override
   HeaderState createState() => new HeaderState(dataHandler: dataHandler,
-      getWidth: getWidth, userNameDialog: userNameDialog);
+      getWidth: getWidth, userNameDialog: userNameDialog, updateData: updateData);
 }
 
-class HeaderState extends State<Header> {
+class HeaderState extends State<Header> with SingleTickerProviderStateMixin {
+  AnimationController _animationController;
   DataHandler dataHandler;
   double getWidth;
+  Function updateData;
+  int iconIndex = 0;
   Dialog userNameDialog;
+  double _rotAngle = 2*math.pi;
+  int duration = 500;
+  var rng = new math.Random();
 
-  HeaderState({@required this.dataHandler, @required this.getWidth, @required this.userNameDialog});
+  HeaderState({@required this.dataHandler, @required this.getWidth,
+    @required this.userNameDialog, @required this.updateData});
 
   @override
   void initState() {
     super.initState();
+    //We get a new number here to show the user we have more than one icon
+    iconIndex = rng.nextInt(3);
+    _animationController = new AnimationController(
+        vsync: this,
+        lowerBound: 0.0,
+        upperBound: _rotAngle);
+    super.initState();
     dataHandler = dataHandler;
   }
 
-  _gotoLoginScreen({BuildContext context, DataHandler dataHandler}){
-    Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginSignUpPage(
-            dataHandler: dataHandler))
+  //Kill the animation controller when we no longer need it
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void changeGender(String geschlecht) {
+    //setState(() => null);
+    dataHandler.hero.geschlecht = geschlecht;
+    //Actually animate the selection - direction depends on the selected sex
+    _animationController.animateTo(_animationController.value==_rotAngle?0.0:_rotAngle,
+      duration: Duration(milliseconds: duration),
     );
+    //Make sure to tell the parent widgets about the new sex
+    updateData(newData: dataHandler);
   }
 
   @override
@@ -124,16 +148,15 @@ class HeaderState extends State<Header> {
         padding: const EdgeInsets.only(left: 10),
         child: Row(
             children: <Widget>[
-              GestureDetector(
-                onTap: () => _gotoLoginScreen(context: context, dataHandler: dataHandler),
-                child: Container(
-                    height: 75.0,
-                    width: 75.0,
-                    child:Image.asset(dataHandler.hero.signedIn
-                        ?'assets/images/cloud.png'
-                        :'assets/images/world.png')
-                ),
-              ),
+            Container(
+            height: 80.0,
+            width: 80.0,
+            child: RotatedGenderIcon(
+                changeGender: changeGender, animationController: _animationController,
+                //Show the sex not currently selected
+                geschlecht: dataHandler.hero.geschlecht == 'm'?'w':'m',
+                duration: duration, iconIndex: iconIndex)
+            ),
               Padding(
                 padding: EdgeInsets.only(left: 10.0),
                 child: GestureDetector(
@@ -149,14 +172,11 @@ class HeaderState extends State<Header> {
                           style: titleStyle,
                         ),
                         new Text(
-                            dataHandler.hero.signedIn
-                                ?'Du bist eingeloggt!'
-                                :'Ändere ' + (dataHandler.hero.geschlecht=='m'
+                            'Ändere ' + (dataHandler.hero.geschlecht=='m'
                                 ?'seinen'
-                                :'ihren') + ' Namen hier\nOder log dich über das Bild ein',
+                                :'ihren') + ' Namen hier',
                             style: subTitleStyle)
-                      ]
-                  ),
+                      ]),
                 ),
               ),
             ]
@@ -179,11 +199,7 @@ class HeldAuswahl extends StatefulWidget{
   getHeight: getHeight, getWidth: getWidth, updateData: updateData);
 }
 
-class HeldAuswahlState extends State<HeldAuswahl> with SingleTickerProviderStateMixin {
-  AnimationController _animationController;
-  double _rotAngle = 2*math.pi;
-  int duration = 500;
-  int iconIndex = 0;
+class HeldAuswahlState extends State<HeldAuswahl>{
   DataHandler dataHandler;
   Function updateData;
   double getHeight, getWidth;
@@ -197,38 +213,21 @@ class HeldAuswahlState extends State<HeldAuswahl> with SingleTickerProviderState
   @override
   void initState() {
     super.initState();
-    _animationController = new AnimationController(
-        vsync: this,
-        lowerBound: 0.0,
-        upperBound: _rotAngle);
+    //If we have a new user - chose a random image
+    if(dataHandler.hero.iBild==-1){
+      int imageIndex = rng.nextInt(dataHandler.hero.maxImages);
+      dataHandler.hero.iBild=imageIndex;
+    }
     pageController = PageController(viewportFraction: 0.75,
         //Set initial image to zero if we have a new user
-        initialPage: dataHandler.hero.iBild==-1?0:dataHandler.hero.iBild);
+        initialPage: dataHandler.hero.iBild);
     //When we get to the page we need to set the offset so we center the images
-    pageOffset = (dataHandler.hero.iBild==-1?0:dataHandler.hero.iBild).toDouble();
+    pageOffset = dataHandler.hero.iBild.toDouble();
     //We need this to actually re-draw the page view when the page is changed
-    //We need that for the paralax effect
+    //We need that for the parallax effect
     pageController.addListener(() {
       setState(() => pageOffset = pageController.page); //<-- add listener and set state
     });
-  }
-
-  void changeGender(String geschlecht) {
-    //setState(() => null);
-    dataHandler.hero.geschlecht = geschlecht;
-    //Actually animate the selection - direction depends on the selected sex
-    _animationController.animateTo(_animationController.value==_rotAngle?0.0:_rotAngle,
-      duration: Duration(milliseconds: duration),
-    );
-    //Make sure to tell the parent widgets about the new sex
-    updateData(newData: dataHandler);
-  }
-
-  //Kill the animation controller when we no longer need it
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   @override
@@ -267,19 +266,6 @@ class HeldAuswahlState extends State<HeldAuswahl> with SingleTickerProviderState
                       imageList: Iterable.generate(dataHandler.hero.maxImages).toList()
                   )
               )
-          ),
-          Row(mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                    height: 80.0,
-                    width: 80.0,
-                    child: RotatedGenderIcon(
-                        changeGender: changeGender, animationController: _animationController,
-                        //Show the sex not currently selected
-                        geschlecht: dataHandler.hero.geschlecht == 'm'?'w':'m',
-                        duration: duration, iconIndex: iconIndex)
-                    )
-              ]
           )
         ]
     );
@@ -290,8 +276,6 @@ class HeldAuswahlState extends State<HeldAuswahl> with SingleTickerProviderState
     return PageView(
       controller: pageController,
       onPageChanged: (pageIndex) {
-        //We get a new number here to show the user we have more than one icon
-        iconIndex = rng.nextInt(3);
         dataHandler.hero.iBild = pageIndex;
         updateData(newData: dataHandler);
       },

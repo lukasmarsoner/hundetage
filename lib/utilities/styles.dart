@@ -11,6 +11,13 @@ final TextStyle titleBlackStyle = new TextStyle(
     fontFamily: 'PatrickHand',
     fontWeight: FontWeight.w600);
 
+final TextStyle subTitleButtonStyle = new TextStyle(
+    fontSize: 24,
+    fontFamily: 'IndieFlower',
+    color: Colors.white,
+    fontStyle: FontStyle.italic,
+    fontWeight: FontWeight.w300);
+
 final TextStyle subTitleStyle = new TextStyle(
     fontSize: 18,
     fontFamily: 'IndieFlower',

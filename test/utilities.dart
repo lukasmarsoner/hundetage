@@ -14,6 +14,65 @@ class StaticTestWidget extends StatelessWidget{
   }
 }
 
+//Mock class-instances needed in all tests involving classes initialized from Firebase
+final Firestore mockFirestore = MockFirestore();
+
+final CollectionReference mockCollectionReference = MockCollectionReference();
+
+final DocumentSnapshot mockDocumentSnapshotGendering = MockDocumentSnapshot();
+final DocumentSnapshot mockDocumentSnapshotErlebnisse = MockDocumentSnapshot();
+final DocumentSnapshot mockDocumentSnapshotVersions = MockDocumentSnapshot();
+final DocumentSnapshot mockDocumentSnapshotUser = MockDocumentSnapshot();
+final DocumentSnapshot mockDocumentSnapshotAbenteuer = MockDocumentSnapshot();
+final DocumentSnapshot mockDocumentSnapshotAbenteuerMetadata = MockDocumentSnapshot();
+
+final DocumentReference mockDocumentReferenceGendering = MockDocumentReference();
+final DocumentReference mockDocumentReferenceErlebnisse = MockDocumentReference();
+final DocumentReference mockDocumentReferenceVersions = MockDocumentReference();
+final DocumentReference mockDocumentReferenceUser = MockDocumentReference();
+final DocumentReference mockDocumentReferenceAbenteuer = MockDocumentReference();
+final QuerySnapshot mockQuerySnapshot = MockQuerySnapshot();
+
+geschichten['Raja'].screens = screens;
+geschichten['Raja'].url = 'http://test.de';
+geschichten['Raja'].image = null;
+//Mock data handler
+final DataHandler dataHandler = DataHandler(firestore: mockFirestore);
+dataHandler.hero = testHeld;
+dataHandler.substitution = substitutions;
+dataHandler.generalData = generalData;
+dataHandler.stories = geschichten;
+
+//Mock the collection
+when(mockFirestore.collection('general_data')).thenReturn(mockCollectionReference);
+//Mock both documents
+when(mockCollectionReference.document('gendering')).thenReturn(mockDocumentReferenceGendering);
+when(mockDocumentReferenceGendering.get()).thenAnswer((_) async => mockDocumentSnapshotGendering);
+when(mockDocumentSnapshotGendering.data).thenReturn(genderingMockData);
+
+when(mockCollectionReference.document('erlebnisse')).thenReturn(mockDocumentReferenceErlebnisse);
+when(mockDocumentReferenceErlebnisse.get()).thenAnswer((_) async => mockDocumentSnapshotErlebnisse);
+when(mockDocumentSnapshotErlebnisse.data).thenReturn(erlebnisseMockData);
+
+when(mockCollectionReference.document('firebase_versions')).thenReturn(mockDocumentReferenceVersions);
+when(mockDocumentReferenceVersions.get()).thenAnswer((_) async => mockDocumentSnapshotVersions);
+when(mockDocumentSnapshotVersions.data).thenReturn(versionData);
+
+when(mockFirestore.collection('user_data')).thenReturn(mockCollectionReference);
+when(mockCollectionReference.document('hQtzTZdHkQde3dUxyZQ3EkzxYYn1')).thenReturn(mockDocumentReferenceUser);
+when(mockDocumentReferenceUser.get()).thenAnswer((_) async => mockDocumentSnapshotUser);
+when(mockDocumentSnapshotUser.data).thenReturn(testHeld.values);
+
+when(mockFirestore.collection('abenteuer')).thenReturn(mockCollectionReference);
+when(mockFirestore.collection('abenteuer_metadata')).thenReturn(mockCollectionReference);
+when(mockCollectionReference.snapshots()).thenAnswer((_) => Stream.fromIterable([mockQuerySnapshot]));
+when(mockQuerySnapshot.documents).thenReturn([mockDocumentSnapshotAbenteuerMetadata]);
+when(mockCollectionReference.document('Raja')).thenReturn(mockDocumentReferenceAbenteuer);
+when(mockDocumentReferenceAbenteuer.get()).thenAnswer((_) async => mockDocumentSnapshotAbenteuer);
+when(mockDocumentSnapshotAbenteuer.data).thenReturn(screensFirebase);
+when(mockDocumentSnapshotAbenteuerMetadata.data).thenReturn(adventureMetadata);
+
+
 //Stuff needed by a number of tests
 Map<String,Map<String,String>> genderingTestData = {'ErSie':{'m':'Er','w':'Sie'},
   'eineine':{'m':'ein','w':'eine'},

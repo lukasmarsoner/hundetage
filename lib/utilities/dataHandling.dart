@@ -155,7 +155,7 @@ class DataHandler {
     hero = await loadLocalUserData();
     if(hero==null){hero = Held.initial();}
 
-    if(hero.useAnalytics){hero.analytics = new FirebaseAnalytics();}
+    hero.analytics = new FirebaseAnalytics();
 
     //Generate substitutions and terminate loading animation
     substitution = Substitution(hero: hero, generalData: generalData);
@@ -166,98 +166,80 @@ class Held{
   // Properties of users
   //This is being set here. As user images are stored in the assets it will
   //never change in the live app
-  int _maxImages = 8;
-  String _name, _geschlecht, _lastOption;
-  bool useAnalytics;
-  int _iBild, _iScreen;
+  String _name, _username, _geschlecht, _lastOption;
+  Image userImage;
+  int _iScreen;
   List<String> _erlebnisse;
   List<int> _screens;
   FirebaseAnalytics analytics;
-
-  Map<int,Map<String,String>> _berufe = {
-    -1: {'m': '', 'w': ''},
-    0: {'m': 'Ein gewiefter Abenteurer', 'w': 'Eine gewiefte Abenteurerin'},
-    1: {'m': 'Der stärkste Hund im Land', 'w': 'Die stärkste Hündin im Land'},
-    2: {'m': 'Hat schon alles gesehen', 'w': 'Hat schon alles gesehen'},
-    3: {'m': 'Nichts kann ihn aufhalten', 'w': 'Nichts kann sie aufhalten'},
-    4: {'m': 'Der neugierigste Hund im Land', 'w': 'Die neugierigste Hündin im Land'},
-    5: {'m': 'Ihm kann man nichts vormachen', 'w': 'Ihr kann man nichts vormachen'},
-    6: {'m': 'Genauso wuschelig wie tapfer', 'w': 'Genauso wuschelig wie tapfer'},
-    7: {'m': 'Dein bester Freund', 'w': 'Deine beste Freundin'}};
 
   // Default values for user
   Map<String,dynamic> _defaults = {
     'name': 'Mara',
     'geschlecht': 'w',
-    'iBild': -1,
-    '_lastOption': '',
+    'username': 'Maya',
+    'lastOption': '',
     'iScreen': 0,
-    'useAnalytics': null,
     'screens': <int>[],
     'erlebnisse': <String>[]};
 
   // Default values for testing
   Map<String,dynamic> _testing = {
     'name': 'Mara',
+    'username': 'Maya',
     'geschlecht': 'w',
-    'iBild': 0,
-    '_lastOption': 'Last option',
+    'lastOption': 'Last option',
     'iScreen': 0,
-    'useAnalytics': true,
     'screens': <int>[0,1,2,3],
     'erlebnisse': <String>['besteFreunde']};
 
   // Initialize new User with defaults
   Held.initial(){
     _name = _defaults['name'];
+    _username = _defaults['username'];
     _geschlecht = _defaults['geschlecht'];
-    _iBild = _defaults['iBild'];
     _lastOption = _defaults['lastOption'];
     _erlebnisse = _defaults['erlebnisse'];
     _screens = _defaults['screens'];
-    useAnalytics = _defaults['useAnalytics'];
     _iScreen = _defaults['iScreen'];
   }
 
   //Used for testing widgets
   Held.test(){
     _name = _testing['name'];
+    _username = _defaults['username'];
     _geschlecht = _testing['geschlecht'];
-    _iBild = _testing['iBild'];
     _lastOption = _testing['lastOption'];
     _erlebnisse = _testing['erlebnisse'];
     _screens = _testing['screens'];
     _iScreen = _testing['iScreen'];
-    useAnalytics = _testing['useAnalytics'];
   }
 
   //Generate Hero from map
   Held.fromMap(Map<String,dynamic> _map){
     _name = _map['name'];
+    _username = _defaults['username'];
     _lastOption = _map['lastOption'];
     _geschlecht = _map['geschlecht'];
-    _iBild = _map['iBild'];
     _erlebnisse = _map['erlebnisse'];
     _screens = _map['screens'];
     _iScreen = _map['iScreen'];
-    useAnalytics = _map['useAnalytics'];
   }
 
   // Setters with sanity-checks
   set name(String valIn){
     (valIn != null && valIn.length != 0)?_name = valIn:throw new Exception('Invalid name!');
   }
+  set userName(String valIn){
+    (valIn != null && valIn.length != 0)?_name = valIn:throw new Exception('Invalid name!');
+  }
   set geschlecht(String valIn){
     (valIn=='m' || valIn=='w')?_geschlecht = valIn:throw new Exception('Invalid sex!');
-  }
-  set iBild(int valIn){
-    (valIn != null && valIn >=-1 && valIn <= maxImages)?_iBild = valIn:throw new Exception('Invalid imange index!');
   }
   set addErlebniss(String valIn){
     if(valIn != null && valIn != '' && !_erlebnisse.contains(valIn)){
       _erlebnisse.add(valIn);
-      if(useAnalytics){
-        analytics.logEvent(name: valIn);}
+      analytics.logEvent(name: valIn);
     }
   }
   set iScreen(int valIn){
@@ -276,14 +258,12 @@ class Held{
   }
 
   // Getters
-  int get maxImages => _maxImages;
   String get name => _name;
-  int get iBild => _iBild;
+  String get userName => _username;
   int get iScreen => _iScreen;
   String get geschlecht => _geschlecht;
   List<String> get erlebnisse => _erlebnisse;
   List<int> get screens => _screens;
-  Map<int,Map<String,String>> get berufe => _berufe;
   String get lastOption => (iScreen!=0 && iScreen!=888)?_lastOption+' ':'';
 
   // This getter is only for testing
@@ -291,13 +271,12 @@ class Held{
 
   Map<String,dynamic> get values => {
     'name': name,
+    'userName': userName,
     'lastOption': lastOption,
     'geschlecht': geschlecht,
-    'iBild': iBild,
     'erlebnisse': erlebnisse,
     'iScreen': iScreen,
     'screens': screens,
-    'useAnalytics': useAnalytics
   };
 }
 

@@ -3,16 +3,18 @@ description: Eine App für interaktive Kindergeschichten.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.3.0-dev.0.5 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^0.1.2
-  cloud_firestore: ^0.12.5+1
-  firebase_analytics: ^3.0.2
-  connectivity: ^0.4.3+1
+  cloud_firestore: ^0.12.5+2
+  firebase_analytics: ^3.0.3
+  connectivity: ^0.4.3+2
   path_provider: ^1.1.0
+  image_picker: ^0.6.0+10
+  firebase_performance: 0.3.0+1
   http: ^0.12.0+2
 
 dev_dependencies:
@@ -44,13 +46,33 @@ flutter:
 
   assets:
     - assets/images/forward.png
-    - assets/images/girl_0.png
-    - assets/images/girl_1.png
-    - assets/images/girl_2.png
-    - assets/images/boy_0.png
-    - assets/images/boy_1.png
-    - assets/images/boy_2.png
+    - assets/images/jakob_lukas.png
+    - assets/images/user_images/gender_selection/girl-0.png
+    - assets/images/user_images/gender_selection/girl-1.png
+    - assets/images/user_images/gender_selection/girl-2.png
+    - assets/images/user_images/gender_selection/girl-3.png
+    - assets/images/user_images/gender_selection/girl-4.png
+    - assets/images/user_images/gender_selection/girl-5.png
+    - assets/images/user_images/gender_selection/girl-6.png
+    - assets/images/user_images/gender_selection/girl-7.png
+    - assets/images/user_images/gender_selection/girl-8.png
+    - assets/images/user_images/gender_selection/girl-9.png
+    - assets/images/user_images/gender_selection/girl-10.png
+    - assets/images/user_images/gender_selection/girl-11.png
+    - assets/images/user_images/gender_selection/boy-0.png
+    - assets/images/user_images/gender_selection/boy-1.png
+    - assets/images/user_images/gender_selection/boy-2.png
+    - assets/images/user_images/gender_selection/boy-3.png
+    - assets/images/user_images/gender_selection/boy-4.png
+    - assets/images/user_images/gender_selection/boy-5.png
+    - assets/images/user_images/gender_selection/boy-6.png
+    - assets/images/user_images/gender_selection/boy-7.png
+    - assets/images/user_images/gender_selection/boy-8.png
+    - assets/images/user_images/gender_selection/boy-9.png
+    - assets/images/user_images/gender_selection/boy-10.png
+    - assets/images/user_images/gender_selection/boy-11.png
     - assets/images/icon.png
+    - assets/images/event.png
     - assets/images/house.png
     - assets/images/logout.png
     - assets/images/user_images/hund_0.jpg

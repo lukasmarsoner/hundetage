@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
@@ -61,7 +60,7 @@ class UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
             body: Stack(children: <Widget>[
               Background(getHeight: getHeight, getWidth: getWidth),
               Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     Header(dataHandler: dataHandler, getWidth: getWidth,
                         userNameDialog: userNameDialog, updateData: updateData),
@@ -113,7 +112,7 @@ class HeaderState extends State<Header> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     //We get a new number here to show the user we have more than one icon
-    iconIndex = rng.nextInt(3);
+    iconIndex = rng.nextInt(12);
     _animationController = new AnimationController(
         vsync: this,
         lowerBound: 0.0,
@@ -138,6 +137,7 @@ class HeaderState extends State<Header> with SingleTickerProviderStateMixin {
     );
     //Make sure to tell the parent widgets about the new sex
     updateData(newData: dataHandler);
+    iconIndex = rng.nextInt(12);
   }
 
   @override
@@ -151,11 +151,11 @@ class HeaderState extends State<Header> with SingleTickerProviderStateMixin {
             Container(
             height: 80.0,
             width: 80.0,
-            child: RotatedGenderIcon(
-                changeGender: changeGender, animationController: _animationController,
-                //Show the sex not currently selected
-                geschlecht: dataHandler.hero.geschlecht == 'm'?'w':'m',
-                duration: duration, iconIndex: iconIndex)
+                child: RotatedGenderIcon(
+                    changeGender: changeGender, animationController: _animationController,
+                    //Show the sex not currently selected
+                    geschlecht: dataHandler.hero.geschlecht == 'm'?'w':'m',
+                    duration: duration, iconIndex: iconIndex)
             ),
               Padding(
                 padding: EdgeInsets.only(left: 10.0),
@@ -336,7 +336,7 @@ class RotatedGenderIcon extends AnimatedWidget {
         angle: _angle,
         child: GestureDetector(
             onTap: () => changeGender(geschlecht),
-            child: Image.asset('assets/images/${geschlecht=='m'?'girl':'boy'}_$iconIndex.png'),
+            child: Image.asset('assets/images/user_images/gender_selection/${geschlecht=='m'?'girl':'boy'}_$iconIndex.png'),
         )
     );
   }

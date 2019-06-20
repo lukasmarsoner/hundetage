@@ -2,8 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Diese App benötigt Zugriff auf deine Galerie damit du Bilder für dein Nutzerprofil auswählen kannst. Diese Bilder verlassen dein Gerät nicht und werden nur lokal gespeichert.</string>
+<key>NSCameraUsageDescription</key>
+<string>Diese App benötigt Zugriff auf deine Kamera damit du Bilder für dein Nutzerprofil auswählen kannst. Diese Bilder verlassen dein Gerät nicht und werden nur lokal gespeichert.</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>Diese App benötigt aus technischen Gründen Zugriff auf dein Mikrofon. Wir verwenden diese Berechtigungen nicht.</string>
+
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>de</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

@@ -106,19 +106,15 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
 
     return Container(
         padding: EdgeInsets.only(top: 70.0),
-        child:GridView.count(
-            crossAxisSpacing: 10.0,
-            mainAxisSpacing: 10.0,
-            crossAxisCount: 2,
-            children: _erlebnisseList));
+        child:ListView(children: _erlebnisseList));
   }
 
   Widget _buildItem({Erlebniss erlebniss}) {
     return ExpandedErlebniss(
-      onTap: () => _openDialog(ShowErlebniss(erlebniss: erlebniss, dataHandler: dataHandler),
-          context),
-      isVisible: _controller.status == AnimationStatus.completed,
-      erlebniss: erlebniss);
+        visibility: _controller.value,
+            onTap: () => _openDialog(ShowErlebniss(erlebniss: erlebniss, dataHandler: dataHandler),
+                context),
+            erlebniss: erlebniss);
   }
 
   _openDialog(Widget _dialog, BuildContext context){
@@ -155,19 +151,19 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
 }
 
 class ExpandedErlebniss extends StatelessWidget {
-  final bool isVisible;
+  final double visibility;
   final Function onTap;
   final Erlebniss erlebniss;
 
   const ExpandedErlebniss(
-      {@required this.isVisible,
+      {@required this.visibility,
         @required this.onTap,
         @required this.erlebniss});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-        opacity: isVisible ? 1 : 0,
+        opacity: visibility,
         duration: Duration(milliseconds: 200),
         child:GestureDetector(
           onTap: () => onTap(),
@@ -196,19 +192,18 @@ class ShowErlebniss extends StatelessWidget{
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        elevation: 5.0,
         child: Container(
             width: 120,
-            height: 440,
-            child: ListView(
+            height: 340,
+            child: Row(
                 children: <Widget>[
                   Container(
-                      padding: EdgeInsets.all(20.0),
-                      child: erlebniss.image),
+                      height: 20,
+                      width: 20,
+                      child: Image.asset('assets/images/event.png')),
                   Container(
-                      padding: EdgeInsets.fromLTRB(20.0,0.0,20.0,20.0),
-                      child: Text(dataHandler.substitution.applyAllSubstitutions(erlebniss.text),
-                          style: textStyle))
+                      padding: EdgeInsets.only(left: 10),
+                      child: Text(erlebniss.title, style: subTitleBlackStyle))
                 ]
             )
         )

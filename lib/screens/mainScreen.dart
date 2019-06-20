@@ -35,19 +35,19 @@ class MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIOverlays([]);
-    return Scaffold(
-      body: Stack(
+    return Stack(
+      children: <Widget>[
+        Background(getWidth: getWidth, getHeight: getHeight),
+        Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              Background(getWidth: getWidth, getHeight: getHeight),
-              Column(children: <Widget>[
-                ProfileRow(dataHandler: dataHandler, login: false),
-                AbenteuerAuswahl(dataHandler: dataHandler, getHeight: getHeight),
-              ]),
-              MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
-                  getWidth: getWidth, icon: 'assets/images/logout.png',
-                  homeButtonFunction: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'))
-            ],
-          ),
+              ProfileRow(dataHandler: dataHandler, login: false),
+              AbenteuerAuswahl(dataHandler: dataHandler, getHeight: getHeight),
+            ]),
+        MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
+            getWidth: getWidth, icon: 'assets/images/logout.png',
+            homeButtonFunction: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'))
+      ],
     );
   }
 }

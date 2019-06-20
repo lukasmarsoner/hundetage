@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:hundetage/screens/mainScreen.dart';
-import 'package:hundetage/utilities/styles.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+//import 'package:hundetage/screens/mainScreen';
+import 'package:hundetage/screens/userChat.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
@@ -122,75 +121,9 @@ class _MyAppState extends State<MyApp>{
     });
   }
 
-    //Dialog for asking for permission to use analytics
-  Widget useAnalyticsDialog() {
-    return Center(
-      child: Container(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0)),
-        child: Container(
-          height: 520.0,
-          width: getWidth-20,
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(top: 15.0),
-                  child: Text('Nutzungsdaten',
-                      style: titleBlackStyle),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 15.0),
-                  child: Text('Lieber Nutzer, um unsere Geschichte in Zukunft noch besser zu machen, '
-                      'würden wir gerne anonyme Daten über dein Leseverhalten sammeln. '
-                      'Um genau zu sein, möchten wir wissen, wie viele Nutzer gewisse '
-                      'besondere Punkte in der Geschichte erreichen.'
-                      'Alle Daten sind vollkommen anonym, helfen uns aber sehr dabei zu verstehen, '
-                      'was dir an unserer Geschichte gefällt.'
-                      'Wenn du das nicht möchtest, klick einfach auf "Nein" und genieß die Geschichte.\n\n'
-                      'Liebe Grüße\n'
-                      'Lukas und Jakob',
-                      style: textStyle),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 25.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        RaisedButton(
-                            color: Colors.green,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                            child: Text('Ja',
-                                style: subTitleButtonStyle),
-                            onPressed:() {
-                              dataHandler.hero.useAnalytics = true;
-                              dataHandler.hero.analytics = new FirebaseAnalytics();
-                              updateData(newData: dataHandler);
-                            }),
-                        SizedBox(width: 30,),
-                        RaisedButton(
-                            color: Colors.redAccent,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                            child: Text('Nein',
-                                style: subTitleButtonStyle),
-                            onPressed:() {
-                              dataHandler.hero.useAnalytics = false;
-                              updateData(newData: dataHandler);
-                            }),
-                ])),
-              ]
-            ),
-      )));
-    }
-
   @override
   Widget build(BuildContext context){
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Hundetage',
-      home: Scaffold(body: dataHandler.hero.useAnalytics==null
-          ?useAnalyticsDialog()
-          :MainPage(dataHandler: dataHandler))
-    );
+    return UserChat(dataHandler: dataHandler);
   }
 }

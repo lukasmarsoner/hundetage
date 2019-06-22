@@ -11,6 +11,8 @@ class DataHandler {
   VersionController versionController, firebaseVersions;
   Firestore firestore = Firestore.instance;
   Map<String,Geschichte> stories;
+  //We set this here for now. The machinery is in place to handle more than one
+  //story but we don't have one for now ;-)
   String currentStory = 'Raja';
   bool local;
   Held hero = Held.initial();
@@ -369,6 +371,7 @@ class Substitution{
   //Substitute username in text - in the future more might happen here...
   _applyNameSubstitutions(String textIn){
     textIn = textIn.replaceAll('#username', hero.name);
+    textIn = textIn.replaceAll('#lesername', hero.username);
     return textIn;
   }
 

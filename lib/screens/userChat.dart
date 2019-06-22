@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'dart:math' as math;
-import 'dart:io';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:hundetage/utilities/json.dart';
 import 'package:hundetage/screens/adventures.dart';
 import 'package:flutter/scheduler.dart';
@@ -64,8 +64,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     var _image = await ImagePicker.pickImage(source: ImageSource.camera);
     //Save image to file
     if(dataHandler.hero.userImage==null) {
-      File file = await localFile('user_image', '.png');
-      await file.writeAsBytes(await _image.readAsBytes());
+      await saveCameraImageToFile(image: _image, filename: 'user_image');
     }
     setState(() {
       if(dataHandler.hero.userImage==null)
@@ -105,7 +104,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
 
   Future<void> _postMessages(int start, int stop) async{
     Map<int, Map<String, String>> qAndAOutputs = {
-      0: {'text': '😊', 'user': 'Lukas'},//{'text': 'Hallo liebe Leser - willkommen bei Hundetage!', 'user': 'Lukas'},
+      0: {'text': 'Hallo liebe Leser - willkommen bei Hundetage!', 'user': 'Lukas'},
       1: {'text': 'Bevor wir unser Abenteuer beginnen, wollten wir uns kurz vorstellen und '
           'euch - unsere Leser - ein bisschen besser kennenlernen 😊', 'user': 'Lukas'},
       2: {'text': 'Wir, das sind ich, Lukas und mein Bruder Jakob', 'user': 'Lukas'},
@@ -201,6 +200,8 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
   }
 
   Future<void> _gotoAdventureScreen() async{
+    dataHandler.hero.analytics = new FirebaseAnalytics();
+    updateData(newData: dataHandler);
     await _sleep(seconds: 1);
     Navigator.push(
         context,
@@ -258,56 +259,33 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
   }
 
   Widget _weiterButton(){
-    return Stack(children: <Widget>[
-      Container(
-          padding: EdgeInsets.fromLTRB(4,4,0,10),
-          child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                    constraints: BoxConstraints(maxWidth: getWidth * 2/3),
-                    decoration: BoxDecoration(
-                        color: red,
-                        borderRadius: BorderRadius.circular(40)),
-                    child: Padding(
-                        padding: EdgeInsets.all(15),
-                        child: Text((' '*6) + 'Alles klar - lass uns loslegen! 🙄',
-                            style: chatStyle, softWrap: true))
-                )
-              ]
-          )
-      ),
-      Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[_posterAvatar('Lukas')]),
-    ]
-    );
-
-
-    return Stack(
-        children: <Widget>[
-          Container(padding: EdgeInsets.only(bottom: 10),
-            child: GestureDetector(
-                onTap: () => _gotoAdventureScreen(),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                        width: 280,
+    return GestureDetector(
+        onTap: () => _gotoAdventureScreen(),child:
+        Stack(children: <Widget>[
+          Container(
+              padding: EdgeInsets.fromLTRB(4,4,0,10),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                        constraints: BoxConstraints(maxWidth: getWidth * 2/3),
                         decoration: BoxDecoration(
                             color: red,
                             borderRadius: BorderRadius.circular(40)),
-                        //Inset to avoid user-icon
-                        child: Padding(child: Text(' '*6 + 'Alles klar - los geht\'s!',
-                          style: chatStyle, softWrap: true),
-                            padding: EdgeInsets.fromLTRB(20,20,10,25)),
-                      )
-                    ])
-            )),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[_posterAvatar('Lukas')]),
-        ]);
+                        child: Padding(
+                            padding: EdgeInsets.all(15),
+                            child: Text((' '*6) + 'Alles klar - lass uns loslegen! 🙂',
+                                style: chatStyle, softWrap: true))
+                    )
+                  ]
+              )
+          ),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[_posterAvatar('Lukas')]),
+        ]
+        )
+    );
   }
 
   Widget _genderButton(String _gender) {
@@ -403,7 +381,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                         color: orange,
                         borderRadius: BorderRadius.circular(40)),
                     child: Padding(
-                        padding: EdgeInsets.fromLTRB(15,15,45,15),
+                        padding: EdgeInsets.all(5),
                         child: response)
                 )
               ]

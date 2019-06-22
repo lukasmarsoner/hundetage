@@ -56,8 +56,9 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
     );
   }
 
-  Dialog userNameDialog() {
-    return Dialog(
+  @override
+  Widget build(BuildContext context) {
+    Dialog userNameDialog  = new Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       child: Container(
         padding: EdgeInsets.all(30),
@@ -74,10 +75,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
         ),
       ),
     );
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
@@ -88,7 +86,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
                     padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
                     child: StoryText(dataHandler: dataHandler, imageHeight: imageHeight)),
                 MenuBottomSheet(dataHandler: dataHandler,
-                    homeButtonFunction: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog()))
+                    homeButtonFunction: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog))
               ],
             )))
         )

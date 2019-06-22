@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/utilities/styles.dart';
-
 import 'package:flutter/material.dart';
 
 const double minHeightBottomSheet = 60;
@@ -21,8 +20,9 @@ class MenuBottomSheet extends StatefulWidget {
 class MenuBottomSheetState extends State<MenuBottomSheet>
     with SingleTickerProviderStateMixin {
   AnimationController _controller;
-  double get getHeight => MediaQuery.of(context).size.height - 30;
   Function homeButtonFunction;
+  double get getWidth => MediaQuery.of(context).size.width;
+  double get getHeight => MediaQuery.of(context).size.height;
   DataHandler dataHandler;
 
   MenuBottomSheetState({@required this.dataHandler, @required this.homeButtonFunction});
@@ -56,7 +56,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
         animation: _controller,
         builder: (context, child) {
           return Positioned(
-            height: lerp(minHeightBottomSheet, getHeight),
+            height: lerp(minHeightBottomSheet, getHeight-30),
             left: 0,
             right: 0,
             bottom: 0,
@@ -106,7 +106,8 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   Widget _buildItem({Erlebniss erlebniss}) {
     return ExpandedErlebniss(
         visibility: _controller.value,
-            onTap: () => _openDialog(ShowErlebniss(erlebniss: erlebniss, dataHandler: dataHandler),
+            onTap: () => _openDialog(ShowErlebniss(erlebniss: erlebniss, dataHandler: dataHandler,
+                getWidth: getWidth, getHeight: getHeight),
                 context),
             erlebniss: erlebniss);
   }
@@ -158,15 +159,15 @@ class ExpandedErlebniss extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedOpacity(
         opacity: visibility,
-        duration: Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 600),
         child:GestureDetector(
           onTap: () => onTap(),
             child: Container(
-              decoration: BoxDecoration(
-                  color: yellow,
-                  borderRadius: BorderRadius.circular(10)),
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(color: red,
+                  borderRadius: BorderRadius.circular(30)),
               child: ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
                   child: erlebniss.image),
         )
         )
@@ -177,8 +178,9 @@ class ExpandedErlebniss extends StatelessWidget {
 class ShowErlebniss extends StatelessWidget{
   final Erlebniss erlebniss;
   final DataHandler dataHandler;
+  final double getWidth, getHeight;
 
-  ShowErlebniss({this.erlebniss, this.dataHandler});
+  ShowErlebniss({this.erlebniss, this.dataHandler, this.getHeight, this.getWidth});
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +189,8 @@ class ShowErlebniss extends StatelessWidget{
           borderRadius: BorderRadius.circular(20),
         ),
         child: Container(
+          constraints: BoxConstraints(minHeight: 200, maxWidth: getWidth * 3/4,
+              minWidth: 250, maxHeight: getHeight * 2/3),
             width: 300,
             height: 400,
             child: ListView(

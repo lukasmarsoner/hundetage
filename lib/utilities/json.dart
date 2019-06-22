@@ -13,6 +13,12 @@ Future<File> saveImageToFile({String url, String filename}) async{
   return file.writeAsBytes(bytes);
 }
 
+Future<File> saveCameraImageToFile({File image, String filename}) async{
+  List<int> bytes = await image.readAsBytes();
+  File file = await localFile(filename, 'png');
+  return file.writeAsBytes(bytes);
+}
+
 Future<Image> loadImageFromFile(String filename) async{
   File file = await localFile(filename, 'png');
   if(await fileExists(file)){

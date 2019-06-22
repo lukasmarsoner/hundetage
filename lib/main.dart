@@ -126,6 +126,9 @@ class _MyAppState extends State<MyApp>{
     //Check if user has been loaded from file...
     bool _userFromFile = dataHandler.hero.userImage!=null && dataHandler.hero.username!=null
         && dataHandler.hero.name!=null && dataHandler.hero.geschlecht!=null;
+    print('Lukas');
+    print(dataHandler.hero.userImage!=null);
+    print('test');
     return _userFromFile
         ?GeschichteMainScreen(dataHandler: dataHandler)
         :UserChat(dataHandler: dataHandler);

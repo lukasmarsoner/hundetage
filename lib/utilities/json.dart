@@ -9,12 +9,12 @@ import 'package:path_provider/path_provider.dart';
 Future<File> saveImageToFile({String url, String filename}) async{
   var response = await http.get(url);
   List<int> bytes = response.bodyBytes.toList();
-  File file = await localFile(filename, 'jpg');
+  File file = await localFile(filename, 'png');
   return file.writeAsBytes(bytes);
 }
 
 Future<Image> loadImageFromFile(String filename) async{
-  File file = await localFile(filename, 'jpg');
+  File file = await localFile(filename, 'png');
   if(await fileExists(file)){
     List<int> bytes = await file.readAsBytes();
     return Image.memory(bytes, fit: BoxFit.cover);
@@ -54,6 +54,7 @@ Future<Held> loadLocalUserData() async {
     Map<String, dynamic> _heroMap = json.decode(contents);
     _heroMap['erlebnisse'] = List<String>.from(_heroMap['erlebnisse']);
     _heroMap['screens'] = List<int>.from(_heroMap['screens']);
+    _heroMap['userImage'] = await loadImageFromFile('user_image');
 
   return Held.fromMap(_heroMap);
   }
@@ -67,6 +68,12 @@ Future<void> deleteLocalUserData() async{
 
   if(await fileExists(file)){
     await file.delete();
+  }
+
+  final File imageFile = await localFile('user_image', 'png');
+
+  if(await fileExists(imageFile)){
+    await imageFile.delete();
   }
 }
 

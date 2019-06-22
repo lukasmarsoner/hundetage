@@ -6,42 +6,31 @@ final titleStyle = new TextStyle(
     color: Colors.white,
     fontWeight: FontWeight.w600);
 
-final TextStyle titleBlackStyle = new TextStyle(
-    fontSize: 24,
-    fontFamily: 'PatrickHand',
-    fontWeight: FontWeight.w600);
-
-final TextStyle subTitleButtonStyle = new TextStyle(
+final TextStyle subTitleStyle = new TextStyle(
     fontSize: 24,
     fontFamily: 'IndieFlower',
     color: Colors.white,
     fontStyle: FontStyle.italic,
     fontWeight: FontWeight.w300);
 
-final TextStyle subTitleStyle = new TextStyle(
+final TextStyle chatBlackStyle = new TextStyle(
     fontSize: 18,
-    fontFamily: 'IndieFlower',
-    color: Colors.white,
-    fontStyle: FontStyle.italic,
+    height: 1.05,
+    fontFamily: 'Montserrat',
     fontWeight: FontWeight.w300);
 
 final TextStyle chatStyle = new TextStyle(
     fontSize: 18,
-    fontFamily: 'IndieFlower',
+    height: 1.05,
+    fontFamily: 'Montserrat',
     color: Colors.white,
     fontWeight: FontWeight.w300);
 
 final TextStyle subTitleBlackStyle = new TextStyle(
-    fontSize: 18,
+    fontSize: 24,
     fontFamily: 'IndieFlower',
     fontStyle: FontStyle.italic,
     fontWeight: FontWeight.w300);
-
-final TextStyle subTitleBlackBoldStyle = new TextStyle(
-    fontSize: 18,
-    fontFamily: 'IndieFlower',
-    fontStyle: FontStyle.italic,
-    fontWeight: FontWeight.w600);
 
 final TextStyle textStyle = new TextStyle(
     fontSize: 18,

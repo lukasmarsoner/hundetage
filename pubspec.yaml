@@ -29,9 +29,6 @@ flutter:
     - family: IndieFlower
       fonts:
         - asset: assets/IndieFlower.ttf
-    - family: PatrickHand
-      fonts:
-        - asset: assets/PatrickHand-Regular.ttf
     - family: Montserrat
       fonts:
         - asset: assets/Montserrat-Regular.ttf
@@ -47,6 +44,8 @@ flutter:
   assets:
     - assets/images/forward.png
     - assets/images/jakob_lukas.png
+    - assets/images/jakob.png
+    - assets/images/lukas.png
     - assets/images/user_images/gender_selection/girl-0.png
     - assets/images/user_images/gender_selection/girl-1.png
     - assets/images/user_images/gender_selection/girl-2.png
@@ -73,14 +72,4 @@ flutter:
     - assets/images/user_images/gender_selection/boy-11.png
     - assets/images/icon.png
     - assets/images/event.png
-    - assets/images/house.png
-    - assets/images/logout.png
-    - assets/images/user_images/hund_0.jpg
-    - assets/images/user_images/hund_1.jpg
-    - assets/images/user_images/hund_2.jpg
-    - assets/images/user_images/hund_3.jpg
-    - assets/images/user_images/hund_4.jpg
-    - assets/images/user_images/hund_5.jpg
-    - assets/images/user_images/hund_6.jpg
-    - assets/images/user_images/hund_7.jpg
 

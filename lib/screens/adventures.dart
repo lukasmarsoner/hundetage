@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
+import 'dart:math' as math;
 import 'package:hundetage/utilities/dataHandling.dart';
 
 class GeschichteMainScreen extends StatefulWidget{
@@ -14,11 +15,10 @@ class GeschichteMainScreen extends StatefulWidget{
 
 class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   DataHandler dataHandler;
+  var rng = new math.Random();
   double imageHeight = 100.0;
-  double get getWidth => MediaQuery.of(context).size.width;
-  double get getHeight => MediaQuery.of(context).size.height;
 
-  void updateDataStory({DataHandler newData}){
+  void updateData({DataHandler newData}){
     setState(() {
       dataHandler.updateData = newData;
     });
@@ -26,22 +26,73 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
 
   GeschichteMainScreenState({@required this.dataHandler});
 
+  Widget _genderButton(String _gender) {
+    return GestureDetector(
+        onTap: () {
+          dataHandler.hero.geschlecht = _gender;
+          updateData(newData: dataHandler);
+        },
+        child: Container(
+          height: 60,
+          width: 60,
+          padding: EdgeInsets.all(5),
+          child: Image.asset('assets/images/user_images/gender_selection/'
+              '${_gender=='m'?'boy':'girl'}-${rng.nextInt(12)}.png'),
+        )
+    );
+  }
+
+  Widget _boyGirlSelection(){
+    return Container(
+        padding: EdgeInsets.only(bottom: 10),
+        child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              _genderButton('m'),
+              SizedBox(width: 20),
+              _genderButton('w')
+            ]
+        )
+    );
+  }
+
+  Dialog userNameDialog() {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      child: Container(
+        padding: EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),
+            SizedBox(height: 20,),
+            NameField(setUsername: false, updateData: updateData,
+                dataHandler: dataHandler),
+            SizedBox(height: 20,),
+            _boyGirlSelection(),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-            body: new Stack(
+            body: Container(child:
+            SafeArea(child: Stack(
               children: <Widget>[
                 Padding(
                     padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
                     child: StoryText(dataHandler: dataHandler, imageHeight: imageHeight)),
-                MenuBottomSheet(getHeight: getHeight, dataHandler: dataHandler,
-                    getWidth: getWidth, icon: 'assets/images/house.png',
-                    homeButtonFunction: () => Navigator.pop(context))
+                MenuBottomSheet(dataHandler: dataHandler,
+                    homeButtonFunction: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog()))
               ],
-            )
-    ));
+            )))
+        )
+    );
   }
 }
 
@@ -303,5 +354,58 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
         child: new ListView(
             children: animatedTexts
     ));
+  }
+}
+
+class NameField extends StatefulWidget{
+  final DataHandler dataHandler;
+  final Function updateData;
+  final bool setUsername;
+
+  NameField({@required this.dataHandler, @required this.updateData,
+  @required this.setUsername});
+
+  @override
+  NameFieldState createState() =>
+      new NameFieldState(dataHandler: dataHandler, updateData: updateData,
+      setUsername: setUsername);
+}
+
+class NameFieldState extends State<NameField>{
+  DataHandler dataHandler;
+  Function updateData;
+  bool setUsername;
+  TextEditingController _controller;
+
+  NameFieldState({@required this.dataHandler, @required this.updateData,
+    @required this.setUsername});
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = new TextEditingController(
+        text: setUsername?dataHandler.hero.username:dataHandler.hero.name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: Container(
+            child: TextField(
+              //This should make it more comfortable to write names
+              textCapitalization: TextCapitalization.words,
+              decoration: new InputDecoration(
+                labelText: setUsername
+                    ?'Dein Name'
+                    :'Der Name ${dataHandler.hero.geschlecht=='w'?'unserer Heldin':'unseres Helden'}',
+              ),
+              style: textStyle,
+              maxLengthEnforced: true,
+              controller: _controller,
+              onChanged: (name){
+                setUsername?dataHandler.hero.username=name:dataHandler.hero.name=name;
+                updateData(newData: dataHandler);},
+            )
+        ));
   }
 }

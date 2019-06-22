@@ -8,30 +8,24 @@ import 'package:flutter/material.dart';
 const double minHeightBottomSheet = 60;
 
 class MenuBottomSheet extends StatefulWidget {
-  final double getHeight, getWidth;
   final DataHandler dataHandler;
-  final String icon;
   final Function homeButtonFunction;
 
-  MenuBottomSheet({@required this.getHeight, @required this.dataHandler,
-  @required this.homeButtonFunction, @required this.getWidth, @required this.icon});
+  MenuBottomSheet({@required this.dataHandler, @required this.homeButtonFunction});
 
   @override
-  MenuBottomSheetState createState() => MenuBottomSheetState(getHeight: getHeight,
-  dataHandler: dataHandler, homeButtonFunction: homeButtonFunction,
-  getWidth: getWidth, icon: icon);
+  MenuBottomSheetState createState() => MenuBottomSheetState(
+  dataHandler: dataHandler, homeButtonFunction: homeButtonFunction);
 }
 
 class MenuBottomSheetState extends State<MenuBottomSheet>
     with SingleTickerProviderStateMixin {
   AnimationController _controller;
-  double getHeight, getWidth;
-  String icon;
+  double get getHeight => MediaQuery.of(context).size.height - 30;
   Function homeButtonFunction;
   DataHandler dataHandler;
 
-  MenuBottomSheetState({@required this.getHeight, @required this.dataHandler,
-  @required this.homeButtonFunction, @required this.getWidth, @required this.icon});
+  MenuBottomSheetState({@required this.dataHandler, @required this.homeButtonFunction});
 
   double get headerTopMargin =>
       lerp(8, 8 + MediaQuery.of(context).padding.top);
@@ -81,8 +75,8 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
                     _buildErlebnisseList(),
                     Padding(padding: EdgeInsets.only(top: headerTopMargin),
                         child: Row(children: <Widget>[
-                          HomeButton(homeButtonFunction: homeButtonFunction, icon: icon),
-                          SheetHeader(fontStyle: headerTextStyle),
+                          HomeButton(homeButtonFunction: homeButtonFunction),
+                          SheetHeader(fontStyle: subTitleStyle),
                           Spacer(),
                           MenuButton()
                         ]
@@ -193,17 +187,25 @@ class ShowErlebniss extends StatelessWidget{
           borderRadius: BorderRadius.circular(20),
         ),
         child: Container(
-            width: 120,
-            height: 340,
-            child: Row(
+            width: 300,
+            height: 400,
+            child: ListView(
                 children: <Widget>[
+                  Center(child: Container(
+                      padding: EdgeInsets.fromLTRB(15,10,15,5),
+                      child: Text(erlebniss.title, style: subTitleBlackStyle)
+                  )),
                   Container(
-                      height: 20,
-                      width: 20,
-                      child: Image.asset('assets/images/event.png')),
+                      padding: EdgeInsets.only(left: 15, right: 15),
+                      height: 220,
+                      width: 220,
+                      child: ClipRRect(
+                          borderRadius: new BorderRadius.circular(20.0),
+                          child: erlebniss.image)),
                   Container(
-                      padding: EdgeInsets.only(left: 10),
-                      child: Text(erlebniss.title, style: subTitleBlackStyle))
+                      padding: EdgeInsets.fromLTRB(15,15,15,15),
+                      child: Text(dataHandler.substitution.applyAllSubstitutions(erlebniss.text),
+                          style: textStyle))
                 ]
             )
         )
@@ -235,25 +237,22 @@ class MenuButton extends StatelessWidget {
     return Icon(
         Icons.menu,
         color: Colors.white,
-        size: 28,
+        size: 35,
     );
   }
 }
 
 class HomeButton extends StatelessWidget {
   final Function homeButtonFunction;
-  final String icon;
 
-  HomeButton({@required this.homeButtonFunction, @required this.icon});
+  HomeButton({@required this.homeButtonFunction});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => homeButtonFunction(),
-      child: Image.asset(icon,
-        height: 45,
-        width: 45,
-      )
+    return IconButton(
+      onPressed: () => homeButtonFunction(),
+      iconSize: 35,
+      icon: Icon(Icons.face, color: Colors.white)
     );
   }
 }

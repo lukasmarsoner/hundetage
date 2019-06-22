@@ -11,7 +11,7 @@ class DataHandler {
   VersionController versionController, firebaseVersions;
   Firestore firestore = Firestore.instance;
   Map<String,Geschichte> stories;
-  String currentStory;
+  String currentStory = 'Raja';
   bool local;
   Held hero = Held.initial();
   ConnectionStatus connectionStatus = new ConnectionStatus();
@@ -33,6 +33,7 @@ class DataHandler {
   set updateHero(Held heroIn) {
     hero = heroIn;
     writeLocalUserData(hero);
+    substitution = Substitution(hero: hero, generalData: generalData);
   }
 
   //This can get more functionality later
@@ -157,8 +158,7 @@ class DataHandler {
 
     hero.analytics = new FirebaseAnalytics();
 
-    //Generate substitutions and terminate loading animation
-    substitution = Substitution(hero: hero, generalData: generalData);
+    this.updateHero = hero;
   }
 }
 
@@ -175,9 +175,6 @@ class Held{
 
   // Default values for user
   Map<String,dynamic> _defaults = {
-    'name': 'Mara',
-    'geschlecht': 'w',
-    'username': 'Maya',
     'lastOption': '',
     'iScreen': 0,
     'screens': <int>[],
@@ -218,6 +215,7 @@ class Held{
   //Generate Hero from map
   Held.fromMap(Map<String,dynamic> _map){
     _name = _map['name'];
+    userImage = _map['userImage'];
     _username = _defaults['username'];
     _lastOption = _map['lastOption'];
     _geschlecht = _map['geschlecht'];
@@ -230,14 +228,14 @@ class Held{
   set name(String valIn){
     (valIn != null && valIn.length != 0)?_name = valIn:throw new Exception('Invalid name!');
   }
-  set userName(String valIn){
-    (valIn != null && valIn.length != 0)?_name = valIn:throw new Exception('Invalid name!');
+  set username(String valIn){
+    (valIn != null && valIn.length != 0)?_username = valIn:throw new Exception('Invalid name!');
   }
   set geschlecht(String valIn){
     (valIn=='m' || valIn=='w')?_geschlecht = valIn:throw new Exception('Invalid sex!');
   }
   set addErlebniss(String valIn){
-    if(valIn != null && valIn != '' && !_erlebnisse.contains(valIn)){
+    if(valIn != null && valIn != ''){
       _erlebnisse.add(valIn);
       analytics.logEvent(name: valIn);
     }
@@ -259,7 +257,7 @@ class Held{
 
   // Getters
   String get name => _name;
-  String get userName => _username;
+  String get username => _username;
   int get iScreen => _iScreen;
   String get geschlecht => _geschlecht;
   List<String> get erlebnisse => _erlebnisse;
@@ -271,7 +269,7 @@ class Held{
 
   Map<String,dynamic> get values => {
     'name': name,
-    'userName': userName,
+    'username': username,
     'lastOption': lastOption,
     'geschlecht': geschlecht,
     'erlebnisse': erlebnisse,

@@ -146,10 +146,8 @@ Future<Map<String,Geschichte>> loadAllLocalStoryData() async {
 
 //Load one single story from JSON
 Future<Geschichte> loadLocalStoryData({Map<String, dynamic> jsonFile, String storyname}) async {
-  Image _image = await loadImageFromFile(storyname);
-
   Geschichte _story = Geschichte(storyname: storyname);
-  _story.setFromJSON(imageIn: _image, screensJSON: jsonFile[storyname]['screens'],
+  _story.setFromJSON(screensJSON: jsonFile[storyname]['screens'],
       summary: jsonFile[storyname]['zusammenfassung']);
   return _story;
 }
@@ -216,7 +214,7 @@ Future<void> deleteLocalGenderingData() async{
 
 Future<File> writeLocalErlebnisseData(GeneralData generalData) async {
   //Write images to file
-  //TODO: load this during first loading as we do for story images
+  //TODO: load this during first loading
   List<String> _keys = generalData.erlebnisse.keys.toList();
   for(String _key in _keys){
     //First write image to disk - then write the data to JSON

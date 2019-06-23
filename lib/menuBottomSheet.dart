@@ -162,14 +162,9 @@ class ExpandedErlebniss extends StatelessWidget {
         duration: Duration(milliseconds: 600),
         child:GestureDetector(
           onTap: () => onTap(),
-            child: Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(color: red,
-                  borderRadius: BorderRadius.circular(30)),
-              child: ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  child: erlebniss.image),
-        )
+            child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+                child: erlebniss.image),
         )
     );
   }
@@ -180,7 +175,8 @@ class ShowErlebniss extends StatelessWidget{
   final DataHandler dataHandler;
   final double getWidth, getHeight;
 
-  ShowErlebniss({this.erlebniss, this.dataHandler, this.getHeight, this.getWidth});
+  ShowErlebniss({@required this.erlebniss, @required this.dataHandler,
+    @required this.getHeight, @required this.getWidth});
 
   @override
   Widget build(BuildContext context) {
@@ -191,23 +187,21 @@ class ShowErlebniss extends StatelessWidget{
         child: Container(
           constraints: BoxConstraints(minHeight: 200, maxWidth: getWidth * 3/4,
               minWidth: 250, maxHeight: getHeight * 2/3),
-            width: 300,
-            height: 400,
             child: ListView(
                 children: <Widget>[
                   Center(child: Container(
-                      padding: EdgeInsets.fromLTRB(15,10,15,5),
+                      padding: EdgeInsets.fromLTRB(15,10,15,0),
                       child: Text(erlebniss.title, style: subTitleBlackStyle)
                   )),
                   Container(
                       padding: EdgeInsets.only(left: 15, right: 15),
-                      height: 220,
-                      width: 220,
+                      height: 180,
+                      width: 180,
                       child: ClipRRect(
-                          borderRadius: new BorderRadius.circular(20.0),
+                          borderRadius: new BorderRadius.circular(120.0),
                           child: erlebniss.image)),
                   Container(
-                      padding: EdgeInsets.fromLTRB(15,15,15,15),
+                      padding: EdgeInsets.fromLTRB(15,10,15,10),
                       child: Text(dataHandler.substitution.applyAllSubstitutions(erlebniss.text),
                           style: textStyle))
                 ]

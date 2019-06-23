@@ -15,8 +15,9 @@ class GeschichteMainScreen extends StatefulWidget{
 
 class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   DataHandler dataHandler;
-  var rng = new math.Random();
   double imageHeight = 100.0;
+  double get getHeight => MediaQuery.of(context).size.height;
+  double get getWidth => MediaQuery.of(context).size.width;
 
   void updateData({DataHandler newData}){
     setState(() {
@@ -26,54 +27,33 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
 
   GeschichteMainScreenState({@required this.dataHandler});
 
-  Widget _genderButton(String _gender) {
-    return GestureDetector(
-        onTap: () {
-          dataHandler.hero.geschlecht = _gender;
-          updateData(newData: dataHandler);
-        },
-        child: Container(
-          height: 60,
-          width: 60,
-          padding: EdgeInsets.all(5),
-          child: Image.asset('assets/images/user_images/gender_selection/'
-              '${_gender=='m'?'boy':'girl'}-${rng.nextInt(12)}.png'),
-        )
-    );
-  }
-
-  Widget _boyGirlSelection(){
-    return Container(
-        padding: EdgeInsets.only(bottom: 10),
-        child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              _genderButton('m'),
-              SizedBox(width: 20),
-              _genderButton('w')
-            ]
-        )
-    );
+  void changeGender(String _gender){
+    dataHandler.hero.geschlecht = _gender;
+    updateData(newData: dataHandler);
   }
 
   @override
   Widget build(BuildContext context) {
     Dialog userNameDialog  = new Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Container(
-        padding: EdgeInsets.all(30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),
-            SizedBox(height: 20,),
-            NameField(setUsername: false, updateData: updateData,
-                dataHandler: dataHandler),
-            SizedBox(height: 20,),
-            _boyGirlSelection(),
-          ],
+      child: Container(padding: EdgeInsets.all(15),
+        child: Container(
+          height: 300,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Avtar(size: 60, dataHandler: dataHandler),
+              SizedBox(height: 20,),
+              NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),
+              SizedBox(height: 20,),
+              NameField(setUsername: false, updateData: updateData,
+                  dataHandler: dataHandler),
+              SizedBox(height: 20,),
+              GenderSelection(dataHandler: dataHandler, changeGender: changeGender),
+            ],
+          ),
         ),
-      ),
+      )
     );
 
     return MaterialApp(
@@ -242,6 +222,8 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   List<bool> _validForward;
   double imageHeight;
   AnimationController animationText;
+  double get getWidth => MediaQuery.of(context).size.width;
+  double get getHeight => MediaQuery.of(context).size.height;
 
   StoryTextState({@required this.dataHandler, @required this.imageHeight});
 
@@ -284,7 +266,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     //Show pop-up if user encounters a new event
     if(erlebniss!='' && !(dataHandler.hero.erlebnisse.contains(erlebniss))){
       _openDialog(ShowErlebniss(erlebniss: dataHandler.generalData.erlebnisse[erlebniss],
-          dataHandler: dataHandler), context);}
+          dataHandler: dataHandler, getHeight: getHeight, getWidth: getWidth), context);}
     setState((){
       dataHandler.hero.iScreen = int.parse(iNext);
       dataHandler.hero.addScreen = int.parse(iNext);
@@ -395,15 +377,90 @@ class NameFieldState extends State<NameField>{
               decoration: new InputDecoration(
                 labelText: setUsername
                     ?'Dein Name'
-                    :'Der Name ${dataHandler.hero.geschlecht=='w'?'unserer Heldin':'unseres Helden'}',
+                    :'${dataHandler.hero.geschlecht=='w'?'Unsere Heldin':'Unser Held'}',
               ),
               style: textStyle,
-              maxLengthEnforced: true,
               controller: _controller,
               onChanged: (name){
                 setUsername?dataHandler.hero.username=name:dataHandler.hero.name=name;
                 updateData(newData: dataHandler);},
             )
         ));
+  }
+}
+
+class Avtar extends StatelessWidget{
+  final double size;
+  final DataHandler dataHandler;
+
+  Avtar({@required this.size, @required this.dataHandler});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        width: size,
+        height: size,
+        padding: EdgeInsets.all(2),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: orange),
+        child: CircleAvatar(backgroundImage: dataHandler.hero.userImage.image)
+    );
+  }
+}
+
+class GenderSelection extends StatefulWidget{
+  final DataHandler dataHandler;
+  final Function changeGender;
+
+  GenderSelection({@required this.dataHandler, @required this.changeGender});
+
+  @override
+  GenderSelectionState createState() =>
+      new GenderSelectionState(dataHandler: dataHandler, changeGender: changeGender);
+}
+
+class GenderSelectionState extends State<GenderSelection>{
+  DataHandler dataHandler;
+  Function changeGender;
+  var rng = new math.Random();
+
+  GenderSelectionState({@required this.dataHandler, @required this.changeGender});
+
+  void updateData(String _gender){
+    changeGender(_gender);
+    setState(() {
+      dataHandler.hero.geschlecht = _gender;
+    });
+  }
+
+  Widget _genderButton(String _gender) {
+    return GestureDetector(
+        onTap: () => updateData(_gender),
+        child: Container(
+          height: 60,
+          width: 60,
+          decoration: dataHandler.hero.geschlecht==_gender
+              ?BoxDecoration(color: _gender=='m'?Colors.deepPurpleAccent:Colors.green,
+              borderRadius: BorderRadius.circular(40)):BoxDecoration(),
+          padding: EdgeInsets.all(5),
+          child: Image.asset('assets/images/user_images/gender_selection/'
+              '${_gender=='m'?'boy':'girl'}-${rng.nextInt(12)}.png'),
+        )
+    );
+  }
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        padding: EdgeInsets.only(bottom: 10),
+        child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              _genderButton('m'),
+              SizedBox(width: 20),
+              _genderButton('w')
+            ]
+        )
+    );
   }
 }

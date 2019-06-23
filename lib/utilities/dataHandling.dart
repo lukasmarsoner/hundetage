@@ -194,9 +194,6 @@ class Held{
 
   // Initialize new User with defaults
   Held.initial(){
-    _name = _defaults['name'];
-    _username = _defaults['username'];
-    _geschlecht = _defaults['geschlecht'];
     _lastOption = _defaults['lastOption'];
     _erlebnisse = _defaults['erlebnisse'];
     _screens = _defaults['screens'];
@@ -218,7 +215,7 @@ class Held{
   Held.fromMap(Map<String,dynamic> _map){
     _name = _map['name'];
     userImage = _map['userImage'];
-    _username = _defaults['username'];
+    _username = _map['username'];
     _lastOption = _map['lastOption'];
     _geschlecht = _map['geschlecht'];
     _erlebnisse = _map['erlebnisse'];
@@ -385,7 +382,6 @@ class Substitution{
 class Geschichte {
   final String storyname;
   String url, zusammenfassung;
-  Image image;
   Held hero;
   Map<int,Map<String,dynamic>> screens;
 
@@ -393,19 +389,16 @@ class Geschichte {
 
   Geschichte.fromFirebaseMap(Map<String, dynamic> map)
       : assert(map['name'] != null),
-        assert(map['image'] != null),
         assert(map['zusammenfassung'] != null),
         assert(map['url'] != null),
         storyname = map['name'],
         url = map['url'],
-        zusammenfassung = map['zusammenfassung'],
-        image = map['image'];
+        zusammenfassung = map['zusammenfassung'];
 
   //Used to set data from local file
   void setFromJSON({Image imageIn, Map<String,dynamic> screensJSON,
     String summary}){
     screens = screensFromJSON(screensJSON);
-    image = imageIn;
     zusammenfassung = summary;
   }
 

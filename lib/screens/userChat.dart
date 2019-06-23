@@ -62,6 +62,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
 
   Future _sendImage() async {
     var _image = await ImagePicker.pickImage(source: ImageSource.camera);
+    await saveCameraImageToFile(image: _image, filename: 'user_image');
     //Save image to file
     if(dataHandler.hero.userImage==null) {
       await saveCameraImageToFile(image: _image, filename: 'user_image');

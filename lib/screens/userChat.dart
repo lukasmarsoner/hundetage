@@ -64,11 +64,11 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     var _image = await ImagePicker.pickImage(source: ImageSource.camera);
     await saveCameraImageToFile(image: _image, filename: 'user_image');
     //Save image to file
-    if(dataHandler.hero.userImage==null) {
+    if(dataHandler.hero.userImage==null && !_chatRunning) {
       await saveCameraImageToFile(image: _image, filename: 'user_image');
     }
     setState(() {
-      if(dataHandler.hero.userImage==null)
+      if(dataHandler.hero.userImage==null && !_chatRunning)
       {dataHandler.hero.userImage = Image.file(_image, fit: BoxFit.cover);}
       _messages.add(_newImage(dataHandler.hero.userImage, 'user'));
     });
@@ -89,10 +89,10 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
 
     setState((){
       if(text.length != 0) {
-        if (dataHandler.hero.username == null) {
+        if (dataHandler.hero.username == null && !_chatRunning) {
           dataHandler.hero.username = text;
         }
-        else if (dataHandler.hero.name == null) {
+        else if (dataHandler.hero.name == null && !_chatRunning) {
           dataHandler.hero.name = text;
         }
       }
@@ -119,7 +119,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
           'Wie heißt du denn? 🙂', 'user': 'Lukas'},
       6: {'text': '${dataHandler.hero.username} - das ist aber ein '
           '${{0: 'schöner', 1: 'cooler', 2: 'toller'}[rng.nextInt(3)]} Name!', 'user': 'Lukas'},
-      7: {'text': 'Wie schön, dass du heute bei uns bist! 😁', 'user': 'Lukas'},
+      7: {'text': 'Wie schön, dass du heute bei uns bist ${dataHandler.hero.username}! 😁', 'user': 'Lukas'},
       8: {'text': 'Um dieses Buch für dich ganz persöhnlich zu gestalten, kannst du jetzt '
           'noch ein cooles Bild hochladen. Das kann ein Bild von dir sein, oder '
           'von einem Spielzeug das du besonders gerne magst.', 'user': 'Lukas'},
@@ -147,8 +147,8 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       22: {'text': 'Es tut mir wirklich Leid! 😣', 'user': 'Lukas'},
       23: {'text': 'Schon gut... Aber jetzt müssen wir uns echt was einfallen lassen... '
           'Wer könnte uns nur weiterhelfen? 🤔', 'user': 'Jakob'},
-      24: {'text': 'Wie wäre es mit den Lesern? 🙂', 'user': 'Lukas'},
-      25: {'text': 'Die Leser? Du willst die Leser fragen von wem unsere '
+      24: {'text': 'Wie wäre es mit ${dataHandler.hero.username}? 🙂', 'user': 'Lukas'},
+      25: {'text': '${dataHandler.hero.username}? Du willst die Leser fragen von wem unsere '
           'Geschichte handelt? 🤨', 'user': 'Jakob'},
       26: {'text': 'Also wenn du mich fragst, dann sehen die ziemlich klug aus - '
           'die können uns bestimmt weiterhelfen! 🧐', 'user': 'Lukas'},
@@ -165,7 +165,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       31: {'text': 'Großartig - das klappt echt besser als gedacht. Nächste Frage: '
           'Weißt du denn auch den Namen '
           '${dataHandler.hero.geschlecht=='w'?'unserer Heldin':'unseres Helden'}?','user': 'Jakob'},
-      32: {'text': 'Aber klar: ${dataHandler.hero.name} - das ist auch wirklich ein toller Name! 💚💙❤','user': 'Jakob'},
+      32: {'text': 'Aber klar: ${dataHandler.hero.name} - das ist auch wirklich ein toller Name! 💚❤','user': 'Jakob'},
       33: {'text': 'So... *Blätterraschel* ich glaube damit haben wir auch alles - Lukas?','user': 'Jakob'},
       34: {'text': 'Jop - das sollte Alles sein - nochmal Enschuldigung, dass ich die '
           'Blätter verschlampt habe 😶','user': 'Lukas'},
@@ -187,9 +187,9 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
 
   Future<void> _sleep({int seconds, String text}) async{
     //Average german reading-speed is 150 words / minutes
-    //We use a slightly lower value and add a random element to make things seem less robotic
+    //We add a random element to make things seem less robotic
     int milliseconds;
-    int _readingSpeed = 130;
+    int _readingSpeed = 150;
     if(text != null) {
       int _nWords = text.split(' ').length;
       milliseconds = (_nWords * 60 ~/ _readingSpeed) * 1000  + rng.nextInt(400);
@@ -215,6 +215,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     if(dataHandler.hero.userImage==null && dataHandler.hero.username==null
         && dataHandler.hero.name==null && dataHandler.hero.geschlecht==null
         && !_qAndAsDone[0]){
+      _chatRunning = true;
       await _postMessages(0,3);
       setState(() => _messages.add(_newImage(
           Image.asset('assets/images/jakob_lukas.png', fit: BoxFit.cover), 'Lukas')));
@@ -226,7 +227,8 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     else if(dataHandler.hero.userImage==null && dataHandler.hero.username!=null
         && dataHandler.hero.name==null && dataHandler.hero.geschlecht==null
         && !_qAndAsDone[1]){
-      await _sleep(seconds: 4);
+      _chatRunning = true;
+      await _sleep(seconds: 2);
       await _postMessages(6,10);
       _qAndAsDone[1] = true;
       _chatRunning = false;
@@ -234,7 +236,8 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     else if(dataHandler.hero.userImage!=null && dataHandler.hero.username!=null
         && dataHandler.hero.name==null && dataHandler.hero.geschlecht==null
         && !_qAndAsDone[2]){
-      await _sleep(seconds: 4);
+      _chatRunning = true;
+      await _sleep(seconds: 2);
       await _postMessages(10,30);
       _postButton(_boyGirlSelection());
       _qAndAsDone[2] = true;
@@ -243,7 +246,8 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     else if(dataHandler.hero.userImage!=null && dataHandler.hero.username!=null
         && dataHandler.hero.name==null && dataHandler.hero.geschlecht!=null
         && !_qAndAsDone[3]){
-      await _sleep(seconds: 4);
+      _chatRunning = true;
+      await _sleep(seconds: 2);
       await _postMessages(30,32);
       _qAndAsDone[3] = true;
       _chatRunning = false;
@@ -251,7 +255,8 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     else if(dataHandler.hero.userImage!=null && dataHandler.hero.username!=null
         && dataHandler.hero.name!=null && dataHandler.hero.geschlecht!=null
         && !_qAndAsDone[4]){
-      await _sleep(seconds: 4);
+      _chatRunning = true;
+      await _sleep(seconds: 2);
       await _postMessages(32,38);
       _qAndAsDone[4] = true;
       _postButton(_weiterButton());
@@ -266,24 +271,21 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
           Container(
               padding: EdgeInsets.fromLTRB(4,4,0,10),
               child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Container(
-                        constraints: BoxConstraints(maxWidth: getWidth * 2/3),
+                        constraints: BoxConstraints(maxWidth: getWidth - 10),
                         decoration: BoxDecoration(
                             color: red,
                             borderRadius: BorderRadius.circular(40)),
                         child: Padding(
                             padding: EdgeInsets.all(15),
-                            child: Text((' '*6) + 'Alles klar - lass uns loslegen! 🙂',
+                            child: Text('Alles klar - lass uns loslegen! 🙂',
                                 style: chatStyle, softWrap: true))
                     )
                   ]
               )
           ),
-          Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[_posterAvatar('Lukas')]),
         ]
         )
     );
@@ -353,7 +355,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                       height: 250,
                       padding: EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                          color: user=='user'?orange:user=='Lukas'?red:yellow,
+                          color: user=='user'?orange:user=='Lukas'?red:blue,
                           borderRadius: BorderRadius.circular(40)
                       ),
                       child: ClipRRect(
@@ -379,7 +381,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                 Container(
                     constraints: BoxConstraints(maxWidth: getWidth * 2/3),
                     decoration: BoxDecoration(
-                        color: orange,
+                        color: Colors.transparent,
                         borderRadius: BorderRadius.circular(40)),
                     child: Padding(
                         padding: EdgeInsets.all(5),
@@ -405,12 +407,12 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                 Container(
                   constraints: BoxConstraints(maxWidth: getWidth * 2/3),
                     decoration: BoxDecoration(
-                              color: user=='user'?orange:user=='Lukas'?red:yellow,
+                              color: user=='user'?orange:user=='Lukas'?red:blue,
                               borderRadius: BorderRadius.circular(40)),
                           child: Padding(
-                              padding: user=='user'?EdgeInsets.fromLTRB(15,15,45,15):EdgeInsets.all(15),
+                              padding: user=='user'?EdgeInsets.fromLTRB(15,15,40,15):EdgeInsets.all(15),
                               child: Text((user=='user'?'':(' '*6)) + text,
-                                  style: user=='Lukas'?chatStyle:chatBlackStyle, softWrap: true))
+                                  style: chatStyle, softWrap: true))
                           )
               ]
           )

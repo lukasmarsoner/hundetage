@@ -215,8 +215,7 @@ Future<void> deleteLocalGenderingData() async{
 Future<File> writeLocalErlebnisseData(GeneralData generalData) async {
   //Write images to file
   //TODO: load this during first loading
-  List<String> _keys = generalData.erlebnisse.keys.toList();
-  for(String _key in _keys){
+  for(String _key in generalData.erlebnisse.keys){
     //First write image to disk - then write the data to JSON
     await saveImageToFile(url: generalData.erlebnisse[_key].url,
         filename: _key);

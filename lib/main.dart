@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:hundetage/screens/userChat.dart';
+import 'package:hundetage/screens/welcome.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:hundetage/screens/adventures.dart';
+import 'package:hundetage/screens/userChat.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 void main() async{
@@ -127,7 +127,7 @@ class _MyAppState extends State<MyApp>{
     bool _userFromFile = dataHandler.hero.userImage!=null && dataHandler.hero.username!=null
         && dataHandler.hero.name!=null && dataHandler.hero.geschlecht!=null;
     return _userFromFile
-        ?GeschichteMainScreen(dataHandler: dataHandler)
+        ?WelcomeScreen(dataHandler: dataHandler)
         :UserChat(dataHandler: dataHandler);
   }
 }

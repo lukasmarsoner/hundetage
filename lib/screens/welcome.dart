@@ -17,18 +17,19 @@ class WelcomeScreen extends StatelessWidget{
             MaterialPageRoute(builder: (context) => GeschichteMainScreen(
                 dataHandler: dataHandler))),
         child: Container(
-        constraints: BoxConstraints(maxHeight: getHeight, maxWidth: getWidth),
+          width: getWidth,
+        height: getHeight,
         decoration: BoxDecoration(gradient: gradient),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Avtar(size: 80, dataHandler: dataHandler),
-            SizedBox(height: 20),
-            Text('Willkommen zurück ${dataHandler.hero.username}!', style: titleStyle),
-            SizedBox(height: 8),
-            Text('Schön, dass du wieder da bist', style: subTitleStyle),
-          ]
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Avtar(size: 180, dataHandler: dataHandler),
+              SizedBox(height: 20),
+              Text('Willkommen zurück ${dataHandler.hero.username}!', style: titleStyle),
+              SizedBox(height: 5),
+              Text('Schön, dass du wieder da bist', style: subTitleSmallStyle),
+            ]
         ),
       )
     );

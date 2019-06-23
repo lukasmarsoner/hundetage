@@ -120,12 +120,9 @@ class DataHandler {
           }
 
           //Check all stories for updates
-          List<String> _storiesFirebase = firebaseVersions.stories.keys
-              .toList();
           List<String> _storiesLocal = versionController.stories.keys.toList();
           //Update existing stories
-          for (int i = 0; i < _storiesFirebase.length; i++) {
-            String _storyname = _storiesFirebase[i];
+          for (String _storyname in firebaseVersions.stories.keys) {
             if (_storiesLocal.contains(_storyname)) {
               if (versionController.stories[_storyname] <
                   firebaseVersions.stories[_storyname]) {
@@ -287,9 +284,8 @@ class GeneralData{
   GeneralData({@required this.gendering, @required this.erlebnisse});
 
   erlebnisseToJSON(){
-    List<String> _keys = erlebnisse.keys.toList();
     Map<String, Map<String,String>> _erlebnisseOut = Map<String, Map<String,String>>();
-    for(String _key in _keys){
+    for(String _key in erlebnisse.keys){
       _erlebnisseOut[_key] = erlebnisse[_key].toMap;
     }
     return _erlebnisseOut;
@@ -321,9 +317,9 @@ class VersionController{
     gendering = _map['gendering'];
     erlebnisse = _map['erlebnisse'];
     //All other version-data refers to stories
-    List<String> _keys = _map.keys.toList();
     stories = new Map<String,double>();
-    for(String _key in _keys){
+
+    for(String _key in _map.keys){
       if(!(<String>['gendering','erlebnisse'].contains(_key))){
         stories[_key] = _map[_key];
       }
@@ -336,8 +332,8 @@ class VersionController{
     Map<String,double> _outputAsString = new Map<String,double>();
     _outputAsString['gendering'] = gendering;
     _outputAsString['erlebnisse'] = erlebnisse;
-    List<String> _keys = stories.keys.toList();
-    for(String _key in _keys){
+
+    for(String _key in stories.keys){
       if(!(<String>['gendering','erlebnisse'].contains(_key))){
         _outputAsString[_key] = stories[_key];
       }
@@ -357,8 +353,7 @@ class Substitution{
 
   //Substitute gendered Versions of Words
   _applyGenderSubstitutions(String textIn){
-    List<String> _keys = generalData.gendering.keys.toList();
-    for(String _key in _keys){
+    for(String _key in generalData.gendering.keys){
       String _substring = generalData.gendering[_key][hero.geschlecht];
       textIn = textIn.replaceAll('#'+_key, _substring);
     }
@@ -419,17 +414,15 @@ class Geschichte {
 
   Map<String,Map<String,dynamic>> allKeysToString(){
     Map<String,Map<String,dynamic>> _screensJSON = Map<String,Map<String,dynamic>>();
-    List<int> _keys = screens.keys.toList();
-    for(int _key in _keys){
+    for(int _key in screens.keys){
       _screensJSON[_key.toString()] = screens[_key];
     }
     return _screensJSON;
   }
 
   Map<int,Map<String,dynamic>> screensFromJSON(Map<String,dynamic> _screensJSON){
-    List<String> _keys = _screensJSON.keys.toList();
     Map<int,Map<String,dynamic>> _screensInt = Map<int,Map<String,dynamic>>();
-    for(String _key in _keys){
+    for(String _key in _screensJSON.keys){
       _screensInt[int.parse(_key)] = _screensJSON[_key];
     }
     return _screensInt;

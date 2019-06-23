@@ -27,9 +27,8 @@ Future<VersionController> loadVersionInformation({Firestore firestore}) async {
 
 Map<String,Map<String,String>> generalDataFromDynamic(Map<dynamic, dynamic> mapIn) {
   Map<String, Map<String, String>> mapOut = {};
-  List<String> _outerKeys = mapIn.keys.toList();
 
-  for (String _outerKey in _outerKeys) {
+  for (String _outerKey in mapIn.keys) {
     List _innerKeys = mapIn[_outerKey].keys.toList();
     mapOut[_outerKey] = {};
     for (String _innerKey in _innerKeys) {
@@ -56,9 +55,8 @@ Future<Map<String,Erlebniss>> loadErlebnisse(Firestore firestore) async {
 Map<String,Erlebniss> transformErlebnisse(Map<String,dynamic> data){
   Map<String, Erlebniss> _erlebnisseOut = Map();
   Map<String,Map<String,String>> _erlebnisseIn = generalDataFromDynamic(data);
-  List<String> _keys = _erlebnisseIn.keys.toList();
 
-  for(String _key in _keys){
+  for(String _key in _erlebnisseIn.keys){
     _erlebnisseOut[_key] = Erlebniss(text: _erlebnisseIn[_key]['text'],
         title: _erlebnisseIn[_key]['title'],
         image: Image.network(_erlebnisseIn[_key]['image']),

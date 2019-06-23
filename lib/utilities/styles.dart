@@ -13,6 +13,13 @@ final TextStyle subTitleStyle = new TextStyle(
     fontStyle: FontStyle.italic,
     fontWeight: FontWeight.w300);
 
+final TextStyle subTitleSmallStyle = new TextStyle(
+    fontSize: 20,
+    fontFamily: 'IndieFlower',
+    color: Colors.white,
+    fontStyle: FontStyle.italic,
+    fontWeight: FontWeight.w300);
+
 final TextStyle chatBlackStyle = new TextStyle(
     fontSize: 18,
     height: 1.05,
@@ -55,6 +62,7 @@ final TextStyle textBoldItalicStyle = new TextStyle(
 final Color red = Color(0xc8B02302);
 final Color orange = Color(0xc8D95F11);
 final Color yellow = Color(0xc8F19421);
+final Color blue = Color(0xDC00688B);
 
 final LinearGradient gradient = LinearGradient(
   begin: Alignment.topLeft,

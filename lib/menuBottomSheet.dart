@@ -67,7 +67,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
           child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: const BoxDecoration(
-                  color: Colors.blueAccent,
+                  color: Color(0xDC00688B),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Stack(
@@ -94,13 +94,18 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   Widget _buildErlebnisseList(){
     List<Widget> _erlebnisseList = new List<Widget>();
 
-    for(String title in dataHandler.hero.erlebnisse){
+    for(String title in dataHandler.hero.erlebnisse.toSet()){
       _erlebnisseList.add(_buildItem(erlebniss: dataHandler.generalData.erlebnisse[title]));
     }
 
     return Container(
         padding: EdgeInsets.only(top: 70.0),
-        child:ListView(children: _erlebnisseList));
+        child:GridView.count(
+            crossAxisCount: 2,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            children: _erlebnisseList)
+    );
   }
 
   Widget _buildItem({Erlebniss erlebniss}) {
@@ -158,14 +163,14 @@ class ExpandedErlebniss extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-        opacity: visibility,
-        duration: Duration(milliseconds: 600),
-        child:GestureDetector(
-          onTap: () => onTap(),
-            child: ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(30)),
-                child: erlebniss.image),
-        )
+          opacity: visibility,
+          duration: Duration(milliseconds: 600),
+          child:GestureDetector(
+            onTap: () => onTap(),
+              child: ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                  child: erlebniss.image),
+          )
     );
   }
 }
@@ -185,21 +190,23 @@ class ShowErlebniss extends StatelessWidget{
           borderRadius: BorderRadius.circular(20),
         ),
         child: Container(
-          constraints: BoxConstraints(minHeight: 200, maxWidth: getWidth * 3/4,
-              minWidth: 250, maxHeight: getHeight * 2/3),
+          constraints: BoxConstraints(minHeight: 200, maxWidth: getWidth * 4/5,
+              minWidth: 250, maxHeight: getHeight * 3/4),
             child: ListView(
                 children: <Widget>[
                   Center(child: Container(
                       padding: EdgeInsets.fromLTRB(15,10,15,0),
                       child: Text(erlebniss.title, style: subTitleBlackStyle)
                   )),
+                  SizedBox(height: 10,),
                   Container(
                       padding: EdgeInsets.only(left: 15, right: 15),
-                      height: 180,
-                      width: 180,
+                      height: 160,
+                      width: 160,
                       child: ClipRRect(
-                          borderRadius: new BorderRadius.circular(120.0),
+                          borderRadius: new BorderRadius.circular(30.0),
                           child: erlebniss.image)),
+                  SizedBox(height: 10,),
                   Container(
                       padding: EdgeInsets.fromLTRB(15,10,15,10),
                       child: Text(dataHandler.substitution.applyAllSubstitutions(erlebniss.text),

@@ -38,17 +38,17 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       child: Container(padding: EdgeInsets.all(15),
         child: Container(
-          height: 300,
+          height: 370,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Avtar(size: 60, dataHandler: dataHandler),
-              SizedBox(height: 20,),
+              Avtar(size: 100, dataHandler: dataHandler),
+              SizedBox(height: 10,),
               NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),
               SizedBox(height: 20,),
               NameField(setUsername: false, updateData: updateData,
                   dataHandler: dataHandler),
-              SizedBox(height: 20,),
+              SizedBox(height: 30,),
               GenderSelection(dataHandler: dataHandler, changeGender: changeGender),
             ],
           ),
@@ -165,8 +165,10 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
     return new AnimatedBuilder(animation: opacity,
         builder: (BuildContext context, Widget child) {
           return new Opacity(opacity: 1.0 - opacity.value,
-              child: Row(children: <Widget>[
-                _characterCount.isCompleted
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    _characterCount.isCompleted
                     ?Image.asset('assets/images/forward.png', height: 20, width: 20)
                     :Container(),
                 SizedBox(width: 10),
@@ -264,7 +266,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     dataHandler.hero.lastOption = option;
 
     //Show pop-up if user encounters a new event
-    if(erlebniss!='' && !(dataHandler.hero.erlebnisse.contains(erlebniss))){
+    if(erlebniss!='' && !dataHandler.hero.erlebnisse.contains(erlebniss)){
       _openDialog(ShowErlebniss(erlebniss: dataHandler.generalData.erlebnisse[erlebniss],
           dataHandler: dataHandler, getHeight: getHeight, getWidth: getWidth), context);}
     setState((){
@@ -315,9 +317,13 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     }
 
     //We should always have an equal number of options and forwards for them
+    //As we don't add all forwards to the screen we add dummy-forwards for the remaining ones
     forwards = <String>[];
-    for(int i=0;i<_optionKeys.length;i++){if(_validForward[i])
-    {forwards.add(dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['forwards'][i.toString()]);}}
+    for(int i=0;i<_optionKeys.length;i++){
+      if(_validForward[i])
+      {forwards.add(dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['forwards'][i.toString()]);}
+      else{forwards.add('');}
+    }
 
     //Create widget for main text
     animatedTexts = <Widget>[];
@@ -400,8 +406,8 @@ class Avtar extends StatelessWidget{
     return Container(
         width: size,
         height: size,
-        padding: EdgeInsets.all(2),
-        decoration: BoxDecoration(shape: BoxShape.circle, color: orange),
+        padding: EdgeInsets.all(size/50),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
         child: CircleAvatar(backgroundImage: dataHandler.hero.userImage.image)
     );
   }

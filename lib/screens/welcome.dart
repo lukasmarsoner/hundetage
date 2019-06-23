@@ -18,7 +18,7 @@ class WelcomeScreen extends StatelessWidget{
                 dataHandler: dataHandler))),
         child: Container(
           width: getWidth,
-        height: getHeight,
+          height: getHeight,
         decoration: BoxDecoration(gradient: gradient),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

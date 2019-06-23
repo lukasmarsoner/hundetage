@@ -33,6 +33,13 @@ final TextStyle chatStyle = new TextStyle(
     color: Colors.white,
     fontWeight: FontWeight.w300);
 
+final TextStyle chatBoldStyle = new TextStyle(
+    fontSize: 20,
+    fontFamily: 'Montserrat',
+    color: Colors.white,
+    fontWeight: FontWeight.w400);
+
+
 final TextStyle subTitleBlackStyle = new TextStyle(
     fontSize: 24,
     fontFamily: 'IndieFlower',

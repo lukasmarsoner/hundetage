@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hundetage/screens/welcome.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:hundetage/utilities/styles.dart';
 import 'package:hundetage/screens/userChat.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
@@ -19,6 +20,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
   AnimationController _animationController;
   bool _isLoading = true;
   DataHandler dataHandler;
+  double getHeight, getWidth;
 
   int _stringIndex;
   static const List<String> _textStrings = const <String>[
@@ -48,28 +50,33 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
   }
 
   Widget _loadingScreen(){
-    return Column(
+    return Container(
+        decoration: BoxDecoration(color: Colors.black),
+        child: Row(
             mainAxisAlignment:MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Image.asset('assets/images/icon.png', width: 200.0, height: 200.0),
-              Container(
-                  padding: EdgeInsets.only(top: 10.0),
-                  child: _characterCount == null ? null : new AnimatedBuilder(
-                    key: Key('loadingText'),
-                      animation: _characterCount,
-                      builder: (BuildContext context, Widget child) {
-                      String text = _currentString.substring(0, _characterCount.value);
-                      return new Text(text, style: new TextStyle(
-                          fontSize: 20.0,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500),
-                      );
-                    })
-              ),
-              Container(padding: EdgeInsets.only(top: 10.0),
-                  child: CircularProgressIndicator())
+              Column(
+                  mainAxisAlignment:MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Image.asset('assets/images/icon.png', width: 200.0, height: 200.0),
+                    Container(
+                        padding: EdgeInsets.only(top: 20),
+                        child: _characterCount == null ? null : new AnimatedBuilder(
+                            key: Key('loadingText'),
+                            animation: _characterCount,
+                            builder: (BuildContext context, Widget child) {
+                              return new Text(_currentString.substring(0, _characterCount.value), style: chatBoldStyle);
+                            }
+                            )
+                    ),
+                    Container(padding: EdgeInsets.only(top: 10.0),
+                        child: CircularProgressIndicator())
+                  ]
+              )
             ]
+        )
     );
   }
 

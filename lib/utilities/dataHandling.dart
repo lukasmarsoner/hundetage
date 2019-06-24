@@ -4,6 +4,36 @@ import 'package:hundetage/utilities/firebase.dart';
 import 'package:hundetage/utilities/json.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
+import 'dart:async';
+
+class MailSender{
+  DataHandler dataHandler;
+  String text, subject;
+  Email email;
+  String attachmentPath;
+  bool success;
+
+  MailSender({@required this.dataHandler});
+
+  Future<bool> send() async {
+    email = Email(
+      body: text,
+      subject: 'Nachricht von ${dataHandler.hero.username}',
+      recipients: ['hallo@hundetage.app'],
+      attachmentPath: attachmentPath,
+    );
+
+    try {
+      await FlutterEmailSender.send(email);
+      success = true;
+    } catch (error) {
+      success = false;
+    }
+
+    return success;
+  }
+}
 
 class DataHandler {
   Substitution substitution;
@@ -222,16 +252,17 @@ class Held{
 
   // Setters with sanity-checks
   set name(String valIn){
-    (valIn != null && valIn.length != 0)?_name = valIn:throw new Exception('Invalid name!');
+    (valIn != null && valIn.length != 0)?_name = valIn.trim():throw new Exception('Invalid name!');
   }
   set username(String valIn){
-    (valIn != null && valIn.length != 0)?_username = valIn:throw new Exception('Invalid name!');
+    (valIn != null && valIn.length != 0)?_username = valIn.trim():throw new Exception('Invalid name!');
   }
   set geschlecht(String valIn){
     (valIn=='m' || valIn=='w')?_geschlecht = valIn:throw new Exception('Invalid sex!');
   }
   set addErlebniss(String valIn){
     if(valIn != null && valIn != ''){
+      print(valIn);
       _erlebnisse.add(valIn);
       analytics.logEvent(name: valIn);
     }
@@ -246,8 +277,6 @@ class Held{
     valIn==null
         ?_lastOption=''
     //Remove leading dots if we have any...
-        :valIn.substring(0,3)=='...'
-        ?_lastOption=valIn.substring(4)
         :_lastOption=valIn;
   }
 
@@ -258,7 +287,7 @@ class Held{
   String get geschlecht => _geschlecht;
   List<String> get erlebnisse => _erlebnisse;
   List<int> get screens => _screens;
-  String get lastOption => (iScreen!=0 && iScreen!=888)?_lastOption+' ':'';
+  String get lastOption => (iScreen!=0 || iScreen!=888 || iScreen!=999)?_lastOption:'';
 
   // This getter is only for testing
   Map<String,dynamic> get defaults => _defaults;

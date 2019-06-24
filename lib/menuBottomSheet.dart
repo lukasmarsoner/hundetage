@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 const double minHeightBottomSheet = 60;
 
@@ -24,6 +26,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   double get getWidth => MediaQuery.of(context).size.width;
   double get getHeight => MediaQuery.of(context).size.height;
   DataHandler dataHandler;
+  MailSender mailSender;
 
   MenuBottomSheetState({@required this.dataHandler, @required this.homeButtonFunction});
 
@@ -35,6 +38,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   @override
   void initState() {
     super.initState();
+    mailSender = new MailSender(dataHandler: dataHandler);
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 600),
@@ -50,8 +54,68 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   double lerp(double min, double max) =>
       lerpDouble(min, max, _controller.value);
 
+  void mailCallback(MailSender newSender){
+    setState(()=> mailSender = newSender);
+  }
+
+  Widget attachment(double size){
+    return mailSender.attachmentPath == null
+        ?Container()
+        :Container(
+          width: size,
+          height: size,
+          padding: EdgeInsets.all(size/50),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
+          child: CircleAvatar(backgroundImage: Image.file(File(mailSender.attachmentPath)).image));
+  }
+
   @override
   Widget build(BuildContext context) {
+    AlertDialog _failure = new AlertDialog(title: Text('Ups... 😶', style: textStyle),
+        content: Text('Da ist leider etwas schief gelaufen 🙁', style: textStyle));
+
+    AlertDialog _success = new AlertDialog(title: Text('Super! 😄', style: textStyle),
+        content: Text('Vielen Dank für deine Nachricht. '
+            'Wir werden dir so schnell wie möglich antworten! 😊', style: textStyle));
+
+    Dialog senderDialog = new Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        child: Container(padding: EdgeInsets.all(15),
+            child: Container(
+                padding: EdgeInsets.all(10),
+                height: 320,
+                child: ListView(
+                    children: <Widget>[
+                      MailField(mailCallback: mailCallback, mailSender: mailSender),
+                      SizedBox(height: 25),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children:<Widget>[
+                            IconButton(
+                              icon: Icon(Icons.image, size: 35, color: orange,),
+                              onPressed: () async {
+                                File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+                                setState(() => mailSender.attachmentPath = imageFile.path);
+                              },
+                            ),
+                            attachment(35),
+                            IconButton(
+                              icon: Icon(Icons.send, size: 35, color: orange,),
+                              onPressed: () async {
+                                bool success = await mailSender.send();
+                                success
+                                    ?showDialog(context: context, builder: (BuildContext context) => _success)
+                                    :showDialog(context: context, builder: (BuildContext context) => _failure);
+                                },
+                            )
+                      ]
+                      )
+                    ]
+                )
+            )
+        )
+    );
+
     return new AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -78,7 +142,9 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
                           HomeButton(homeButtonFunction: homeButtonFunction),
                           SheetHeader(fontStyle: subTitleStyle),
                           Spacer(),
-                          MenuButton()
+                          IconButton(icon: Icon(Icons.mail, color: Colors.white,),
+                              iconSize: 35, onPressed: () => showDialog(context: context,
+                                  builder: (BuildContext context) => senderDialog))
                         ]
                         )
                     )
@@ -150,6 +216,54 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   }
 }
 
+class MailField extends StatefulWidget{
+  final MailSender mailSender;
+  final Function mailCallback;
+
+  MailField({@required this.mailSender, @required this.mailCallback});
+
+  @override
+  MailFieldState createState() => new MailFieldState(mailSender: mailSender,
+      mailCallback: mailCallback);
+}
+
+class MailFieldState extends State<MailField>{
+  MailSender mailSender;
+  Function mailCallback;
+  TextEditingController _controller;
+
+  MailFieldState({@required this.mailSender, @required this.mailCallback});
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = new TextEditingController(text: mailSender.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: Container(
+            child: TextField(
+              keyboardType: TextInputType.multiline,
+              minLines: 8,
+              maxLines: 30,
+              //This should make it more comfortable to write names
+              textCapitalization: TextCapitalization.words,
+              decoration: new InputDecoration(
+                  border: new OutlineInputBorder(
+                      borderSide: new BorderSide(color: orange)),
+                  labelText: 'Erzähl uns von dir 😄'),
+              style: textStyle,
+              controller: _controller,
+              onChanged: (text) {mailSender.text=text;
+              setState(() => mailCallback(mailSender));
+              },
+            )
+        ));
+  }
+}
+
 class ExpandedErlebniss extends StatelessWidget {
   final double visibility;
   final Function onTap;
@@ -190,8 +304,8 @@ class ShowErlebniss extends StatelessWidget{
           borderRadius: BorderRadius.circular(20),
         ),
         child: Container(
-          constraints: BoxConstraints(minHeight: 200, maxWidth: getWidth * 4/5,
-              minWidth: 250, maxHeight: getHeight * 3/4),
+          constraints: BoxConstraints(minHeight: 100, maxWidth: getWidth * 4/5,
+              minWidth: 00, maxHeight: getHeight * 3/4),
             child: ListView(
                 children: <Widget>[
                   Center(child: Container(
@@ -201,8 +315,8 @@ class ShowErlebniss extends StatelessWidget{
                   SizedBox(height: 10,),
                   Container(
                       padding: EdgeInsets.only(left: 15, right: 15),
-                      height: 160,
-                      width: 160,
+                      height: 220,
+                      width: 220,
                       child: ClipRRect(
                           borderRadius: new BorderRadius.circular(30.0),
                           child: erlebniss.image)),
@@ -232,17 +346,6 @@ class SheetHeader extends StatelessWidget {
             'Erlebnisse',
             style: fontStyle,
           ),
-    );
-  }
-}
-
-class MenuButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Icon(
-        Icons.menu,
-        color: Colors.white,
-        size: 35,
     );
   }
 }

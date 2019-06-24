@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hundetage/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'dart:math' as math;
+import 'package:image_picker/image_picker.dart';
+import 'package:hundetage/utilities/json.dart';
+import 'dart:io';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 class GeschichteMainScreen extends StatefulWidget{
@@ -19,41 +22,13 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   double get getHeight => MediaQuery.of(context).size.height;
   double get getWidth => MediaQuery.of(context).size.width;
 
-  void updateData({DataHandler newData}){
-    setState(() {
-      dataHandler.updateData = newData;
-    });
-  }
-
   GeschichteMainScreenState({@required this.dataHandler});
-
-  void changeGender(String _gender){
-    dataHandler.hero.geschlecht = _gender;
-    updateData(newData: dataHandler);
-  }
 
   @override
   Widget build(BuildContext context) {
     Dialog userNameDialog  = new Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Container(padding: EdgeInsets.all(15),
-        child: Container(
-          height: 370,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Avtar(size: 100, dataHandler: dataHandler),
-              SizedBox(height: 10,),
-              NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),
-              SizedBox(height: 20,),
-              NameField(setUsername: false, updateData: updateData,
-                  dataHandler: dataHandler),
-              SizedBox(height: 30,),
-              GenderSelection(dataHandler: dataHandler, changeGender: changeGender),
-            ],
-          ),
-        ),
-      )
+      child: NameDialog(dataHandler: dataHandler)
     );
 
     return MaterialApp(
@@ -292,7 +267,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
   @override
   Widget build(BuildContext context){
     //Add previous option to story text
-    storyText = dataHandler.substitution.applyAllSubstitutions(dataHandler.hero.lastOption +
+    storyText = dataHandler.substitution.applyAllSubstitutions(dataHandler.hero.lastOption + ' ' +
             dataHandler.getCurrentStory.screens[dataHandler.hero.iScreen]['text']);
     totalTextLength = storyText.length;
 
@@ -340,6 +315,50 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
         child: new ListView(
             children: animatedTexts
     ));
+  }
+}
+
+class NameDialog extends StatefulWidget{
+  final DataHandler dataHandler;
+
+  NameDialog({@required this.dataHandler});
+
+  @override
+  NameDialogState createState() =>
+      new NameDialogState(dataHandler: dataHandler);
+}
+
+class NameDialogState extends State<NameDialog>{
+  DataHandler dataHandler;
+  TextEditingController _controller;
+
+  NameDialogState({@required this.dataHandler});
+
+  void updateData({DataHandler newData}){
+    setState(() {
+      dataHandler.updateData = newData;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(padding: EdgeInsets.all(15),
+      child: Container(
+        height: 420,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Avtar(size: 100, dataHandler: dataHandler, updateData: updateData),
+            NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),
+            SizedBox(height: 20,),
+            NameField(setUsername: false, updateData: updateData,
+                dataHandler: dataHandler),
+            SizedBox(height: 30,),
+            GenderSelection(dataHandler: dataHandler, updateData: updateData),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -398,49 +417,58 @@ class NameFieldState extends State<NameField>{
 class Avtar extends StatelessWidget{
   final double size;
   final DataHandler dataHandler;
+  final Function updateData;
 
-  Avtar({@required this.size, @required this.dataHandler});
+  Avtar({@required this.size, @required this.dataHandler, @required this.updateData});
+
+  Future<void> _setImage() async {
+    File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+    await saveCameraImageToFile(image: imageFile, filename: 'user_image');
+    dataHandler.hero.userImage = Image.file(imageFile, fit: BoxFit.cover);
+    updateData(newData: dataHandler);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        width: size,
-        height: size,
-        padding: EdgeInsets.all(size/50),
-        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
-        child: CircleAvatar(backgroundImage: dataHandler.hero.userImage.image)
+    return GestureDetector(
+      onTap: () => _setImage(),
+        child: Container(
+          width: size,
+          height: size,
+          padding: EdgeInsets.all(size/50),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
+          child: CircleAvatar(backgroundImage: dataHandler.hero.userImage.image)
+      )
     );
   }
 }
 
 class GenderSelection extends StatefulWidget{
   final DataHandler dataHandler;
-  final Function changeGender;
+  final Function updateData;
 
-  GenderSelection({@required this.dataHandler, @required this.changeGender});
+  GenderSelection({@required this.dataHandler, @required this.updateData});
 
   @override
   GenderSelectionState createState() =>
-      new GenderSelectionState(dataHandler: dataHandler, changeGender: changeGender);
+      new GenderSelectionState(dataHandler: dataHandler, updateData: updateData);
 }
 
 class GenderSelectionState extends State<GenderSelection>{
   DataHandler dataHandler;
-  Function changeGender;
+  Function updateData;
   var rng = new math.Random();
 
-  GenderSelectionState({@required this.dataHandler, @required this.changeGender});
+  GenderSelectionState({@required this.dataHandler, @required this.updateData});
 
-  void updateData(String _gender){
-    changeGender(_gender);
-    setState(() {
-      dataHandler.hero.geschlecht = _gender;
-    });
+  void changeGender(String _gender){
+    dataHandler.hero.geschlecht = _gender;
+    updateData(newData: dataHandler);
   }
 
   Widget _genderButton(String _gender) {
     return GestureDetector(
-        onTap: () => updateData(_gender),
+        onTap: () => changeGender(_gender),
         child: Container(
           height: 60,
           width: 60,

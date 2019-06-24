@@ -20,12 +20,6 @@ final TextStyle subTitleSmallStyle = new TextStyle(
     fontStyle: FontStyle.italic,
     fontWeight: FontWeight.w300);
 
-final TextStyle chatBlackStyle = new TextStyle(
-    fontSize: 18,
-    height: 1.05,
-    fontFamily: 'Montserrat',
-    fontWeight: FontWeight.w300);
-
 final TextStyle chatStyle = new TextStyle(
     fontSize: 18,
     height: 1.05,
@@ -38,7 +32,6 @@ final TextStyle chatBoldStyle = new TextStyle(
     fontFamily: 'Montserrat',
     color: Colors.white,
     fontWeight: FontWeight.w400);
-
 
 final TextStyle subTitleBlackStyle = new TextStyle(
     fontSize: 24,

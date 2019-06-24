@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'dart:math' as math;
+import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:hundetage/utilities/json.dart';
 import 'package:hundetage/screens/adventures.dart';
@@ -60,18 +61,38 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     setState(() => _messages.add(_button));
   }
 
-  Future _sendImage() async {
-    var _image = await ImagePicker.pickImage(source: ImageSource.camera);
-    await saveCameraImageToFile(image: _image, filename: 'user_image');
-    //Save image to file
-    if(dataHandler.hero.userImage==null && !_chatRunning) {
-      await saveCameraImageToFile(image: _image, filename: 'user_image');
+  Future<void> _sendImage({bool defaultImage = false}) async {
+    File imageFile;
+    //We hand in an image if the user does not want to set one of their own
+    if(!defaultImage) {
+      imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+      //Save image to file
+      if (dataHandler.hero.userImage == null && !_chatRunning) {
+        await saveCameraImageToFile(image: imageFile, filename: 'user_image');
+      }
+      setState(() {
+        if (dataHandler.hero.userImage == null && !_chatRunning) {
+          dataHandler.hero.userImage = Image.file(imageFile, fit: BoxFit.cover);
+        }
+        _messages.add(_newImage(dataHandler.hero.userImage, 'user'));
+      });
     }
-    setState(() {
-      if(dataHandler.hero.userImage==null && !_chatRunning)
-      {dataHandler.hero.userImage = Image.file(_image, fit: BoxFit.cover);}
-      _messages.add(_newImage(dataHandler.hero.userImage, 'user'));
-    });
+    else{
+      //Default image url
+      String _url = 'https://firebasestorage.googleapis.com/v0/b/'
+          'hundetage-51cac.appspot.com/o/icon.png?alt'
+          '=media&token=f87dd6f5-36da-4ba9-8d3f-19d69a8f076a';
+      //Save image to file
+      if (dataHandler.hero.userImage == null && !_chatRunning) {
+        await saveImageToFile(url: _url, filename: 'user_image');
+      }
+      setState(() {
+        if (dataHandler.hero.userImage == null && !_chatRunning) {
+          dataHandler.hero.userImage = Image.network(_url, fit: BoxFit.cover);
+        }
+        _messages.add(_newImage(dataHandler.hero.userImage, 'user'));
+      });
+    }
     if(!_chatRunning){await _performQandA();}
   }
 
@@ -124,7 +145,8 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
           'noch ein cooles Bild hochladen. Das kann ein Bild von dir sein, oder '
           'von einem Spielzeug das du besonders gerne magst.', 'user': 'Lukas'},
       9: {'text': 'Das Bild ist nur für dich alleine da. Wir werden es mit niemanden sonst teilen '
-          'und sehen es auch selbst nicht.', 'user': 'Lukas'},
+          'und sehen es auch selbst nicht. Wenn du jetzt kein Bild einstellen möchtest, drück einfach '
+          'auf den Knopf unten.', 'user': 'Lukas'},
       10: {'text': 'Colles Bild 👍👍', 'user': 'Lukas'},
       11: {'text': 'Jetzt wird es auch langsam Zeit, für die Geschichte selbst - viel Spaß also '
           'bei Hundetage - wir hoffen das Abenteuer unserer Freunde gefällt dir! 😊', 'user': 'Lukas'},
@@ -165,7 +187,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       31: {'text': 'Großartig - das klappt echt besser als gedacht. Nächste Frage: '
           'Weißt du denn auch den Namen '
           '${dataHandler.hero.geschlecht=='w'?'unserer Heldin':'unseres Helden'}?','user': 'Jakob'},
-      32: {'text': 'Aber klar: ${dataHandler.hero.name} - das ist auch wirklich ein toller Name! 💚❤','user': 'Jakob'},
+      32: {'text': 'Aber klar: ${dataHandler.hero.name} - das ist auch wirklich ein toller Name! ❤💛🧡','user': 'Jakob'},
       33: {'text': 'So... *Blätterraschel* ich glaube damit haben wir auch alles - Lukas?','user': 'Jakob'},
       34: {'text': 'Jop - das sollte Alles sein - nochmal Enschuldigung, dass ich die '
           'Blätter verschlampt habe 😶','user': 'Lukas'},
@@ -230,6 +252,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       _chatRunning = true;
       await _sleep(seconds: 2);
       await _postMessages(6,10);
+      _keinBildButton();
       _qAndAsDone[1] = true;
       _chatRunning = false;
     }
@@ -263,6 +286,34 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       _chatRunning = false;
     }
   }
+
+  Widget _keinBildButton(){
+    return GestureDetector(
+        onTap: () => _sendImage(defaultImage: true),child:
+    Stack(children: <Widget>[
+      Container(
+          padding: EdgeInsets.fromLTRB(4,4,0,10),
+          child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                    constraints: BoxConstraints(maxWidth: getWidth - 10),
+                    decoration: BoxDecoration(
+                        color: red,
+                        borderRadius: BorderRadius.circular(40)),
+                    child: Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Text('Ich möchte jetzt kein Bild hinzufügen',
+                            style: chatStyle, softWrap: true))
+                )
+              ]
+          )
+      ),
+    ]
+    )
+    );
+  }
+
 
   Widget _weiterButton(){
     return GestureDetector(

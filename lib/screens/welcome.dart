@@ -24,7 +24,7 @@ class WelcomeScreen extends StatelessWidget{
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Avtar(size: 180, dataHandler: dataHandler),
+              Avtar(size: 180, dataHandler: dataHandler, updateData: null),
               SizedBox(height: 20),
               Text('Willkommen zurück ${dataHandler.hero.username}!', style: titleStyle),
               SizedBox(height: 5),

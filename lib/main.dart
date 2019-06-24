@@ -16,29 +16,19 @@ class SplashScreen extends StatefulWidget{
 }
 
 class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin{
-  Animation<int> _characterCount;
   AnimationController _animationController;
   bool _isLoading = true;
   DataHandler dataHandler;
+  Animation<Color> _colorTween;
   double getHeight, getWidth;
 
-  int _stringIndex;
-  static const List<String> _textStrings = const <String>[
-    'Daten werden geladen...',
-  ];
-
-  String get _currentString => _textStrings[_stringIndex % _textStrings.length];
-
-  Future<void> _animateText() async {
+  Future<void> _animateColor() async {
     _animationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
     setState(() {
-      _stringIndex = _stringIndex == null ? 0 : _stringIndex + 1;
-      _characterCount = new StepTween(begin: 0, end: _currentString.length)
-          .animate(
-          new CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+      _colorTween = ColorTween(begin: red, end: yellow).animate(_animationController);
     });
     await _animationController.forward();
   }
@@ -61,18 +51,8 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Image.asset('assets/images/icon.png', width: 200.0, height: 200.0),
-                    Container(
-                        padding: EdgeInsets.only(top: 20),
-                        child: _characterCount == null ? null : new AnimatedBuilder(
-                            key: Key('loadingText'),
-                            animation: _characterCount,
-                            builder: (BuildContext context, Widget child) {
-                              return new Text(_currentString.substring(0, _characterCount.value), style: chatBoldStyle);
-                            }
-                            )
-                    ),
-                    Container(padding: EdgeInsets.only(top: 10.0),
-                        child: CircularProgressIndicator())
+                    SizedBox(height: 40,),
+                    Container(child: CircularProgressIndicator(valueColor: _colorTween))
                   ]
               )
             ]
@@ -83,7 +63,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
   @override
   void initState() {
     super.initState();
-    _animateText();
+    _animateColor();
     SchedulerBinding.instance.addPostFrameCallback((_)=>_runDataLoaders());
   }
 

@@ -26,7 +26,6 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   double get getWidth => MediaQuery.of(context).size.width;
   double get getHeight => MediaQuery.of(context).size.height;
   DataHandler dataHandler;
-  MailSender mailSender;
 
   MenuBottomSheetState({@required this.dataHandler, @required this.homeButtonFunction});
 
@@ -38,7 +37,6 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   @override
   void initState() {
     super.initState();
-    mailSender = new MailSender(dataHandler: dataHandler);
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 600),
@@ -54,65 +52,13 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   double lerp(double min, double max) =>
       lerpDouble(min, max, _controller.value);
 
-  void mailCallback(MailSender newSender){
-    setState(()=> mailSender = newSender);
-  }
-
-  Widget attachment(double size){
-    return mailSender.attachmentPath == null
-        ?Container()
-        :Container(
-          width: size,
-          height: size,
-          padding: EdgeInsets.all(size/50),
-          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
-          child: CircleAvatar(backgroundImage: Image.file(File(mailSender.attachmentPath)).image));
-  }
-
   @override
   Widget build(BuildContext context) {
-    AlertDialog _failure = new AlertDialog(title: Text('Ups... 😶', style: textStyle),
-        content: Text('Da ist leider etwas schief gelaufen 🙁', style: textStyle));
-
-    AlertDialog _success = new AlertDialog(title: Text('Super! 😄', style: textStyle),
-        content: Text('Vielen Dank für deine Nachricht. '
-            'Wir werden dir so schnell wie möglich antworten! 😊', style: textStyle));
 
     Dialog senderDialog = new Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         child: Container(padding: EdgeInsets.all(15),
-            child: Container(
-                padding: EdgeInsets.all(10),
-                height: 320,
-                child: ListView(
-                    children: <Widget>[
-                      MailField(mailCallback: mailCallback, mailSender: mailSender),
-                      SizedBox(height: 25),
-                      Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children:<Widget>[
-                            IconButton(
-                              icon: Icon(Icons.image, size: 35, color: orange,),
-                              onPressed: () async {
-                                File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
-                                setState(() => mailSender.attachmentPath = imageFile.path);
-                              },
-                            ),
-                            attachment(35),
-                            IconButton(
-                              icon: Icon(Icons.send, size: 35, color: orange,),
-                              onPressed: () async {
-                                bool success = await mailSender.send();
-                                success
-                                    ?showDialog(context: context, builder: (BuildContext context) => _success)
-                                    :showDialog(context: context, builder: (BuildContext context) => _failure);
-                                },
-                            )
-                      ]
-                      )
-                    ]
-                )
-            )
+            child: MailDialog(dataHandler: dataHandler)
         )
     );
 
@@ -213,6 +159,104 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
       _controller.fling(velocity: math.min(-2.0, -flingVelocity));
     else
       _controller.fling(velocity: _controller.value < 0.5 ? -2.0 : 2.0);
+  }
+}
+
+class MailDialog extends StatefulWidget{
+  final DataHandler dataHandler;
+
+  MailDialog({@required this.dataHandler});
+
+  @override
+  MailDialogState createState() => new MailDialogState(dataHandler: dataHandler);
+}
+
+class MailDialogState extends State<MailDialog>{
+  DataHandler dataHandler;
+  MailSender mailSender;
+  TextEditingController _controller;
+
+  MailDialogState({@required this.dataHandler});
+
+  @override
+  void initState() {
+    super.initState();
+    mailSender = new MailSender(dataHandler: dataHandler);
+  }
+
+  void mailCallback(MailSender newSender){
+    setState(()=> mailSender = newSender);
+  }
+
+  Dialog userNameDialog() {
+    return Dialog(
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        child: Container(
+            padding: EdgeInsets.all(10),
+            height: 280,
+            width: 240,
+            child: Image.file(File(mailSender.attachmentPath))
+        )
+    );
+  }
+
+  Widget attachment(double size){
+    return mailSender.attachmentPath == null
+        ?Container()
+        :GestureDetector(
+          onTap: ()  => showDialog(context: context,
+        builder: (BuildContext context) => userNameDialog()),
+          child: Container(
+              width: size,
+              height: size,
+              padding: EdgeInsets.all(size/50),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
+              child: CircleAvatar(backgroundImage: Image.file(File(mailSender.attachmentPath)).image))
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    AlertDialog _failure = new AlertDialog(title: Text('Ups... 😶', style: textStyle),
+        content: Text('Da ist leider etwas schief gelaufen 🙁', style: textStyle));
+
+    AlertDialog _success = new AlertDialog(title: Text('Alles klar! 😄', style: textStyle),
+        content: Text('Vielen Dank für deine Nachricht. '
+            'Wir werden dir so schnell wie möglich antworten! 😊', style: textStyle));
+
+    return Container(
+        padding: EdgeInsets.all(10),
+        height: 320,
+        child: ListView(
+            children: <Widget>[
+              MailField(mailCallback: mailCallback, mailSender: mailSender),
+              SizedBox(height: 25),
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children:<Widget>[
+                    IconButton(
+                      icon: Icon(Icons.image, size: 35, color: orange,),
+                      onPressed: () async {
+                        File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+                        setState(() => mailSender.attachmentPath = imageFile.path);
+                      },
+                    ),
+                    attachment(40),
+                    IconButton(
+                      icon: Icon(Icons.send, size: 35, color: orange,),
+                      onPressed: () async {
+                        bool success = await mailSender.send();
+                        success
+                            ?showDialog(context: context, builder: (BuildContext context) => _success)
+                            :showDialog(context: context, builder: (BuildContext context) => _failure);
+                      },
+                    )
+                  ]
+              )
+            ]
+        )
+    );
   }
 }
 

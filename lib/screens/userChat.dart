@@ -350,7 +350,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
           width: 100,
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: _gender=='m'?Colors.deepPurpleAccent:Colors.green,
+              color: _gender=='m'?Colors.green:Colors.orange,
               borderRadius: BorderRadius.circular(40)
           ),
           child: Image.asset('assets/images/user_images/gender_selection/'

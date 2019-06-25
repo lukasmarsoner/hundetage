@@ -344,9 +344,8 @@ class NameDialogState extends State<NameDialog>{
   Widget build(BuildContext context) {
     return Container(padding: EdgeInsets.all(15),
       child: Container(
-        height: 420,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+        height: 360,
+        child: ListView(
           children: <Widget>[
             Avtar(size: 100, dataHandler: dataHandler, updateData: updateData),
             NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),

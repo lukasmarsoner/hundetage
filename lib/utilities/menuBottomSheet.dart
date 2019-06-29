@@ -4,30 +4,29 @@ import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:hundetage/utilities/json.dart';
 import 'package:image_picker/image_picker.dart';
 
 const double minHeightBottomSheet = 60;
 
 class MenuBottomSheet extends StatefulWidget {
   final DataHandler dataHandler;
-  final Function homeButtonFunction;
 
-  MenuBottomSheet({@required this.dataHandler, @required this.homeButtonFunction});
+  MenuBottomSheet({@required this.dataHandler});
 
   @override
   MenuBottomSheetState createState() => MenuBottomSheetState(
-  dataHandler: dataHandler, homeButtonFunction: homeButtonFunction);
+  dataHandler: dataHandler);
 }
 
 class MenuBottomSheetState extends State<MenuBottomSheet>
     with SingleTickerProviderStateMixin {
   AnimationController _controller;
-  Function homeButtonFunction;
   double get getWidth => MediaQuery.of(context).size.width;
   double get getHeight => MediaQuery.of(context).size.height;
   DataHandler dataHandler;
 
-  MenuBottomSheetState({@required this.dataHandler, @required this.homeButtonFunction});
+  MenuBottomSheetState({@required this.dataHandler});
 
   double get headerTopMargin =>
       lerp(8, 8 + MediaQuery.of(context).padding.top);
@@ -85,7 +84,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
                     _buildErlebnisseList(),
                     Padding(padding: EdgeInsets.only(top: headerTopMargin),
                         child: Row(children: <Widget>[
-                          HomeButton(homeButtonFunction: homeButtonFunction),
+                          HomeButton(dataHandler: dataHandler),
                           SheetHeader(fontStyle: subTitleStyle),
                           Spacer(),
                           IconButton(icon: Icon(Icons.mail, color: Colors.white,),
@@ -188,14 +187,14 @@ class MailDialogState extends State<MailDialog>{
     setState(()=> mailSender = newSender);
   }
 
-  Dialog userNameDialog() {
+  Dialog attachmentDialog() {
     return Dialog(
         shape:
         RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         child: Container(
             padding: EdgeInsets.all(10),
             height: 280,
-            width: 240,
+            width: 180,
             child: Image.file(File(mailSender.attachmentPath))
         )
     );
@@ -206,10 +205,10 @@ class MailDialogState extends State<MailDialog>{
         ?Container()
         :GestureDetector(
           onTap: ()  => showDialog(context: context,
-        builder: (BuildContext context) => userNameDialog()),
+        builder: (BuildContext context) => attachmentDialog()),
           child: Container(
-              width: size,
               height: size,
+              width: size,
               padding: EdgeInsets.all(size/50),
               decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
               child: CircleAvatar(backgroundImage: Image.file(File(mailSender.attachmentPath)).image))
@@ -218,10 +217,14 @@ class MailDialogState extends State<MailDialog>{
 
   @override
   Widget build(BuildContext context) {
-    AlertDialog _failure = new AlertDialog(title: Text('Ups... 😶', style: textStyle),
-        content: Text('Da ist leider etwas schief gelaufen 🙁', style: textStyle));
+    AlertDialog _failure = new AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        title: Text('Ups... 😶', style: textStyle),
+        content: Text('Da ist leider etwas schiefgelaufen 🙁', style: textStyle));
 
-    AlertDialog _success = new AlertDialog(title: Text('Alles klar! 😄', style: textStyle),
+    AlertDialog _success = new AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        title: Text('Alles klar! 😄', style: textStyle),
         content: Text('Vielen Dank für deine Nachricht. '
             'Wir werden dir so schnell wie möglich antworten! 😊', style: textStyle));
 
@@ -236,15 +239,15 @@ class MailDialogState extends State<MailDialog>{
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children:<Widget>[
                     IconButton(
-                      icon: Icon(Icons.image, size: 35, color: orange,),
+                      icon: Icon(Icons.camera, size: 35, color: Colors.orange),
                       onPressed: () async {
                         File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
                         setState(() => mailSender.attachmentPath = imageFile.path);
                       },
                     ),
-                    attachment(40),
+                    attachment(45),
                     IconButton(
-                      icon: Icon(Icons.send, size: 35, color: orange,),
+                      icon: Icon(Icons.send, size: 35, color: Colors.orange),
                       onPressed: () async {
                         bool success = await mailSender.send();
                         success
@@ -291,13 +294,13 @@ class MailFieldState extends State<MailField>{
             child: TextField(
               keyboardType: TextInputType.multiline,
               minLines: 8,
-              maxLines: 30,
+              maxLines: 120,
               //This should make it more comfortable to write names
               textCapitalization: TextCapitalization.words,
               decoration: new InputDecoration(
                   border: new OutlineInputBorder(
-                      borderSide: new BorderSide(color: orange)),
-                  labelText: 'Erzähl uns von dir 😄'),
+                      borderSide: new BorderSide(color: Colors.orange)),
+                  labelText: 'Was möchtest du uns erzählen? 😄'),
               style: textStyle,
               controller: _controller,
               onChanged: (text) {mailSender.text=text;
@@ -395,16 +398,207 @@ class SheetHeader extends StatelessWidget {
 }
 
 class HomeButton extends StatelessWidget {
-  final Function homeButtonFunction;
+  final DataHandler dataHandler;
 
-  HomeButton({@required this.homeButtonFunction});
+  HomeButton({@required this.dataHandler});
 
   @override
   Widget build(BuildContext context) {
+    Dialog userNameDialog  = new Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        child: NameDialog(dataHandler: dataHandler)
+    );
+
     return IconButton(
-      onPressed: () => homeButtonFunction(),
+      onPressed: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog),
       iconSize: 35,
       icon: Icon(Icons.face, color: Colors.white)
+    );
+  }
+}
+
+class NameDialog extends StatefulWidget{
+  final DataHandler dataHandler;
+
+  NameDialog({@required this.dataHandler});
+
+  @override
+  NameDialogState createState() =>
+      new NameDialogState(dataHandler: dataHandler);
+}
+
+class NameDialogState extends State<NameDialog>{
+  DataHandler dataHandler;
+  TextEditingController _controller;
+
+  NameDialogState({@required this.dataHandler});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(padding: EdgeInsets.all(15),
+      child: Container(
+        height: 360,
+        child: Column(
+          children: <Widget>[
+            Avatar(size: 100, dataHandler: dataHandler),
+            NameField(setUsername: true, dataHandler: dataHandler),
+            SizedBox(height: 20,),
+            NameField(setUsername: false, dataHandler: dataHandler),
+            SizedBox(height: 30,),
+            GenderSelection(dataHandler: dataHandler, callback: () => setState((){})),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NameField extends StatefulWidget{
+  final DataHandler dataHandler;
+  final bool setUsername;
+
+  NameField({@required this.dataHandler, @required this.setUsername});
+
+  @override
+  NameFieldState createState() =>
+      new NameFieldState(dataHandler: dataHandler, setUsername: setUsername);
+}
+
+class NameFieldState extends State<NameField>{
+  DataHandler dataHandler;
+  bool setUsername;
+  TextEditingController _controller;
+
+  NameFieldState({@required this.dataHandler, @required this.setUsername});
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = new TextEditingController(
+        text: setUsername?dataHandler.hero.username:dataHandler.hero.name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: Container(
+            child: TextField(
+              //This should make it more comfortable to write names
+              textCapitalization: TextCapitalization.words,
+              decoration: new InputDecoration(
+                labelText: setUsername
+                    ?'Dein Name'
+                    :'${dataHandler.hero.geschlecht=='w'?'Unsere Heldin':'Unser Held'}',
+              ),
+              style: textStyle,
+              controller: _controller,
+              onChanged: (name){
+                setUsername?dataHandler.hero.username=name:dataHandler.hero.name=name;},
+            )
+        ));
+  }
+}
+
+class Avatar extends StatefulWidget{
+  final double size;
+  final DataHandler dataHandler;
+
+  Avatar({@required this.size, @required this.dataHandler});
+
+  @override
+  AvatarState createState() =>
+      new AvatarState(dataHandler: dataHandler, size: size);
+}
+
+class AvatarState extends State<Avatar>{
+  double size;
+  DataHandler dataHandler;
+
+  @override
+  void initState() { 
+    super.initState();
+  }
+
+  AvatarState({@required this.size, @required this.dataHandler});
+
+  Future<void> _setImage() async {
+    File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+    await saveCameraImageToFile(image: imageFile, filename: 'user_image');
+    setState(() => dataHandler.hero.userImage = Image.file(imageFile, fit: BoxFit.cover));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+        onTap: () => _setImage(),
+        child: Container(
+            width: size,
+            height: size,
+            padding: EdgeInsets.all(size/50),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
+            child: CircleAvatar(backgroundImage: dataHandler.hero.userImage.image)
+        )
+    );
+  }
+}
+
+class GenderSelection extends StatefulWidget{
+  final DataHandler dataHandler;
+  final VoidCallback callback;
+
+  GenderSelection({@required this.dataHandler, @required this.callback});
+
+  @override
+  GenderSelectionState createState() =>
+      new GenderSelectionState(dataHandler: dataHandler, callback: callback);
+}
+
+class GenderSelectionState extends State<GenderSelection>{
+  DataHandler dataHandler;
+  VoidCallback callback;
+  var rng = new math.Random();
+
+  @override
+  void initState() { 
+    super.initState();
+  }
+
+  GenderSelectionState({@required this.dataHandler, @required this.callback});
+
+  void changeGender(String _gender){
+    setState(() => dataHandler.hero.geschlecht = _gender);
+    callback();
+  }
+
+  Widget _genderButton(String _gender) {
+    return GestureDetector(
+        onTap: () => changeGender(_gender),
+        child: Container(
+          height: 60,
+          width: 60,
+          decoration: dataHandler.hero.geschlecht==_gender
+              ?BoxDecoration(color: _gender=='m'?Colors.deepPurpleAccent:Colors.green,
+              borderRadius: BorderRadius.circular(40)):BoxDecoration(),
+          padding: EdgeInsets.all(5),
+          child: Image.asset('assets/images/user_images/gender_selection/'
+              '${_gender=='m'?'boy':'girl'}-${rng.nextInt(12)}.png'),
+        )
+    );
+  }
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        padding: EdgeInsets.only(bottom: 10),
+        child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              _genderButton('m'),
+              SizedBox(width: 20),
+              _genderButton('w')
+            ]
+        )
     );
   }
 }

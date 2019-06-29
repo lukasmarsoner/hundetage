@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:hundetage/screens/adventures.dart';
 import 'package:hundetage/utilities/styles.dart';
+import 'package:hundetage/utilities/menuBottomSheet.dart';
 
 class WelcomeScreen extends StatelessWidget{
   final DataHandler dataHandler;
@@ -24,7 +25,7 @@ class WelcomeScreen extends StatelessWidget{
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Avtar(size: 180, dataHandler: dataHandler, updateData: null),
+              Avatar(size: 180, dataHandler: dataHandler),
               SizedBox(height: 20),
               Text('Willkommen zurück ${dataHandler.hero.username}!', style: titleStyle),
               SizedBox(height: 5),

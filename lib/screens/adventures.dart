@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hundetage/menuBottomSheet.dart';
+import 'package:hundetage/utilities/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
-import 'dart:math' as math;
-import 'package:image_picker/image_picker.dart';
-import 'package:hundetage/utilities/json.dart';
-import 'dart:io';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 class GeschichteMainScreen extends StatefulWidget{
@@ -26,11 +22,6 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
 
   @override
   Widget build(BuildContext context) {
-    Dialog userNameDialog  = new Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: NameDialog(dataHandler: dataHandler)
-    );
-
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
@@ -40,8 +31,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
                 Padding(
                     padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
                     child: StoryText(dataHandler: dataHandler, imageHeight: imageHeight)),
-                MenuBottomSheet(dataHandler: dataHandler,
-                    homeButtonFunction: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog))
+                MenuBottomSheet(dataHandler: dataHandler)
               ],
             )))
         )
@@ -204,13 +194,6 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
 
   StoryTextState({@required this.dataHandler, @required this.imageHeight});
 
-  //Update user page and hand change to hero to main function
-  void updateData({DataHandler newData}){
-    setState(() {
-      dataHandler.updateData = newData;
-    });
-  }
-
   @override
   initState() {
     super.initState();
@@ -249,7 +232,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
       dataHandler.hero.addScreen = int.parse(iNext);
       dataHandler.hero.addErlebniss = erlebniss;
     });
-    updateData(newData: dataHandler);
+    dataHandler.updateHero();
     animationText.reset();
     animationText.forward();
   }
@@ -315,185 +298,5 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
         child: new ListView(
             children: animatedTexts
     ));
-  }
-}
-
-class NameDialog extends StatefulWidget{
-  final DataHandler dataHandler;
-
-  NameDialog({@required this.dataHandler});
-
-  @override
-  NameDialogState createState() =>
-      new NameDialogState(dataHandler: dataHandler);
-}
-
-class NameDialogState extends State<NameDialog>{
-  DataHandler dataHandler;
-  TextEditingController _controller;
-
-  NameDialogState({@required this.dataHandler});
-
-  void updateData({DataHandler newData}){
-    setState(() {
-      dataHandler.updateData = newData;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(padding: EdgeInsets.all(15),
-      child: Container(
-        height: 360,
-        child: ListView(
-          children: <Widget>[
-            Avtar(size: 100, dataHandler: dataHandler, updateData: updateData),
-            NameField(setUsername: true, updateData: updateData, dataHandler: dataHandler),
-            SizedBox(height: 20,),
-            NameField(setUsername: false, updateData: updateData,
-                dataHandler: dataHandler),
-            SizedBox(height: 30,),
-            GenderSelection(dataHandler: dataHandler, updateData: updateData),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class NameField extends StatefulWidget{
-  final DataHandler dataHandler;
-  final Function updateData;
-  final bool setUsername;
-
-  NameField({@required this.dataHandler, @required this.updateData,
-  @required this.setUsername});
-
-  @override
-  NameFieldState createState() =>
-      new NameFieldState(dataHandler: dataHandler, updateData: updateData,
-      setUsername: setUsername);
-}
-
-class NameFieldState extends State<NameField>{
-  DataHandler dataHandler;
-  Function updateData;
-  bool setUsername;
-  TextEditingController _controller;
-
-  NameFieldState({@required this.dataHandler, @required this.updateData,
-    @required this.setUsername});
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = new TextEditingController(
-        text: setUsername?dataHandler.hero.username:dataHandler.hero.name);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-        child: Container(
-            child: TextField(
-              //This should make it more comfortable to write names
-              textCapitalization: TextCapitalization.words,
-              decoration: new InputDecoration(
-                labelText: setUsername
-                    ?'Dein Name'
-                    :'${dataHandler.hero.geschlecht=='w'?'Unsere Heldin':'Unser Held'}',
-              ),
-              style: textStyle,
-              controller: _controller,
-              onChanged: (name){
-                setUsername?dataHandler.hero.username=name:dataHandler.hero.name=name;
-                updateData(newData: dataHandler);},
-            )
-        ));
-  }
-}
-
-class Avtar extends StatelessWidget{
-  final double size;
-  final DataHandler dataHandler;
-  final Function updateData;
-
-  Avtar({@required this.size, @required this.dataHandler, @required this.updateData});
-
-  Future<void> _setImage() async {
-    File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
-    await saveCameraImageToFile(image: imageFile, filename: 'user_image');
-    dataHandler.hero.userImage = Image.file(imageFile, fit: BoxFit.cover);
-    updateData(newData: dataHandler);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _setImage(),
-        child: Container(
-          width: size,
-          height: size,
-          padding: EdgeInsets.all(size/50),
-          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
-          child: CircleAvatar(backgroundImage: dataHandler.hero.userImage.image)
-      )
-    );
-  }
-}
-
-class GenderSelection extends StatefulWidget{
-  final DataHandler dataHandler;
-  final Function updateData;
-
-  GenderSelection({@required this.dataHandler, @required this.updateData});
-
-  @override
-  GenderSelectionState createState() =>
-      new GenderSelectionState(dataHandler: dataHandler, updateData: updateData);
-}
-
-class GenderSelectionState extends State<GenderSelection>{
-  DataHandler dataHandler;
-  Function updateData;
-  var rng = new math.Random();
-
-  GenderSelectionState({@required this.dataHandler, @required this.updateData});
-
-  void changeGender(String _gender){
-    dataHandler.hero.geschlecht = _gender;
-    updateData(newData: dataHandler);
-  }
-
-  Widget _genderButton(String _gender) {
-    return GestureDetector(
-        onTap: () => changeGender(_gender),
-        child: Container(
-          height: 60,
-          width: 60,
-          decoration: dataHandler.hero.geschlecht==_gender
-              ?BoxDecoration(color: _gender=='m'?Colors.deepPurpleAccent:Colors.green,
-              borderRadius: BorderRadius.circular(40)):BoxDecoration(),
-          padding: EdgeInsets.all(5),
-          child: Image.asset('assets/images/user_images/gender_selection/'
-              '${_gender=='m'?'boy':'girl'}-${rng.nextInt(12)}.png'),
-        )
-    );
-  }
-
-  @override
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        padding: EdgeInsets.only(bottom: 10),
-        child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              _genderButton('m'),
-              SizedBox(width: 20),
-              _genderButton('w')
-            ]
-        )
-    );
   }
 }

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
-import 'package:hundetage/utilities/json.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity/connectivity.dart';
 
@@ -82,7 +81,7 @@ Future<Geschichte> loadGeschichte({Firestore firestore, Geschichte story}) async
 }
 
 //Loads all stories data from firestore
-Future<Map<String,Geschichte>> loadGeschichten({Firestore firestore}) async {
+Future<Map<String,Geschichte>> loadGeschichten(Firestore firestore) async {
   CollectionReference _collection = firestore.collection('abenteuer');
   QuerySnapshot _queryReference = await _collection.getDocuments();
   List<DocumentSnapshot> allStories = _queryReference.documents;
@@ -90,14 +89,6 @@ Future<Map<String,Geschichte>> loadGeschichten({Firestore firestore}) async {
   Map<String, Geschichte> _stories = Map<String, Geschichte>();
   for(DocumentSnapshot _story in allStories){
     String _storyname = _story.data['name'];
-    _story.data['url'] = _story.data['image'];
-
-    //Save image to local file - we do this here so we don't load stuff twice...
-    await saveImageToFile(url: _story.data['url'],
-        filename: _story.data['name']);
-
-    Image _image = Image.network(_story.data['url'], fit: BoxFit.cover);
-    _story.data['image'] = _image;
 
     _stories[_storyname] = Geschichte.fromFirebaseMap(_story.data);
     //Add actual data - make sure we have the right one

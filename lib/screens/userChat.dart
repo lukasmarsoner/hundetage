@@ -52,11 +52,6 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     SchedulerBinding.instance.addPostFrameCallback((_)=>_performQandA());
   }
 
-  //Update user page and hand change to hero to main function
-  void updateData({DataHandler newData}){
-    setState(() => dataHandler.updateData = newData);
-  }
-
   void _postButton(Widget _button){
     setState(() => _messages.add(_button));
   }
@@ -100,7 +95,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     setState(() => _messages.add(_newButtonResponse(_genderButton(_geschlecht))));
     if(dataHandler.hero.geschlecht==null) {
       dataHandler.hero.geschlecht = _geschlecht;
-      updateData(newData: dataHandler);
+      dataHandler.updateHero();
     }
     if(!_chatRunning){await _performQandA();}
   }
@@ -120,7 +115,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       _messages.add(_newItem(text, 'user'));
       _textController.clear();
     });
-    updateData(newData: dataHandler);
+    dataHandler.updateHero();
     if(!_chatRunning){await _performQandA();}
   }
 
@@ -203,7 +198,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       String _text = qAndAOutputs[i]['text'];
       String _user = qAndAOutputs[i]['user'];
       setState(() => _messages.add(_newItem(_text, _user)));
-      await _sleep(text: _text);
+      if(i<stop-1){await _sleep(text: _text);}
     }
   }
 
@@ -224,7 +219,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
 
   Future<void> _gotoAdventureScreen() async{
     dataHandler.hero.analytics = new FirebaseAnalytics();
-    updateData(newData: dataHandler);
+    dataHandler.updateHero();
     await _sleep(seconds: 1);
     Navigator.push(
         context,
@@ -252,7 +247,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       _chatRunning = true;
       await _sleep(seconds: 2);
       await _postMessages(6,10);
-      _keinBildButton();
+      _postButton(_keinBildButton());
       _qAndAsDone[1] = true;
       _chatRunning = false;
     }
@@ -299,11 +294,11 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                 Container(
                     constraints: BoxConstraints(maxWidth: getWidth - 10),
                     decoration: BoxDecoration(
-                        color: red,
+                        color: Colors.green,
                         borderRadius: BorderRadius.circular(40)),
                     child: Padding(
                         padding: EdgeInsets.all(15),
-                        child: Text('Ich möchte jetzt kein Bild hinzufügen',
+                        child: Text('Jetzt kein Bild hinzufügen',
                             style: chatStyle, softWrap: true))
                 )
               ]
@@ -313,7 +308,6 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     )
     );
   }
-
 
   Widget _weiterButton(){
     return GestureDetector(
@@ -327,7 +321,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                     Container(
                         constraints: BoxConstraints(maxWidth: getWidth - 10),
                         decoration: BoxDecoration(
-                            color: red,
+                            color: Colors.green,
                             borderRadius: BorderRadius.circular(40)),
                         child: Padding(
                             padding: EdgeInsets.all(15),
@@ -406,7 +400,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                       height: 250,
                       padding: EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                          color: user=='user'?orange:user=='Lukas'?red:blue,
+                          color: user=='user'?Colors.orange:user=='Lukas'?red:blue,
                           borderRadius: BorderRadius.circular(40)
                       ),
                       child: ClipRRect(
@@ -458,7 +452,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                 Container(
                   constraints: BoxConstraints(maxWidth: getWidth * 2/3),
                     decoration: BoxDecoration(
-                              color: user=='user'?orange:user=='Lukas'?red:blue,
+                              color: user=='user'?Colors.orange:user=='Lukas'?red:blue,
                               borderRadius: BorderRadius.circular(40)),
                           child: Padding(
                               padding: user=='user'?EdgeInsets.fromLTRB(15,15,40,15):EdgeInsets.all(15),
@@ -483,13 +477,14 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
             child: new Container(
               margin: new EdgeInsets.symmetric(horizontal: 1.0),
               child: new IconButton(
-                icon: new Icon(Icons.photo_camera),
+                icon: new Icon(Icons.camera, size: 35, color: Colors.orange),
                 onPressed: () => _sendImage(),
-                color: orange,
+                color: Colors.orange,
               ),
             ),
             color: Colors.white,
           ),
+          SizedBox(width: 5),
           Flexible(
             child: Container(
               child: TextField(
@@ -498,13 +493,14 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
               ),
             ),
           ),
+          SizedBox(width: 5),
           Material(
             child: new Container(
               margin: new EdgeInsets.symmetric(horizontal: 8.0),
               child: new IconButton(
-                icon: new Icon(Icons.send),
+                icon: new Icon(Icons.send, size: 35, color: Colors.orange,),
                 onPressed: () => _sendMessage(_textController.text),
-                color: orange,
+                color: Colors.orange,
               ),
             ),
             color: Colors.white,
@@ -537,20 +533,20 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
   Widget build(BuildContext context) {
     return Scaffold(body:
       SafeArea(
-            child:Stack(children: <Widget>[
-              ListView.builder(
-                  padding: EdgeInsets.fromLTRB(10,0,10,55),
-                  itemBuilder: (context, index) => _messages[_messages.length - (index+1)],
-                  itemCount: _messages.length,
-                  reverse: true,
-                  controller: _listScrollController
-              ),
-              Positioned(
-                  height: 50,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: _buildInput())
+        child:Stack(children: <Widget>[
+          ListView.builder(
+            padding: EdgeInsets.fromLTRB(10,0,10,55),
+            itemBuilder: (context, index) => _messages[_messages.length - (index+1)],
+            itemCount: _messages.length,
+            reverse: true,
+            controller: _listScrollController
+          ),
+          Positioned(
+            height: 50,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildInput())
             ])
     ));
   }

@@ -18,7 +18,7 @@ class SplashScreen extends StatefulWidget{
 class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin{
   AnimationController _animationController;
   bool _isLoading = true;
-  DataHandler dataHandler;
+  DataHandler dataHandler = DataHandler();
   Animation<Color> _colorTween;
   double getHeight, getWidth;
 
@@ -67,9 +67,16 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
     SchedulerBinding.instance.addPostFrameCallback((_)=>_runDataLoaders());
   }
 
+  AlertDialog warningDialog() {
+    return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        title: Text('Da ist etwas schiefgelaufen... 😶', style: textStyle),
+        content: Text('Beim ersten Start wird eine Internetverbindung benötigt...', style: textStyle));
+  }
+
   Future<void> _runDataLoaders() async{
     //Class taking care of all data-loading logic
-    dataHandler = DataHandler();
+    await dataHandler.checkDataSituation();
     await dataHandler.loadData();
     setState(() => _isLoading = false);
   }
@@ -101,19 +108,14 @@ class _MyAppState extends State<MyApp>{
 
   _MyAppState({@required this.dataHandler});
 
-  //Update user page and hand change to hero to main function
-  void updateData({DataHandler newData}){
-    setState(() {
-      dataHandler.updateData = newData;
-    });
-  }
-
   @override
   Widget build(BuildContext context){
     //Check if user has been loaded from file...
     bool _userFromFile = dataHandler.hero.userImage!=null && dataHandler.hero.username!=null
         && dataHandler.hero.name!=null && dataHandler.hero.geschlecht!=null;
-    return _userFromFile
+    return 
+    
+    _userFromFile
         ?WelcomeScreen(dataHandler: dataHandler)
         :UserChat(dataHandler: dataHandler);
   }

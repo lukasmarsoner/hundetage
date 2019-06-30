@@ -3,7 +3,6 @@ import 'utilities.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:mockito/mockito.dart';
-import 'package:image_test_utils/image_test_utils.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 void main() {
@@ -54,42 +53,52 @@ void main() {
     
     //Tests start from here
     test('Load Data from Firebase', () async {
-      provideMockedNetworkImages(() async {
+      //provideMockedNetworkImages(() async {
       expect(dataHandler.connectionStatus.online, true);
       expect(dataHandler.offlineData, false);
       await dataHandler.loadData();
       expect(dataHandler.hero.values, Held.initial().values);
+      dataHandler.generalData = await dataHandler.futureGeneralData;
       expect(dataHandler.generalData.gendering, genderingMockData);
       for(String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
         for (String _key in dataHandler.generalData.erlebnisse[_erlebniss].toMap
             .keys) {
-          expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
+              expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
               erlebnisseMockData[_erlebniss][_key]);
-        }}
-      });
+      }}
+      dataHandler.stories = await dataHandler.futureStories;
+      for(String _storyTitle in dataHandler.stories.keys) {
+        expect(dataHandler.stories[_storyTitle].zusammenfassung, adventure['zusammenfassung']);
+        expect(_storyTitle, adventure['name']);
+        Map<String,dynamic> _story = dataHandler.stories[_storyTitle].screensJSON;
+        for (String _screen in _story.keys) {
+          expect(_story[_screen]['text'], adventure['screens'][_screen]['text']);
+          for(String _key in _story[_screen].keys){
+            if(_key != 'text'){
+              for(String _item in _story[_screen][_key].keys){
+                expect(_story[_screen][_key][_item], adventure['screens'][_screen][_key][_item]);
+              }
+            }
+          }
+      }}
     });
 
     test('Load Data from local File', () async {
-      provideMockedNetworkImages(() async {
-        dataHandler.connectionStatus.online = false;
-        dataHandler.offlineData = true;
-        //Load Firestore data and write loaded data to disk
-        expect(dataHandler.connectionStatus.online, false);
-        expect(dataHandler.offlineData, true);
-        await dataHandler.loadData();
-        expect(dataHandler.hero.values, Held
-            .initial()
-            .values);
-        expect(dataHandler.generalData.gendering, genderingMockData);
-        for (String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
-          for (String _key in dataHandler.generalData.erlebnisse[_erlebniss]
-              .toMap.keys) {
-            expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
-                erlebnisseMockData[_erlebniss][_key]);
-          }
+      dataHandler.connectionStatus.online = false;
+      dataHandler.offlineData = true;
+      //Load Firestore data and write loaded data to disk
+      expect(dataHandler.connectionStatus.online, false);
+      expect(dataHandler.offlineData, true);
+      await dataHandler.loadData();
+      expect(dataHandler.hero.values, Held.initial().values);
+      expect(dataHandler.generalData.gendering, genderingMockData);
+      for (String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
+        for (String _key in dataHandler.generalData.erlebnisse[_erlebniss]
+            .toMap.keys) {
+          expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
+              erlebnisseMockData[_erlebniss][_key]);
         }
-      });
+      }
     });
-
   });
 }

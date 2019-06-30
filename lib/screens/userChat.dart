@@ -206,7 +206,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     //Average german reading-speed is 150 words / minutes
     //We add a random element to make things seem less robotic
     int milliseconds;
-    int _readingSpeed = 150;
+    int _readingSpeed = 10000;
     if(text != null) {
       int _nWords = text.split(' ').length;
       milliseconds = (_nWords * 60 ~/ _readingSpeed) * 1000  + rng.nextInt(400);

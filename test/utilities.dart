@@ -1,4 +1,6 @@
+import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:mockito/mockito.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
@@ -25,20 +27,44 @@ DocumentReference mockDocumentReferenceVersions = MockDocumentReference();
 DocumentReference mockDocumentReferenceAbenteuer = MockDocumentReference();
 QuerySnapshot mockQuerySnapshot = MockQuerySnapshot();
 
-Map<String,Map<String,String>> genderingMockData = {'ErSie':{'m':'Er','w':'Sie'}, 'eineine':{'m':'ein','w':'eine'}};
+Map<String,Map<String,String>> genderingMockData = {'ErSie':{'m':'Er','w':'Sie'}, 
+'eineine':{'m':'ein','w':'eine'}, 'wahrerwahre':{'m':'wahrer','w':'wahre'}, 'HeldHeldin':{'m':'Held','w':'Heldin'}};
+
 Map<String,dynamic> erlebnisseMockData = {
   'besteFreunde':{'title': 'Beste Freunde', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
     'image': 'https://example.com/image.png', 'url': 'https://example.com/image.png'},
   'alteFrau':{'title': 'Alte Frau', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
     'image': 'https://example.com/image.png', 'url': 'https://example.com/image.png'}};
+
+Map<String,Erlebniss> erlebnisseMap = {
+  'besteFreunde': Erlebniss(text: erlebnisseMockData['besteFreunde']['text'],
+  title: erlebnisseMockData['besteFreunde']['title'], url: erlebnisseMockData['besteFreunde']['url'],
+  image: Image.asset('assets/images/icon.png')),
+  'alteFrau': Erlebniss(text: erlebnisseMockData['alteFrau']['text'],
+  title: erlebnisseMockData['alteFrau']['title'], url: erlebnisseMockData['alteFrau']['url'],
+  image: Image.asset('assets/images/icon.png')),
+};
+
 Map<String,double> versionData = {'Raja': 1.1, 'erlebnisse': 0.71, 'gendering': 0.9};
+
 Map<String, dynamic> adventure = {
   'zusammenfassung': 'Eine schöne Geschichte',
   'name': 'Raja',
-  'screens': {'0': {'conditions': {'0':'','1':''}, 'erlebnisse': {'0':'','1':''},
-    'forwards': {'0':'1','1':'5'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
-    'options': {'0':'test0','1':'test1'}},
-  '1':{'conditions': {'0':''}, 'erlebnisse': {'0':'alteFrau'},
-    'forwards': {'0':'0'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
-    'options': {'0':'new page'}}}};
+  'screens': {
+    '0': {'conditions': {'0':''}, 'erlebnisse': {'0':''},
+      'forwards': {'0':'1'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+      'options': {'0':'test0'}},
+    '1':{'conditions': {'0': '', '1': ''}, 'erlebnisse': {'0':'alteFrau', '1': ''},
+      'forwards': {'0':'0', '1': '1'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+      'options': {'0':'new page', '1': 'test'}}}};
 
+class StaticTestWidget extends StatelessWidget{
+  final Widget returnWidget;
+  StaticTestWidget({this.returnWidget});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: Scaffold(
+        body: returnWidget));
+  }
+}

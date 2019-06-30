@@ -39,9 +39,11 @@ class MailSender{
 class DataHandler{
   Substitution substitution;
   GeneralData generalData;
+  Future<GeneralData> futureGeneralData;
   VersionController versionController, firebaseVersions;
   Firestore firestore = Firestore.instance;
   Map<String,Geschichte> stories;
+  Future<Map<String,Geschichte>> futureStories;
   //We set this here for now. The machinery is in place to handle more than one
   //story but we don't have one for now ;-)
   String currentStory = 'Raja';
@@ -63,21 +65,19 @@ class DataHandler{
 
   //Hero-setter also ensuring Firebase and local data are
   //always up-to-date
-  void updateHero() {
-    compute(writeLocalUserData, hero);
+  Future<void> updateHero() async{
+    //We await this. Otherwise it is to easy to get the user
+    //into an ill-defined state or losing data
+    await writeLocalUserData(hero);
+    //We can only update the substitutions if we have already
+    //loaded all general data
+    if(generalData != null) {
+      updateSubstitutions();
+    }
+  }
+
+  void updateSubstitutions(){
     substitution = Substitution(hero: hero, generalData: generalData);
-  }
-
-  void updateLocalStoryData(Geschichte _updatedStory){
-    //Update version-information on disk
-    compute(writeLocalVersionData, versionController);
-    //Update data on disk
-    compute(writeLocalStoryData, _updatedStory);
-  }
-
-  Future<void> loadLocalData(bool _dummy) async{
-    generalData = await loadLocalGeneralData();
-    stories = await loadAllLocalStoryData();
   }
 
   Future<void> checkDataSituation() async{
@@ -89,69 +89,77 @@ class DataHandler{
     offlineData = await canWorkOffline();
   }
 
-  Future<void> _updateFromTheWeb(bool _dummy) async {
+  Future<Map<String,Geschichte>> updateStoryDataFromTheWeb() async {
+    //Check all stories for updates
+    List<String> _storiesLocal = versionController.stories.keys.toList();
+    //Update existing stories
+
+    for (String _storyname in firebaseVersions.stories.keys) {
+      if (_storiesLocal.contains(_storyname)) {
+        if (versionController.stories[_storyname] <
+        firebaseVersions.stories[_storyname]) {
+          stories[_storyname] = await loadGeschichte(firestore: firestore,
+          story: stories[_storyname]);
+          versionController.stories[_storyname] =
+          firebaseVersions.stories[_storyname];
+          //Update local data
+          Map<String,dynamic> _inputs = {'story': stories[_storyname], 'versions': versionController};
+          updateLocalStoryData(_inputs);
+        }
+      }
+      //Add missing stories
+      else {
+        //Create new story-entry and load data from firestore
+        stories[_storyname] = Geschichte(storyname: _storyname);
+        stories[_storyname] = await loadGeschichte(
+        firestore: firestore, story: stories[_storyname]);
+        //Add version data to local version controller
+        versionController.stories[_storyname] =
+        firebaseVersions.stories[_storyname];
+        //Update local data
+        Map<String,dynamic> _inputs = {'story': stories[_storyname], 'versions': versionController};
+        updateLocalStoryData(_inputs);
+      }
+    }
+    return stories;
+  }
+
+  Future<GeneralData> updateGeneralDataFromTheWeb() async {
     //Load current local data before updating
+    //This is data-loading is rather selective so we do it synchronously
     if (versionController.gendering < firebaseVersions.gendering) {
       generalData.gendering = await loadGendering(firestore);
       versionController.gendering = firebaseVersions.gendering;
       //Update version-information on disk
-      compute(writeLocalVersionData, versionController);
+      writeLocalVersionData(versionController);
       //Update data on disk
-      compute(writeLocalGenderingData, generalData);
+      await writeLocalGenderingData(generalData);
       }
       if (versionController.erlebnisse < firebaseVersions.erlebnisse) {
         generalData.erlebnisse = await loadErlebnisse(firestore);
         versionController.erlebnisse = firebaseVersions.erlebnisse;
         //Update version-information on disk
-        compute(writeLocalVersionData, versionController);
+        writeLocalVersionData(versionController);
         //Update data on disk
-        compute(writeLocalErlebnisseData, generalData);
-        }
-        
-        //Check all stories for updates
-        List<String> _storiesLocal = versionController.stories.keys.toList();
-        //Update existing stories
-        for (String _storyname in firebaseVersions.stories.keys) {
-          if (_storiesLocal.contains(_storyname)) {
-            if (versionController.stories[_storyname] <
-            firebaseVersions.stories[_storyname]) {
-              stories[_storyname] = await loadGeschichte(firestore: firestore,
-              story: stories[_storyname]);
-              versionController.stories[_storyname] =
-              firebaseVersions.stories[_storyname];
-              //Update local data
-              compute(updateLocalStoryData, stories[_storyname]);
-              }}
-              //Add missing stories
-              else {
-                //Create new story-entry and load data from firestore
-                stories[_storyname] = Geschichte(storyname: _storyname);
-                stories[_storyname] = await loadGeschichte(
-                  firestore: firestore, story: stories[_storyname]);
-                  //Add version data to local version controller
-                  versionController.stories[_storyname] =
-                  firebaseVersions.stories[_storyname];
-                  //Update local data
-                  compute(updateLocalStoryData, stories[_storyname]);
-              }
-        }
+        await writeLocalErlebnisseData(generalData);
+      }
+    return generalData;
   }
 
-  Future<void> _loadAllOnlineData(bool _dummy) async{
-    generalData = await loadGeneralData(firestore);
-    stories = await loadGeschichten(firestore);
-    versionController = firebaseVersions;
-    //Write stuff to file so it is there next time
-    compute(writeLocalVersionData, versionController);
-    compute(writeLocalGeneralData, generalData);
-    compute(writeAllLocalStoriesData, stories);
+  Future<GeneralData> loadGeneralDataFromDevice() async{
+    return await loadLocalGeneralData();
+  }
+
+  Future<Map<String,Geschichte>> loadStoryDataFromDevice() async{
+    return await loadAllLocalStoryData();
   }
 
   Future<void> loadData() async {
     versionController = await loadLocalVersionData();
     //If we have no connection we just load the local data
     if (offlineData || !connectionStatus.online) {
-      compute(loadLocalData, null);
+      futureGeneralData = loadGeneralDataFromDevice();
+      futureStories = loadStoryDataFromDevice();
       //If we have trouble loading local data, delete general data and
       //Stories and load them from Firebase
       //If one of the two is missing we re-load everything
@@ -159,6 +167,7 @@ class DataHandler{
       if(generalData==null || stories==null){
         await deleteLocalGeneralData();
         await deleteLocalStoryData();
+        offlineData = false;
         loadData();
       }
     }
@@ -167,9 +176,19 @@ class DataHandler{
         //First see if we have newer versions available on Firebase
         firebaseVersions = await loadVersionInformation(firestore: firestore);
         //If there is no offline data we need to load everything
-        if (!offlineData) {compute(_loadAllOnlineData, null);}
+        if (!offlineData) {
+          futureGeneralData = loadGeneralData(firestore);
+          futureStories = loadGeschichten(firestore);
+          versionController = firebaseVersions;
+          //We'll write the stuff to the device only when all
+          //the loading futures have completed
+          writeLocalVersionData(versionController);
+        }
         //If there is, we can just update what has changed
-        else {compute(_updateFromTheWeb, null);}
+        else {
+          futureGeneralData = updateGeneralDataFromTheWeb();
+          futureStories = updateStoryDataFromTheWeb();
+          }
       }
       else{await loadData();}
     }
@@ -232,9 +251,10 @@ class Held{
   }
   set addErlebniss(String valIn){
     if(valIn != null && valIn != ''){
-      print(valIn);
       _erlebnisse.add(valIn);
-      analytics.logEvent(name: valIn);
+      if(analytics != null){
+        analytics.logEvent(name: valIn);
+      }
     }
   }
   set iScreen(int valIn){

@@ -5,6 +5,16 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
+
+void updateLocalStoryData(Map<String,dynamic> _inputs){
+  VersionController _updatedVersion = _inputs['versions'];
+  Geschichte _updatedStory = _inputs['story'];
+  //Update version-information on disk
+  compute(writeLocalVersionData, _updatedVersion);
+  //Update data on disk
+  compute(writeLocalStoryData, _updatedStory);
+}
 
 Future<File> saveImageToFile({String url, String filename}) async{
   var response = await http.get(url);
@@ -62,7 +72,7 @@ Future<Held> loadLocalUserData() async {
     try{
       _heroMap['erlebnisse'] = List<String>.from(_heroMap['erlebnisse']);
       _heroMap['screens'] = List<int>.from(_heroMap['screens']);
-      _heroMap['userImage'] = loadImageFromFile('user_image');
+      _heroMap['userImage'] = await loadImageFromFile('user_image');
     }
     catch (e) {return Held.initial();}
     return Held.fromMap(_heroMap);

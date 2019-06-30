@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:hundetage/utilities/json.dart';
 import 'package:hundetage/utilities/menuBottomSheet.dart';
 import 'package:hundetage/utilities/styles.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
@@ -15,16 +17,47 @@ class GeschichteMainScreen extends StatefulWidget{
 class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   DataHandler dataHandler;
   double imageHeight = 100.0;
+  bool _storiesLoading, _generalDataLoading;
   double get getHeight => MediaQuery.of(context).size.height;
   double get getWidth => MediaQuery.of(context).size.width;
 
   GeschichteMainScreenState({@required this.dataHandler});
 
   @override
-  Widget build(BuildContext context) {
+  void initState() { 
+    super.initState();
+    _storiesLoading = true;
+    _generalDataLoading = true;
+    SchedulerBinding.instance.addPostFrameCallback((_)=>_waitForFutures());
+  }
+
+  Future<void> _waitForFutures() async{
+    //Write stuff to file so it is there next time
+    if(dataHandler.futureStories != null) {
+      dataHandler.stories = await dataHandler.futureStories;
+      await writeAllLocalStoriesData(dataHandler.stories);
+    }
+    setState(() => _storiesLoading = false);
+    if(dataHandler.futureGeneralData != null) {
+      dataHandler.generalData = await dataHandler.futureGeneralData;
+      await writeLocalGeneralData(dataHandler.generalData);
+    }
+    dataHandler.updateSubstitutions();
+    setState(() => _generalDataLoading = false);
+  }
+
+  //If we have not loaded yet we need to finish here
+  Widget _showCircularProgress({DataHandler dataHandler}){
+    return (_storiesLoading || _generalDataLoading)
+      ?Stack(key: Key('Loading Story Screen'), children: <Widget>[_dummyStory(), CircularProgressIndicator()])
+      :_story(dataHandler: dataHandler);
+  }
+
+  Widget _story({DataHandler dataHandler}){
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
+            key: Key('Main Story Screen'),
             body: Container(child:
             SafeArea(child: Stack(
               children: <Widget>[
@@ -36,6 +69,28 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
             )))
         )
     );
+  }
+
+  Widget _dummyStory(){
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+            body: Container(child:
+            SafeArea(child: Stack(
+              children: <Widget>[
+                Padding(
+                    padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
+                    child: Container(height: imageHeight)),
+                DummyMenuButtonSheet()
+              ],
+            )))
+        )
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _showCircularProgress(dataHandler: dataHandler);
   }
 }
 
@@ -242,7 +297,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
       padding: EdgeInsets.all(25),
       child: StringAnimation(animatedString: optionTexts[iOption], totalLength: totalTextLength,
           delay: delays[iOption], animationText: animationText,
-          key: Key(dataHandler.hero.iScreen.toString()+iOption.toString()), italic: true,
+          key: Key('Screen ${dataHandler.hero.iScreen} Option $iOption'), italic: true,
           textCallback: () => _textCallback(forwards[iOption], _erlebnisse[iOption], optionTexts[iOption])),
     );
   }
@@ -287,7 +342,7 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     animatedTexts = <Widget>[];
     animatedTexts.add(Container(
       padding: EdgeInsets.fromLTRB(25,40,25,15),
-      child: StringAnimation(animatedString: storyText, delay: 0, key: Key(dataHandler.hero.iScreen.toString()),
+      child: StringAnimation(animatedString: storyText, delay: 0, key: Key('Story Text ${dataHandler.hero.iScreen}'),
         totalLength:totalTextLength, animationText: animationText),
     ));
 
@@ -295,8 +350,9 @@ class StoryTextState extends State<StoryText> with TickerProviderStateMixin{
     for(int i=0;i<_optionKeys.length;i++){if(_validForward[i]){animatedTexts.add(_buildOption(iOption: i));}}
 
     return new Scrollbar(
-        child: new ListView(
-            children: animatedTexts
+      child: new ListView(
+        key: Key('Text'),
+        children: animatedTexts
     ));
   }
 }

@@ -9,6 +9,49 @@ import 'package:image_picker/image_picker.dart';
 
 const double minHeightBottomSheet = 60;
 
+class DummyMenuButtonSheet extends StatefulWidget {
+
+  @override
+  DummyMenuButtonSheetState createState() => DummyMenuButtonSheetState();
+}
+
+class DummyMenuButtonSheetState extends State<DummyMenuButtonSheet>{
+  double get getWidth => MediaQuery.of(context).size.width;
+  double get getHeight => MediaQuery.of(context).size.height;
+
+  double get headerTopMargin => 8;
+
+  Widget build(BuildContext context) {
+
+    return new Positioned(
+        height: minHeightBottomSheet,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: const BoxDecoration(
+            color: Color(0xDC00688B),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Stack(
+              children: <Widget>[
+                Padding(padding: EdgeInsets.only(top: headerTopMargin),
+                    child: Row(children: <Widget>[
+                      UserButton(),
+                      SheetHeader(fontStyle: subTitleStyle),
+                      Spacer(),
+                      Icon(Icons.mail, color: Colors.white, size: 35, key: Key('Inactive Mail Button'))
+                    ])
+                )
+              ],
+            ),
+        ),
+    );
+  }
+
+}
+
 class MenuBottomSheet extends StatefulWidget {
   final DataHandler dataHandler;
 
@@ -70,6 +113,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
             right: 0,
             bottom: 0,
             child: GestureDetector(
+              key: Key('Erlebnisse Menu'),
               onTap: _toggle,
               onVerticalDragUpdate: _handleDragUpdate,
               onVerticalDragEnd: _handleDragEnd,
@@ -84,12 +128,13 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
                     _buildErlebnisseList(),
                     Padding(padding: EdgeInsets.only(top: headerTopMargin),
                         child: Row(children: <Widget>[
-                          HomeButton(dataHandler: dataHandler),
+                          UserButton(dataHandler: dataHandler),
                           SheetHeader(fontStyle: subTitleStyle),
                           Spacer(),
                           IconButton(icon: Icon(Icons.mail, color: Colors.white,),
-                              iconSize: 35, onPressed: () => showDialog(context: context,
-                                  builder: (BuildContext context) => senderDialog))
+                            key: Key('Active Mail Button'), iconSize: 35, 
+                              onPressed: () => showDialog(context: context,
+                              builder: (BuildContext context) => senderDialog))
                         ]
                         )
                     )
@@ -229,30 +274,33 @@ class MailDialogState extends State<MailDialog>{
             'Wir werden dir so schnell wie möglich antworten! 😊', style: textStyle));
 
     return Container(
-        padding: EdgeInsets.all(10),
-        height: 320,
-        child: ListView(
-            children: <Widget>[
-              MailField(mailCallback: mailCallback, mailSender: mailSender),
-              SizedBox(height: 25),
-              Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children:<Widget>[
-                    IconButton(
-                      icon: Icon(Icons.camera, size: 35, color: Colors.orange),
-                      onPressed: () async {
-                        File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
-                        setState(() => mailSender.attachmentPath = imageFile.path);
-                      },
-                    ),
-                    attachment(45),
-                    IconButton(
-                      icon: Icon(Icons.send, size: 35, color: Colors.orange),
-                      onPressed: () async {
-                        bool success = await mailSender.send();
-                        success
-                            ?showDialog(context: context, builder: (BuildContext context) => _success)
-                            :showDialog(context: context, builder: (BuildContext context) => _failure);
+      key: Key('Mail Dialog'),
+      padding: EdgeInsets.all(10),
+      height: 320,
+      child: ListView(
+        children: <Widget>[
+          MailField(mailCallback: mailCallback, mailSender: mailSender),
+          SizedBox(height: 25),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children:<Widget>[
+              IconButton(
+                icon: Icon(Icons.camera, size: 35, color: Colors.orange),
+                key: Key('Camera Icon'),
+                onPressed: () async {
+                  File imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+                  setState(() => mailSender.attachmentPath = imageFile.path);
+                },
+              ),
+                  attachment(45),
+                  IconButton(
+                    icon: Icon(Icons.send, size: 35, color: Colors.orange), 
+                    key: Key('Send Icon'),
+                    onPressed: () async {
+                      bool success = await mailSender.send();
+                      success
+                        ?showDialog(context: context, builder: (BuildContext context) => _success)
+                        :showDialog(context: context, builder: (BuildContext context) => _failure);
                       },
                     )
                   ]
@@ -324,14 +372,16 @@ class ExpandedErlebniss extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-          opacity: visibility,
-          duration: Duration(milliseconds: 600),
-          child:GestureDetector(
-            onTap: () => onTap(),
-              child: ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  child: erlebniss.image),
-          )
+      key: Key(erlebniss.title),
+      opacity: visibility,
+      duration: Duration(milliseconds: 600),
+      child:GestureDetector(
+        onTap: () => onTap(),
+          child: ClipRRect(
+            key: Key('Erlebniss Image'),
+            borderRadius: BorderRadius.all(Radius.circular(30)),
+            child: erlebniss.image),
+      )
     );
   }
 }
@@ -397,10 +447,10 @@ class SheetHeader extends StatelessWidget {
   }
 }
 
-class HomeButton extends StatelessWidget {
+class UserButton extends StatelessWidget {
   final DataHandler dataHandler;
 
-  HomeButton({@required this.dataHandler});
+  UserButton({this.dataHandler});
 
   @override
   Widget build(BuildContext context) {
@@ -410,6 +460,7 @@ class HomeButton extends StatelessWidget {
     );
 
     return IconButton(
+      key: Key('User Button'),
       onPressed: () => showDialog(context: context, builder: (BuildContext context) => userNameDialog),
       iconSize: 35,
       icon: Icon(Icons.face, color: Colors.white)
@@ -437,6 +488,7 @@ class NameDialogState extends State<NameDialog>{
   Widget build(BuildContext context) {
     return Container(padding: EdgeInsets.all(15),
       child: Container(
+        key: Key('User Name Dialog'),
         height: 360,
         child: Column(
           children: <Widget>[

@@ -71,6 +71,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
     );
   }
 
+  //Is shown if data has not finished loading yet
   Widget _dummyStory(){
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -171,6 +172,7 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
     textCallback();
   }
 
+  //Build text of main story (not options)
   Widget _buildStaticText(text){
     return Text(text,
         style: italic==null
@@ -178,6 +180,7 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
             :bold==null?textItalicStyle:textBoldItalicStyle);
   }
 
+  //Build option texts
   Widget _buildTextWithFadeOut({String text, BuildContext context}){
     return new AnimatedBuilder(animation: opacity,
         builder: (BuildContext context, Widget child) {
@@ -212,7 +215,9 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
           return new GestureDetector(
               onTap: moveToNextScreen,
               child: opacity == null
+                  //Main story text
                   ?_buildStaticText(text)
+                  //Option texts
                   :_buildTextWithFadeOut(text: text, context: context)
           );
         });

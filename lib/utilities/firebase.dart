@@ -77,6 +77,7 @@ Future<Geschichte> loadGeschichte({Firestore firestore, Geschichte story}) async
   DocumentReference _documentReference = _collection.document(story.storyname);
   DocumentSnapshot _documentSnapshot = await _documentReference.get();
   story.setStory(_documentSnapshot.data['screens']);
+  story.zusammenfassung = _documentSnapshot.data['zusammenfassung'];
   return story;
 }
 

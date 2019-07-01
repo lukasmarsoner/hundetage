@@ -30,6 +30,10 @@ QuerySnapshot mockQuerySnapshot = MockQuerySnapshot();
 Map<String,Map<String,String>> genderingMockData = {'ErSie':{'m':'Er','w':'Sie'}, 
 'eineine':{'m':'ein','w':'eine'}, 'wahrerwahre':{'m':'wahrer','w':'wahre'}, 'HeldHeldin':{'m':'Held','w':'Heldin'}};
 
+Map<String,Map<String,String>> genderingMockDataUpdate = {'ErSie':{'m':'Er','w':'Sie'}, 
+'eineine':{'m':'ein','w':'eine'}, 'wahrerwahre':{'m':'wahrer','w':'wahre'}, 'HeldHeldin':{'m':'Held','w':'Heldin'},
+'TesterTesterin':{'m':'Tester','w':'Testerin'}};
+
 Map<String,dynamic> erlebnisseMockData = {
   'besteFreunde':{'title': 'Beste Freunde', 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
     'image': 'https://example.com/image.png', 'url': 'https://example.com/image.png'},
@@ -46,9 +50,21 @@ Map<String,Erlebniss> erlebnisseMap = {
 };
 
 Map<String,double> versionData = {'Raja': 1.1, 'erlebnisse': 0.71, 'gendering': 0.9};
+Map<String,double> versionDataUpdate = {'Raja': 1.11, 'erlebnisse': 0.71, 'gendering': 1.0};
 
 Map<String, dynamic> adventure = {
   'zusammenfassung': 'Eine schöne Geschichte',
+  'name': 'Raja',
+  'screens': {
+    '0': {'conditions': {'0':''}, 'erlebnisse': {'0':''},
+      'forwards': {'0':'1'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+      'options': {'0':'test0'}},
+    '1':{'conditions': {'0': '', '1': ''}, 'erlebnisse': {'0':'alteFrau', '1': ''},
+      'forwards': {'0':'0', '1': '1'}, 'text': '#ErSie ist #eineine #wahrerwahre #HeldHeldin.',
+      'options': {'0':'new page', '1': 'test'}}}};
+
+Map<String, dynamic> adventureUpdate = {
+  'zusammenfassung': 'Eine neue schöne Geschichte',
   'name': 'Raja',
   'screens': {
     '0': {'conditions': {'0':''}, 'erlebnisse': {'0':''},

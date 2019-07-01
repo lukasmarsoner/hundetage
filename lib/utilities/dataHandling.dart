@@ -56,8 +56,7 @@ class DataHandler{
 
   static final DataHandler _instance = DataHandler._privateConstructor();
 
-  factory DataHandler({Firestore firestore,
-    VersionController testVersionController}){
+  factory DataHandler({Firestore firestore}){
     return _instance;
   }
 
@@ -92,16 +91,14 @@ class DataHandler{
   Future<Map<String,Geschichte>> updateStoryDataFromTheWeb() async {
     //Check all stories for updates
     List<String> _storiesLocal = versionController.stories.keys.toList();
-    //Update existing stories
 
+    //Update existing stories
     for (String _storyname in firebaseVersions.stories.keys) {
       if (_storiesLocal.contains(_storyname)) {
         if (versionController.stories[_storyname] <
         firebaseVersions.stories[_storyname]) {
-          stories[_storyname] = await loadGeschichte(firestore: firestore,
-          story: stories[_storyname]);
-          versionController.stories[_storyname] =
-          firebaseVersions.stories[_storyname];
+          stories[_storyname] = await loadGeschichte(firestore: firestore, story: stories[_storyname]);
+          versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
           //Update local data
           Map<String,dynamic> _inputs = {'story': stories[_storyname], 'versions': versionController};
           updateLocalStoryData(_inputs);
@@ -111,15 +108,14 @@ class DataHandler{
       else {
         //Create new story-entry and load data from firestore
         stories[_storyname] = Geschichte(storyname: _storyname);
-        stories[_storyname] = await loadGeschichte(
-        firestore: firestore, story: stories[_storyname]);
+        stories[_storyname] = await loadGeschichte(firestore: firestore, story: stories[_storyname]);
         //Add version data to local version controller
-        versionController.stories[_storyname] =
-        firebaseVersions.stories[_storyname];
+        versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
         //Update local data
         Map<String,dynamic> _inputs = {'story': stories[_storyname], 'versions': versionController};
         updateLocalStoryData(_inputs);
       }
+      print(stories['Raja'].storyname);
     }
     return stories;
   }
@@ -133,7 +129,7 @@ class DataHandler{
       //Update version-information on disk
       writeLocalVersionData(versionController);
       //Update data on disk
-      await writeLocalGenderingData(generalData);
+      writeLocalGenderingData(generalData);
       }
       if (versionController.erlebnisse < firebaseVersions.erlebnisse) {
         generalData.erlebnisse = await loadErlebnisse(firestore);
@@ -141,7 +137,7 @@ class DataHandler{
         //Update version-information on disk
         writeLocalVersionData(versionController);
         //Update data on disk
-        await writeLocalErlebnisseData(generalData);
+        writeLocalErlebnisseData(generalData);
       }
     return generalData;
   }

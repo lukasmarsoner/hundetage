@@ -50,8 +50,8 @@ void main() {
         return null;
       });
     });
-    
-    //Tests start from here
+
+        //Tests start from here
     test('Load Data from Firebase', () async {
       expect(dataHandler.connectionStatus.online, true);
       expect(dataHandler.offlineData, false);
@@ -80,24 +80,33 @@ void main() {
             }
           }
       }}
+
+      //See if we can update data as well
+      when(mockDocumentSnapshotGendering.data).thenReturn(genderingMockDataUpdate);
+      when(mockDocumentSnapshotAbenteuer.data).thenReturn(adventureUpdate);
+      dataHandler.firestore = mockFirestore;
+      dataHandler.firebaseVersions = VersionController.fromMap(versionDataUpdate);
+      expect((await dataHandler.updateGeneralDataFromTheWeb()).gendering, genderingMockDataUpdate);
+      expect((await dataHandler.updateStoryDataFromTheWeb())['Raja'].zusammenfassung, adventureUpdate['zusammenfassung']);
     });
 
-    test('Load Data from local File', () async {
-      dataHandler.connectionStatus.online = false;
-      dataHandler.offlineData = true;
-      //Load Firestore data and write loaded data to disk
-      expect(dataHandler.connectionStatus.online, false);
-      expect(dataHandler.offlineData, true);
-      await dataHandler.loadData();
-      expect(dataHandler.hero.values, Held.initial().values);
-      expect(dataHandler.generalData.gendering, genderingMockData);
-      for (String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
-        for (String _key in dataHandler.generalData.erlebnisse[_erlebniss]
-            .toMap.keys) {
-          expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
-              erlebnisseMockData[_erlebniss][_key]);
-        }
+  test('Load Data from local File', () async {
+    dataHandler.connectionStatus.online = false;
+    dataHandler.offlineData = true;
+    //Load Firestore data and write loaded data to disk
+    expect(dataHandler.connectionStatus.online, false);
+    expect(dataHandler.offlineData, true);
+    await dataHandler.loadData();
+    expect(dataHandler.hero.values, Held.initial().values);
+    expect(dataHandler.generalData.gendering, genderingMockDataUpdate);
+    for (String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
+      for (String _key in dataHandler.generalData.erlebnisse[_erlebniss]
+          .toMap.keys) {
+        expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
+          erlebnisseMockData[_erlebniss][_key]);
       }
-    });
+    }
+  });
+
   });
 }

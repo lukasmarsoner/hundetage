@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 
 const double minHeightBottomSheet = 60;
 
+//This is used if we are waiting for data to finish loading from Firebase
+//While still in the main screen
 class DummyMenuButtonSheet extends StatefulWidget {
 
   @override
@@ -52,6 +54,7 @@ class DummyMenuButtonSheetState extends State<DummyMenuButtonSheet>{
 
 }
 
+//Main Class for the menu shown during adventures
 class MenuBottomSheet extends StatefulWidget {
   final DataHandler dataHandler;
 
@@ -71,9 +74,11 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
 
   MenuBottomSheetState({@required this.dataHandler});
 
+  //Controls the hight of the sheet during animation
   double get headerTopMargin =>
       lerp(8, 8 + MediaQuery.of(context).padding.top);
 
+  //Text for Menu-title
   TextStyle get headerTextStyle => TextStyleTween(begin: subTitleStyle, end: titleStyle).animate(_controller).value;
 
   @override
@@ -91,12 +96,14 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
     super.dispose();
   }
 
+  //Scnas through the menu-height
   double lerp(double min, double max) =>
       lerpDouble(min, max, _controller.value);
 
   @override
   Widget build(BuildContext context) {
 
+    //This is the dialog for the mail contact
     Dialog senderDialog = new Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         child: Container(padding: EdgeInsets.all(15),
@@ -128,9 +135,11 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
                     _buildErlebnisseList(),
                     Padding(padding: EdgeInsets.only(top: headerTopMargin),
                         child: Row(children: <Widget>[
+                          //User settings
                           UserButton(dataHandler: dataHandler),
                           SheetHeader(fontStyle: subTitleStyle),
                           Spacer(),
+                          //Mail-contact form
                           IconButton(icon: Icon(Icons.mail, color: Colors.white,),
                             key: Key('Active Mail Button'), iconSize: 35, 
                               onPressed: () => showDialog(context: context,
@@ -147,6 +156,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
     );
   }
 
+  //Events seen by the user are build into the menu-elements here
   Widget _buildErlebnisseList(){
     List<Widget> _erlebnisseList = new List<Widget>();
 
@@ -154,6 +164,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
       _erlebnisseList.add(_buildItem(erlebniss: dataHandler.generalData.erlebnisse[title]));
     }
 
+    //Events are displayed in a GridVire
     return Container(
         padding: EdgeInsets.only(top: 70.0),
         child:GridView.count(
@@ -164,6 +175,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
     );
   }
 
+  //Every event has an animation associated with it, opening a dialog box
   Widget _buildItem({Erlebniss erlebniss}) {
     return ExpandedErlebniss(
         visibility: _controller.value,
@@ -182,6 +194,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
     );
   }
 
+  //Stuff to control the animation of the sheet
   void _toggle() {
     final bool isOpen = _controller.status == AnimationStatus.completed;
     _controller.fling(velocity: isOpen ? -2 : 2);
@@ -195,6 +208,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
     if (_controller.isAnimating ||
         _controller.status == AnimationStatus.completed) return;
 
+    //Fliging the sheet
     final double flingVelocity =
         details.velocity.pixelsPerSecond.dy / getHeight;
     if (flingVelocity < 0.0)
@@ -206,6 +220,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   }
 }
 
+//This controls the dialog for contact mails
 class MailDialog extends StatefulWidget{
   final DataHandler dataHandler;
 
@@ -232,6 +247,8 @@ class MailDialogState extends State<MailDialog>{
     setState(()=> mailSender = newSender);
   }
 
+  //Attachments can be added - they are shown as a small Image below the mail text
+  //We only support one attachment at a time at this point
   Dialog attachmentDialog() {
     return Dialog(
         shape:
@@ -245,6 +262,7 @@ class MailDialogState extends State<MailDialog>{
     );
   }
 
+  //Image showing the attachement. If we have nothing, we add an empty container
   Widget attachment(double size){
     return mailSender.attachmentPath == null
         ?Container()
@@ -262,6 +280,7 @@ class MailDialogState extends State<MailDialog>{
 
   @override
   Widget build(BuildContext context) {
+    //Check if opening the mail-client has worked or not
     AlertDialog _failure = new AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         title: Text('Ups... 😶', style: textStyle),
@@ -273,6 +292,7 @@ class MailDialogState extends State<MailDialog>{
         content: Text('Vielen Dank für deine Nachricht. '
             'Wir werden dir so schnell wie möglich antworten! 😊', style: textStyle));
 
+    //Dialog containing the mail-text
     return Container(
       key: Key('Mail Dialog'),
       padding: EdgeInsets.all(10),
@@ -284,6 +304,7 @@ class MailDialogState extends State<MailDialog>{
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children:<Widget>[
+              //Butten opening an image-picker and adding the attachment
               IconButton(
                 icon: Icon(Icons.camera, size: 35, color: Colors.orange),
                 key: Key('Camera Icon'),
@@ -292,21 +313,23 @@ class MailDialogState extends State<MailDialog>{
                   setState(() => mailSender.attachmentPath = imageFile.path);
                 },
               ),
-                  attachment(45),
-                  IconButton(
-                    icon: Icon(Icons.send, size: 35, color: Colors.orange), 
-                    key: Key('Send Icon'),
-                    onPressed: () async {
-                      bool success = await mailSender.send();
-                      success
-                        ?showDialog(context: context, builder: (BuildContext context) => _success)
-                        :showDialog(context: context, builder: (BuildContext context) => _failure);
-                      },
-                    )
-                  ]
+              //Image of the attachment
+              attachment(45),
+              //Button opening the mail-dialog
+              IconButton(
+                icon: Icon(Icons.send, size: 35, color: Colors.orange), 
+                  key: Key('Send Icon'),
+                  onPressed: () async {
+                    bool success = await mailSender.send();
+                    success
+                      ?showDialog(context: context, builder: (BuildContext context) => _success)
+                      :showDialog(context: context, builder: (BuildContext context) => _failure);
+                    },
               )
             ]
-        )
+          )
+        ]
+      )
     );
   }
 }
@@ -638,7 +661,6 @@ class GenderSelectionState extends State<GenderSelection>{
     );
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Container(

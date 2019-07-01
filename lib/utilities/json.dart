@@ -7,13 +7,13 @@ import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 
-void updateLocalStoryData(Map<String,dynamic> _inputs){
+Future<void> updateLocalStoryData(Map<String,dynamic> _inputs) async{
   VersionController _updatedVersion = _inputs['versions'];
   Geschichte _updatedStory = _inputs['story'];
   //Update version-information on disk
-  compute(writeLocalVersionData, _updatedVersion);
+  await writeLocalVersionData(_updatedVersion);
   //Update data on disk
-  compute(writeLocalStoryData, _updatedStory);
+  await writeLocalStoryData(_updatedStory);
 }
 
 Future<File> saveImageToFile({String url, String filename}) async{

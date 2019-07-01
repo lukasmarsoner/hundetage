@@ -52,7 +52,7 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
                   children: <Widget>[
                     Image.asset('assets/images/icon.png', width: 200.0, height: 200.0),
                     SizedBox(height: 40,),
-                    Container(child: CircularProgressIndicator(valueColor: _colorTween))
+                    Container(key: Key('Loading...'), child: CircularProgressIndicator(valueColor: _colorTween))
                   ]
               )
             ]
@@ -65,13 +65,6 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
     super.initState();
     _animateColor();
     SchedulerBinding.instance.addPostFrameCallback((_)=>_runDataLoaders());
-  }
-
-  AlertDialog warningDialog() {
-    return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        title: Text('Da ist etwas schiefgelaufen... 😶', style: textStyle),
-        content: Text('Beim ersten Start wird eine Internetverbindung benötigt...', style: textStyle));
   }
 
   Future<void> _runDataLoaders() async{

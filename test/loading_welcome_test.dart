@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'utilities.dart';
+import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:mockito/mockito.dart';
+import 'package:hundetage/main.dart';
+import 'package:hundetage/screens/welcome.dart';
+import 'package:flutter/services.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 void main() {
@@ -52,52 +55,45 @@ void main() {
     });
     
     //Tests start from here
-    test('Load Data from Firebase', () async {
-      expect(dataHandler.connectionStatus.online, true);
-      expect(dataHandler.offlineData, false);
-      await dataHandler.loadData();
-      expect(dataHandler.hero.values, Held.initial().values);
-      dataHandler.generalData = await dataHandler.futureGeneralData;
-      expect(dataHandler.generalData.gendering, genderingMockData);
-      for(String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
-        for (String _key in dataHandler.generalData.erlebnisse[_erlebniss].toMap
-            .keys) {
-              expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
-              erlebnisseMockData[_erlebniss][_key]);
-      }}
-      dataHandler.stories = await dataHandler.futureStories;
-      for(String _storyTitle in dataHandler.stories.keys) {
-        expect(dataHandler.stories[_storyTitle].zusammenfassung, adventure['zusammenfassung']);
-        expect(_storyTitle, adventure['name']);
-        Map<String,dynamic> _story = dataHandler.stories[_storyTitle].screensJSON;
-        for (String _screen in _story.keys) {
-          expect(_story[_screen]['text'], adventure['screens'][_screen]['text']);
-          for(String _key in _story[_screen].keys){
-            if(_key != 'text'){
-              for(String _item in _story[_screen][_key].keys){
-                expect(_story[_screen][_key][_item], adventure['screens'][_screen][_key][_item]);
-              }
-            }
-          }
-      }}
-    });
+    testWidgets('Test Welcome Screen', (WidgetTester _tester) async {
+      dataHandler.generalData = GeneralData.fromMap({'gendering': genderingMockData, 
+      'erlebnisse': erlebnisseMap});
+      dataHandler.stories = {'Raja': Geschichte.fromFirebaseMap(adventure)};
+      dataHandler.stories['Raja'].setStory(adventure['screens']);
+      dataHandler.hero = Held.initial();
+      dataHandler.hero.name = 'Maya';
+      dataHandler.hero.username = 'Maya';
+      dataHandler.hero.geschlecht = 'w';
+      dataHandler.hero.addErlebniss = 'besteFreunde';
+      dataHandler.hero.analytics = null;
+      dataHandler.hero.userImage = Image.asset('assets/images/icon.png');
+      dataHandler.updateSubstitutions();
 
-    test('Load Data from local File', () async {
-      dataHandler.connectionStatus.online = false;
-      dataHandler.offlineData = true;
-      //Load Firestore data and write loaded data to disk
-      expect(dataHandler.connectionStatus.online, false);
-      expect(dataHandler.offlineData, true);
-      await dataHandler.loadData();
-      expect(dataHandler.hero.values, Held.initial().values);
-      expect(dataHandler.generalData.gendering, genderingMockData);
-      for (String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
-        for (String _key in dataHandler.generalData.erlebnisse[_erlebniss]
-            .toMap.keys) {
-          expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
-              erlebnisseMockData[_erlebniss][_key]);
-        }
-      }
+      await _tester.pumpWidget(StaticTestWidget(returnWidget: WelcomeScreen(dataHandler: dataHandler)));
+      await _tester.pumpAndSettle();
+
+      expect(find.text('Willkommen zurück ${dataHandler.hero.username}!'), findsOneWidget);
+      expect(find.text('Schön, dass du wieder da bist'), findsOneWidget);
+      expect(find.byType(CircleAvatar), findsOneWidget);
+    });
+    
+    testWidgets('Test Loading Screen', (WidgetTester _tester) async {
+      dataHandler.generalData = GeneralData.fromMap({'gendering': genderingMockData, 
+      'erlebnisse': erlebnisseMap});
+      dataHandler.stories = {'Raja': Geschichte.fromFirebaseMap(adventure)};
+      dataHandler.stories['Raja'].setStory(adventure['screens']);
+      dataHandler.hero = Held.initial();
+      dataHandler.hero.name = 'Maya';
+      dataHandler.hero.username = 'Maya';
+      dataHandler.hero.geschlecht = 'w';
+      dataHandler.hero.addErlebniss = 'besteFreunde';
+      dataHandler.hero.analytics = null;
+      dataHandler.hero.userImage = Image.asset('assets/images/icon.png');
+      dataHandler.updateSubstitutions();
+
+      await _tester.pumpWidget(StaticTestWidget(returnWidget: SplashScreen()));
+      
+      expect(find.byKey(Key('Loading...')), findsOneWidget);
     });
   });
 }

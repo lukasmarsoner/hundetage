@@ -165,12 +165,9 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
   void moveToNextScreen() async{
     bold = true;
     //In case there is no callback function we just do nothing at all
-    if(textCallback==null) {
-      textCallback=()=>null;
-    }
-    else {
-      await animationNextScreen.forward();
-    }
+    textCallback==null
+      ?textCallback=() => null
+      :await animationNextScreen.forward();
     textCallback();
   }
 
@@ -186,18 +183,18 @@ class StringAnimationState extends State<StringAnimation> with TickerProviderSta
         builder: (BuildContext context, Widget child) {
           return new Opacity(opacity: 1.0 - opacity.value,
               child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    _characterCount.isCompleted
-                    ?Image.asset('assets/images/forward.png', height: 20, width: 20)
-                    :Container(),
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  _characterCount.isCompleted
+                  ?Image.asset('assets/images/forward.png', height: 20, width: 20, key:Key('Option'))
+                  :Container(),
                 SizedBox(width: 10),
                 Flexible(fit: FlexFit.loose,
-                    child: Text(text,
-                        softWrap: true,
-                        style: italic==null
-                            ?bold==null?textStyle:textBoldStyle
-                            :bold==null?textItalicStyle:textBoldItalicStyle))
+                  child: Text(text,
+                    softWrap: true,
+                    style: italic==null
+                      ?bold==null?textStyle:textBoldStyle
+                      :bold==null?textItalicStyle:textBoldItalicStyle))
               ])
           );
     });

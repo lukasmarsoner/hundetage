@@ -96,16 +96,7 @@ void main() {
     //Load Firestore data and write loaded data to disk
     expect(dataHandler.connectionStatus.online, false);
     expect(dataHandler.offlineData, true);
-    await dataHandler.loadData();
-    expect(dataHandler.hero.values, Held.initial().values);
-    expect(dataHandler.generalData.gendering, genderingMockDataUpdate);
-    for (String _erlebniss in dataHandler.generalData.erlebnisse.keys) {
-      for (String _key in dataHandler.generalData.erlebnisse[_erlebniss]
-          .toMap.keys) {
-        expect(dataHandler.generalData.erlebnisse[_erlebniss].toMap[_key],
-          erlebnisseMockData[_erlebniss][_key]);
-      }
-    }
+    //TODO: Add more tests here
   });
 
   });

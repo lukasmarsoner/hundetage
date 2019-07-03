@@ -17,7 +17,7 @@ class GeschichteMainScreen extends StatefulWidget{
 class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   DataHandler dataHandler;
   double imageHeight = 100.0;
-  bool _storiesLoading, _generalDataLoading;
+  bool _isLoading;
   double get getHeight => MediaQuery.of(context).size.height;
   double get getWidth => MediaQuery.of(context).size.width;
 
@@ -26,8 +26,7 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
   @override
   void initState() { 
     super.initState();
-    _storiesLoading = true;
-    _generalDataLoading = true;
+    _isLoading = true;
     SchedulerBinding.instance.addPostFrameCallback((_)=>_waitForFutures());
   }
 
@@ -37,20 +36,12 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
       dataHandler.stories = await dataHandler.futureStories;
       await writeAllLocalStoriesData(dataHandler.stories);
     }
-    setState(() => _storiesLoading = false);
     if(dataHandler.futureGeneralData != null) {
       dataHandler.generalData = await dataHandler.futureGeneralData;
       await writeLocalGeneralData(dataHandler.generalData);
     }
     dataHandler.updateSubstitutions();
-    setState(() => _generalDataLoading = false);
-  }
-
-  //If we have not loaded yet we need to finish here
-  Widget _showCircularProgress({DataHandler dataHandler}){
-    return (_storiesLoading || _generalDataLoading)
-      ?Stack(key: Key('Loading Story Screen'), children: <Widget>[_dummyStory(), CircularProgressIndicator()])
-      :_story(dataHandler: dataHandler);
+    setState(() => _isLoading = false);
   }
 
   Widget _story({DataHandler dataHandler}){
@@ -76,14 +67,15 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-            body: Container(child:
-            SafeArea(child: Stack(
-              children: <Widget>[
-                Padding(
+            body: Container(
+                height: getHeight,
+                child: SafeArea(child: Stack(
+                children: <Widget>[
+                  Padding(
                     padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
                     child: Container(height: imageHeight)),
-                DummyMenuButtonSheet()
-              ],
+                  DummyMenuButtonSheet()
+                ],
             )))
         )
     );
@@ -91,7 +83,10 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
 
   @override
   Widget build(BuildContext context) {
-    return _showCircularProgress(dataHandler: dataHandler);
+    return _isLoading
+      ?Scaffold(body: Stack(key: Key('Loading Story Screen'), children: <Widget>[_dummyStory(),
+          Center(child: CircularProgressIndicator())]))
+      :_story(dataHandler: dataHandler);
   }
 }
 

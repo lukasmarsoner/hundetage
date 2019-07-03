@@ -5,15 +5,12 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
 
-Future<void> updateLocalStoryData(Map<String,dynamic> _inputs) async{
-  VersionController _updatedVersion = _inputs['versions'];
-  Geschichte _updatedStory = _inputs['story'];
+Future<void> updateLocalStoryData({Geschichte updatedStory, VersionController updatedVersion}) async{
   //Update version-information on disk
-  await writeLocalVersionData(_updatedVersion);
+  await writeLocalVersionData(updatedVersion);
   //Update data on disk
-  await writeLocalStoryData(_updatedStory);
+  await writeLocalStoryData(updatedStory);
 }
 
 Future<File> saveImageToFile({String url, String filename}) async{
@@ -68,8 +65,9 @@ Future<Held> loadLocalUserData() async {
 
   if(await fileExists(file)){
     String contents = await file.readAsString();
-    Map<String, dynamic> _heroMap = json.decode(contents);
+    Map<String, dynamic> _heroMap = Map<String, dynamic>();
     try{
+      _heroMap = json.decode(contents);
       _heroMap['erlebnisse'] = List<String>.from(_heroMap['erlebnisse']);
       _heroMap['screens'] = List<int>.from(_heroMap['screens']);
       _heroMap['userImage'] = await loadImageFromFile('user_image');
@@ -79,20 +77,6 @@ Future<Held> loadLocalUserData() async {
   }
   else {
     return Held.initial();
-  }
-}
-
-Future<void> deleteLocalUserData() async{
-  final File file = await localFile('hero');
-
-  if(await fileExists(file)){
-    await file.delete();
-  }
-
-  final File imageFile = await localFile('user_image', 'png');
-
-  if(await fileExists(imageFile)){
-    await imageFile.delete();
   }
 }
 
@@ -169,14 +153,6 @@ Geschichte loadLocalStoryData({Map<String, dynamic> jsonFile, String storyname})
   return _story;
 }
 
-Future<void> deleteLocalStoryData() async {
-  final File file = await localFile('stories');
-
-  if(await fileExists(file)){
-    await file.delete();
-  }
-}
-
 //Write and read functions for general data
 Future<void> writeLocalGeneralData(GeneralData generalData) async {
   try{writeLocalErlebnisseData(generalData);}
@@ -199,7 +175,6 @@ Future<GeneralData> loadLocalGeneralData() async {
 
 Future<void> deleteLocalGeneralData() async{
   await deleteLocalGenderingData();
-  await deleteLocalErlebnisseData();
   await deleteLocalErlebnisseData();
 }
 
@@ -233,6 +208,14 @@ Future<GeneralData> loadLocalGenderingData(GeneralData generalData) async {
 
 Future<void> deleteLocalGenderingData() async{
   final File file = await localFile('gendering_data');
+
+  if(await fileExists(file)){
+    await file.delete();
+  }
+}
+
+Future<void> deleteLocalStoryData() async{
+  final File file = await localFile('stories');
 
   if(await fileExists(file)){
     await file.delete();

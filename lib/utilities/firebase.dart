@@ -53,13 +53,12 @@ Future<Map<String,Erlebniss>> loadErlebnisse(Firestore firestore) async {
 
 Map<String,Erlebniss> transformErlebnisse(Map<String,dynamic> data){
   Map<String, Erlebniss> _erlebnisseOut = Map();
-  Map<String,Map<String,String>> _erlebnisseIn = generalDataFromDynamic(data);
 
-  for(String _key in _erlebnisseIn.keys){
-    _erlebnisseOut[_key] = Erlebniss(text: _erlebnisseIn[_key]['text'],
-        title: _erlebnisseIn[_key]['title'],
-        image: Image.network(_erlebnisseIn[_key]['image']),
-        url: _erlebnisseIn[_key]['image']);
+  for(String _key in data.keys){
+    _erlebnisseOut[_key] = Erlebniss(text: data[_key]['text'],
+        title: data[_key]['title'],
+        image: Image.network(data[_key]['image']),
+        url: data[_key]['image']);
   }
   return _erlebnisseOut;
 }

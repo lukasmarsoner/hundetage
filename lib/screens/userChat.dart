@@ -23,7 +23,7 @@ class UserChat extends StatefulWidget {
 class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
   DataHandler dataHandler;
   int boyGirlIcon;
-  bool _chatRunning;
+  bool _chatRunning, _defaultImage=false;
   List<bool> _qAndAsDone;
   TextEditingController _textController;
   List<Widget> _messages = new List<Widget>();
@@ -75,11 +75,12 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     else{
       //Default image url
       String _url = 'https://firebasestorage.googleapis.com/v0/b/'
-          'hundetage-51cac.appspot.com/o/icon.png?alt'
-          '=media&token=f87dd6f5-36da-4ba9-8d3f-19d69a8f076a';
+          'hundetage-51cac.appspot.com/o/raja_computer.png?alt=media'
+          '&token=c41f6be2-da14-4fe1-86a4-73e3ecd85f87';
       //Save image to file
       if (dataHandler.hero.userImage == null && !_chatRunning) {
         await saveImageToFile(url: _url, filename: 'user_image');
+        _defaultImage = true;
       }
       setState(() {
         if (dataHandler.hero.userImage == null && !_chatRunning) {
@@ -192,6 +193,9 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
           'Lukas und ich hoffen du hast viel Spaß mit den Abenteuern, die du zusammen '
           'mit ${dataHandler.hero.name} erleben wirst. 🐶','user': 'Jakob'},
       37: {'text': 'Tschüss 👋👋','user': 'Lukas'},
+      99: {'text': 'Dann nehmen wir in der Zwischenzeit ein Bild von unserer neuen Programmiererin. '
+          'Maya arbeitet zwar schon hart an der nächsten App, aber '
+          'für ein Foto ist immer Zeit 😉','user': 'Lukas'},
     };
 
     for(int i=start;i<stop;i++) {
@@ -256,7 +260,10 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
         && !_qAndAsDone[2]){
       _chatRunning = true;
       await _sleep(seconds: 2);
-      await _postMessages(10,30);
+      _defaultImage
+          ?await _postMessages(99,100)
+          :await _postMessages(10,11);
+      await _postMessages(11,30);
       _postButton(_boyGirlSelection());
       _qAndAsDone[2] = true;
       _chatRunning = false;

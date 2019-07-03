@@ -40,7 +40,9 @@ class DummyMenuButtonSheetState extends State<DummyMenuButtonSheet>{
               children: <Widget>[
                 Padding(padding: EdgeInsets.only(top: headerTopMargin),
                     child: Row(children: <Widget>[
-                      UserButton(),
+                    Icon(Icons.face, color: Colors.white,
+                        key: Key('Inactive User Button'), size: 35,
+                      ),
                       SheetHeader(fontStyle: subTitleStyle),
                       Spacer(),
                       Icon(Icons.mail, color: Colors.white, size: 35, key: Key('Inactive Mail Button'))
@@ -371,7 +373,7 @@ class MailFieldState extends State<MailField>{
               decoration: new InputDecoration(
                   border: new OutlineInputBorder(
                       borderSide: new BorderSide(color: Colors.orange)),
-                  labelText: 'Was möchtest du uns erzählen? 😄'),
+                  labelText: 'Erzähl uns von dir 😄'),
               style: textStyle,
               controller: _controller,
               onChanged: (text) {mailSender.text=text;

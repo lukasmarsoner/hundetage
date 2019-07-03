@@ -47,7 +47,7 @@ class DataHandler{
   //We set this here for now. The machinery is in place to handle more than one
   //story but we don't have one for now ;-)
   String currentStory = 'Raja';
-  bool offlineData;
+  bool offlineData, cannotLoad=false;
   Held hero = Held.initial();
   ConnectionStatus connectionStatus = new ConnectionStatus();
 
@@ -95,13 +95,11 @@ class DataHandler{
     //Update existing stories
     for (String _storyname in firebaseVersions.stories.keys) {
       if (_storiesLocal.contains(_storyname)) {
-        if (versionController.stories[_storyname] <
-        firebaseVersions.stories[_storyname]) {
+        if (versionController.stories[_storyname] < firebaseVersions.stories[_storyname]) {
           stories[_storyname] = await loadGeschichte(firestore: firestore, story: stories[_storyname]);
           versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
           //Update local data
-          Map<String,dynamic> _inputs = {'story': stories[_storyname], 'versions': versionController};
-          updateLocalStoryData(_inputs);
+          await updateLocalStoryData(updatedVersion: versionController, updatedStory: stories[_storyname]);
         }
       }
       //Add missing stories
@@ -112,11 +110,11 @@ class DataHandler{
         //Add version data to local version controller
         versionController.stories[_storyname] = firebaseVersions.stories[_storyname];
         //Update local data
-        Map<String,dynamic> _inputs = {'story': stories[_storyname], 'versions': versionController};
-        updateLocalStoryData(_inputs);
+        await updateLocalStoryData(updatedVersion: versionController, updatedStory: stories[_storyname]);
       }
-      print(stories['Raja'].storyname);
     }
+    //Update version-information on disk
+    await writeLocalVersionData(versionController);
     return stories;
   }
 
@@ -126,72 +124,62 @@ class DataHandler{
     if (versionController.gendering < firebaseVersions.gendering) {
       generalData.gendering = await loadGendering(firestore);
       versionController.gendering = firebaseVersions.gendering;
-      //Update version-information on disk
-      writeLocalVersionData(versionController);
       //Update data on disk
-      writeLocalGenderingData(generalData);
+      await writeLocalGenderingData(generalData);
       }
-      if (versionController.erlebnisse < firebaseVersions.erlebnisse) {
-        generalData.erlebnisse = await loadErlebnisse(firestore);
-        versionController.erlebnisse = firebaseVersions.erlebnisse;
-        //Update version-information on disk
-        writeLocalVersionData(versionController);
-        //Update data on disk
-        writeLocalErlebnisseData(generalData);
-      }
+
+    if (versionController.erlebnisse < firebaseVersions.erlebnisse) {
+      generalData.erlebnisse = await loadErlebnisse(firestore);
+      versionController.erlebnisse = firebaseVersions.erlebnisse;
+      //Update data on disk
+      await writeLocalErlebnisseData(generalData);
+    }
+
+    //Update version-information on disk
+    await writeLocalVersionData(versionController);
     return generalData;
-  }
-
-  Future<GeneralData> loadGeneralDataFromDevice() async{
-    return await loadLocalGeneralData();
-  }
-
-  Future<Map<String,Geschichte>> loadStoryDataFromDevice() async{
-    return await loadAllLocalStoryData();
   }
 
   Future<void> loadData() async {
     versionController = await loadLocalVersionData();
-    //If we have no connection we just load the local data
-    if (offlineData || !connectionStatus.online) {
-      futureGeneralData = loadGeneralDataFromDevice();
-      futureStories = loadStoryDataFromDevice();
-      //If we have trouble loading local data, delete general data and
-      //Stories and load them from Firebase
-      //If one of the two is missing we re-load everything
-      //This could be more sophisticated but should not really be an issue
-      if(generalData==null || stories==null){
-        await deleteLocalGeneralData();
-        await deleteLocalStoryData();
-        offlineData = false;
-        loadData();
-      }
-    }
-    else {
+    if(connectionStatus.online){firebaseVersions = await loadVersionInformation(firestore: firestore);}
+
+    //If we have offline data we load it as we'll update or use it directly
+    if (offlineData) {
+      generalData = await loadLocalGeneralData();
+      stories = await loadAllLocalStoryData();
       if(connectionStatus.online) {
-        //First see if we have newer versions available on Firebase
-        firebaseVersions = await loadVersionInformation(firestore: firestore);
-        //If there is no offline data we need to load everything
-        if (!offlineData) {
-          futureGeneralData = loadGeneralData(firestore);
-          futureStories = loadGeschichten(firestore);
-          versionController = firebaseVersions;
-          //We'll write the stuff to the device only when all
-          //the loading futures have completed
-          writeLocalVersionData(versionController);
-        }
-        //If there is, we can just update what has changed
-        else {
-          futureGeneralData = updateGeneralDataFromTheWeb();
-          futureStories = updateStoryDataFromTheWeb();
-          }
+        //If we are connected to the internet: check if there are updates available
+        await updateGeneralDataFromTheWeb();
+        await updateStoryDataFromTheWeb();
       }
-      else{await loadData();}
     }
+    //If we don't have offline data we need to load it - this is done asynchronously
+    //So we don't slow-down loading
+    else{
+      if(connectionStatus.online) {
+        futureGeneralData = loadGeneralData(firestore);
+        futureStories = loadGeschichten(firestore);
+        versionController = firebaseVersions;
+      }
+      //If we don't have a connection we need to tell the user to connect to the internet
+      else{cannotLoad=true;}
+    }
+    //If there was an error loading we also re-load
+    //This checks if we failed to load from file (error in loading)
+    if((generalData==null&&stories==null&&futureGeneralData==null&&futureStories==null))
+      {
+        cannotLoad=true;
+        //Clean-up incorrect files
+        await deleteLocalStoryData();
+        await deleteLocalGeneralData();
+        await deleteLocalVersionData();
+      }
+    else{cannotLoad=false;}
 
+    //We chatch reading-errors in the reading itself
+    //and return default values in that case
     hero = await loadLocalUserData();
-    if(hero==null){hero = Held.initial();}
-
     hero.analytics = new FirebaseAnalytics();
     updateHero();
   }

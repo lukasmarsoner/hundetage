@@ -31,6 +31,7 @@ void main() {
     });
     
     //Tests start from here
+
     testWidgets('Test Profile-Row', (WidgetTester _tester) async {
       dataHandler.generalData = GeneralData.fromMap({'gendering': genderingMockData, 
       'erlebnisse': erlebnisseMap});
@@ -48,7 +49,7 @@ void main() {
       await _tester.pumpWidget(StaticTestWidget(returnWidget: GeschichteMainScreen(dataHandler: dataHandler)));
 
       expect(find.byKey(Key('Loading Story Screen')), findsOneWidget);
-      expect(find.byKey(Key('User Button')), findsOneWidget);
+      expect(find.byKey(Key('Inactive User Button')), findsOneWidget);
       expect(find.byKey(Key('Inactive Mail Button')), findsOneWidget);
       await _tester.pumpAndSettle();
       expect(find.byKey(Key('Main Story Screen')), findsOneWidget);

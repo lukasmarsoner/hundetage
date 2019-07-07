@@ -36,7 +36,7 @@ void main() {
   dataHandler.connectionStatus.online = true;
   dataHandler.offlineData = false;
 
-  group('Main Classes Unit-Tests', () {
+  group('Welcome Screen Tests', () {
     //Mocks calls to the application directory
     setUpAll(() async {
       // Create a temporary directory to work with

@@ -50,14 +50,14 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
         home: Scaffold(
             key: Key('Main Story Screen'),
             body: Container(child:
-            SafeArea(child: Stack(
+            Stack(
               children: <Widget>[
                 Padding(
                     padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
                     child: StoryText(dataHandler: dataHandler, imageHeight: imageHeight)),
                 MenuBottomSheet(dataHandler: dataHandler)
               ],
-            )))
+            ))
         )
     );
   }
@@ -69,14 +69,14 @@ class GeschichteMainScreenState extends State<GeschichteMainScreen>{
         home: Scaffold(
             body: Container(
                 height: getHeight,
-                child: SafeArea(child: Stack(
+                child: Stack(
                 children: <Widget>[
                   Padding(
                     padding: EdgeInsets.only(bottom: minHeightBottomSheet+5),
                     child: Container(height: imageHeight)),
                   DummyMenuButtonSheet()
                 ],
-            )))
+            ))
         )
     );
   }

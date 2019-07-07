@@ -52,8 +52,8 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
                   children: <Widget>[
                     Image.asset('assets/images/icon.png', width: 200.0, height: 200.0),
                     SizedBox(height: 40,),
-                    dataHandler.cannotLoad?SizedBox(height: 40,):Container(),
                     dataHandler.cannotLoad?Text('Keine Internetverbindung...', style: chatBoldStyle):Container(),
+                    dataHandler.cannotLoad?SizedBox(height: 40,):Container(),
                     Container(key: Key('Loading...'), child: CircularProgressIndicator(valueColor: _colorTween))
                   ]
               )
@@ -74,7 +74,10 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
     await dataHandler.checkDataSituation();
     await dataHandler.loadData();
     //If we ca't load data we inform the user and try again
-    if(dataHandler.cannotLoad){setState(() => _runDataLoaders());}
+    if(dataHandler.cannotLoad){
+      setState((){});
+      _runDataLoaders();
+    }
     else{setState(() => _isLoading = false);}
   }
 

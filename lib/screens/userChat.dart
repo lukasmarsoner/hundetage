@@ -92,6 +92,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     if(!_chatRunning){await _performQandA();}
   }
 
+//Updates the hero's gender from the user's selection
   Future<void> _setGender(String _geschlecht) async{
     setState(() => _messages.add(_newButtonResponse(_genderButton(_geschlecht))));
     if(dataHandler.hero.geschlecht==null) {
@@ -101,6 +102,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     if(!_chatRunning){await _performQandA();}
   }
 
+  //Sends a message to the chat (used by automatic and user inputs)
   Future<void> _sendMessage(String text) async{
     text = text.trim();
 
@@ -120,6 +122,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     if(!_chatRunning){await _performQandA();}
   }
 
+  //Posts automated responses to the chat
   Future<void> _postMessages(int start, int stop) async{
     Map<int, Map<String, String>> qAndAOutputs = {
       0: {'text': 'Hallo liebe Leser - willkommen bei Hundetage!', 'user': 'Lukas'},
@@ -202,15 +205,19 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       String _text = qAndAOutputs[i]['text'];
       String _user = qAndAOutputs[i]['user'];
       setState(() => _messages.add(_newItem(_text, _user)));
+      //Don't wait on the last response
       if(i<stop-1){await _sleep(text: _text);}
+      //If we only have one response - we still wait
+      if(stop-start == 1){await _sleep(text: _text);}
     }
   }
 
+  //Waiting between automates messages - waiting-time depends on the message's length
   Future<void> _sleep({int seconds, String text}) async{
     //Average german reading-speed is 150 words / minutes
     //We add a random element to make things seem less robotic
     int milliseconds;
-    int _readingSpeed = 10000;
+    int _readingSpeed = 150;
     if(text != null) {
       int _nWords = text.split(' ').length;
       milliseconds = (_nWords * 60 ~/ _readingSpeed) * 1000  + rng.nextInt(400);
@@ -221,6 +228,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     await Future.delayed(Duration(milliseconds: milliseconds));
   }
 
+  //Move to the main screen
   Future<void> _gotoAdventureScreen() async{
     dataHandler.hero.analytics = new FirebaseAnalytics();
     dataHandler.updateHero();
@@ -232,6 +240,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Controlls all automated postings
   Future<void> _performQandA() async{
     if(dataHandler.hero.userImage==null && dataHandler.hero.username==null
         && dataHandler.hero.name==null && dataHandler.hero.geschlecht==null
@@ -240,7 +249,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
       await _postMessages(0,3);
       setState(() => _messages.add(_newImage(
           Image.asset('assets/images/jakob_lukas.png', fit: BoxFit.cover), 'Lukas')));
-      await _sleep(seconds: 4);
+      await _sleep(seconds: 3);
       await _postMessages(3,6);
       _qAndAsDone[0] = true;
       _chatRunning = false;
@@ -289,9 +298,11 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     }
   }
 
+  //Button allowing user to opt-out of providing an image of themselves
   Widget _keinBildButton(){
     return GestureDetector(
-        onTap: () => _sendImage(defaultImage: true),child:
+      key: Key('Kein Bild'),
+      onTap: () => _sendImage(defaultImage: true),child:
     Stack(children: <Widget>[
       Container(
           padding: EdgeInsets.fromLTRB(4,4,0,10),
@@ -316,6 +327,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Button to go to main screen
   Widget _weiterButton(){
     return GestureDetector(
         onTap: () => _gotoAdventureScreen(),child:
@@ -343,6 +355,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Button for gender selection - icons are random
   Widget _genderButton(String _gender) {
     return GestureDetector(
         onTap: () => _setGender(_gender),
@@ -360,20 +373,23 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Button for each of the two geners
   Widget _boyGirlSelection(){
     return Container(
-        padding: EdgeInsets.only(bottom: 10),
-        child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              _genderButton('m'),
-              SizedBox(width: 20),
-              _genderButton('w')
-            ]
-        )
+      key: Key('Boy-Girl Selection'),
+      padding: EdgeInsets.only(bottom: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          _genderButton('m'),
+          SizedBox(width: 20),
+          _genderButton('w')
+        ]
+      )
     );
   }
 
+  //Adds the avatar of the person posting to the chat in a little bubble
   Widget _posterAvatar(String user){
     return Container(
         width: 43,
@@ -393,36 +409,40 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Adds a new image to the chat
   Widget _newImage(Image _image, String user){
     return GestureDetector(
+      key: Key('Posted Image'),
       onTap: () => showDialog(context: context, builder: (BuildContext context) => _showImage(_image)),
-        child: Stack(children: <Widget>[
-          Container(
-              padding: EdgeInsets.fromLTRB(user=='user'?0:8,8,user=='user'?8:0,10),
-              child: Row(
-                  mainAxisAlignment: user=='user'?MainAxisAlignment.end:MainAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      width: 200,
-                      height: 250,
-                      padding: EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                          color: user=='user'?Colors.orange:user=='Lukas'?red:blue,
-                          borderRadius: BorderRadius.circular(40)
-                      ),
-                      child: ClipRRect(
-                          borderRadius: new BorderRadius.circular(40.0), child: _image),
-                    ),
-                  ]
-              )
-          ),
-          Row(
-              mainAxisAlignment: user=='user'?MainAxisAlignment.end:MainAxisAlignment.start,
-              children: <Widget>[_posterAvatar(user)]),
-        ])
+      child: Stack(children: <Widget>[
+        Container(
+          padding: EdgeInsets.fromLTRB(user=='user'?0:8,8,user=='user'?8:0,10),
+          child: Row(
+            mainAxisAlignment: user=='user'?MainAxisAlignment.end:MainAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 200,
+                  height: 250,
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: user=='user'?Colors.orange:user=='Lukas'?red:blue,
+                    borderRadius: BorderRadius.circular(40)
+                  ),
+                child: ClipRRect(
+                  borderRadius: new BorderRadius.circular(40.0), child: _image),
+                ),
+              ]
+          )
+        ),
+        Row(
+          mainAxisAlignment: user=='user'?MainAxisAlignment.end:MainAxisAlignment.start,
+          children: <Widget>[_posterAvatar(user)]),
+      ])
     );
   }
 
+  //Button-responses are things like the gender selection, opting-out of providing an image
+  //or moving to the main screen
   Widget _newButtonResponse(Widget response){
     return Stack(children: <Widget>[
       Container(
@@ -449,9 +469,11 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Ads any new text item to the chat
   Widget _newItem(String text, String user){
     return Stack(children: <Widget>[
       Container(
+          key: Key('Posted Message'),
           padding: EdgeInsets.fromLTRB(user=='user'?0:4,4,user=='user'?4:0,10),
           child: Row(
               mainAxisAlignment: user=='user'?MainAxisAlignment.end:MainAxisAlignment.start,
@@ -476,6 +498,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Input bar containing icons for the camera and sending messages
   Widget _buildInput() {
     return Container(
       child: Row(
@@ -484,6 +507,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
             child: new Container(
               margin: new EdgeInsets.symmetric(horizontal: 1.0),
               child: new IconButton(
+                key: Key('Send Image'),
                 icon: new Icon(Icons.camera, size: 35, color: Colors.orange),
                 onPressed: () => _sendImage(),
                 color: Colors.orange,
@@ -495,6 +519,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
           Flexible(
             child: Container(
               child: TextField(
+                key: Key('Chat Text Field'),
                 style: textStyle,
                 controller: _textController,
               ),
@@ -505,6 +530,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
             child: new Container(
               margin: new EdgeInsets.symmetric(horizontal: 8.0),
               child: new IconButton(
+                key: Key('Send Message'),
                 icon: new Icon(Icons.send, size: 35, color: Colors.orange,),
                 onPressed: () => _sendMessage(_textController.text),
                 color: Colors.orange,
@@ -522,10 +548,12 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Pop-up for viewing chat-images in a dialog
   Dialog _showImage(Image _image) {
     return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         child: Container(
+          key: Key('Image Dialog'),
           height: 500.0,
           width: 250.0,
           child: Padding(
@@ -536,6 +564,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
     );
   }
 
+  //Actually build the chat-window
   @override
   Widget build(BuildContext context) {
     return Scaffold(body:

@@ -150,8 +150,9 @@ class DataHandler{
       stories = await loadAllLocalStoryData();
       if(connectionStatus.online) {
         //If we are connected to the internet: check if there are updates available
-        await updateGeneralDataFromTheWeb();
-        await updateStoryDataFromTheWeb();
+        //We can do this asynchronously as the sub-processes keep the order in tact
+        updateGeneralDataFromTheWeb();
+        updateStoryDataFromTheWeb();
       }
     }
     //If we don't have offline data we need to load it - this is done asynchronously
@@ -177,7 +178,10 @@ class DataHandler{
       }
     else{cannotLoad=false;}
 
-    //We chatch reading-errors in the reading itself
+    //Update Versions on file
+    await writeLocalVersionData(versionController);
+
+    //We catch reading-errors in the reading itself
     //and return default values in that case
     hero = await loadLocalUserData();
     hero.analytics = new FirebaseAnalytics();

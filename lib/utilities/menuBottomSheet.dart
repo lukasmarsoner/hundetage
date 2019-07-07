@@ -39,13 +39,14 @@ class DummyMenuButtonSheetState extends State<DummyMenuButtonSheet>{
             child: Stack(
               children: <Widget>[
                 Padding(padding: EdgeInsets.only(top: headerTopMargin),
-                    child: Row(children: <Widget>[
-                    Icon(Icons.face, color: Colors.white,
-                        key: Key('Inactive User Button'), size: 35,
-                      ),
-                      SheetHeader(fontStyle: subTitleStyle),
-                      Spacer(),
-                      Icon(Icons.mail, color: Colors.white, size: 35, key: Key('Inactive Mail Button'))
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        Icon(Icons.face, color: Colors.white, key: Key('Inactive User Button'), size: 35),
+                        Spacer(),
+                        SheetHeader(fontStyle: subTitleStyle),
+                        Spacer(),
+                        Icon(Icons.mail, color: Colors.white, size: 35, key: Key('Inactive Mail Button'))
                     ])
                 )
               ],
@@ -69,38 +70,36 @@ class MenuBottomSheet extends StatefulWidget {
 
 class MenuBottomSheetState extends State<MenuBottomSheet>
     with SingleTickerProviderStateMixin {
-  AnimationController _controller;
+  AnimationController _animationController;
   double get getWidth => MediaQuery.of(context).size.width;
   double get getHeight => MediaQuery.of(context).size.height;
   DataHandler dataHandler;
+  double get getTopPadding => MediaQuery.of(context).padding.top;
 
   MenuBottomSheetState({@required this.dataHandler});
 
   //Controls the hight of the sheet during animation
   double get headerTopMargin =>
-      lerp(8, 8 + MediaQuery.of(context).padding.top);
-
-  //Text for Menu-title
-  TextStyle get headerTextStyle => TextStyleTween(begin: subTitleStyle, end: titleStyle).animate(_controller).value;
+      scanHeight(5, 5+getTopPadding);
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _animationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 600),
+      duration: Duration(seconds: 1),
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
-  //Scnas through the menu-height
-  double lerp(double min, double max) =>
-      lerpDouble(min, max, _controller.value);
+  //Scans through the menu-height
+  double scanHeight(double min, double max) =>
+      lerpDouble(min, max, _animationController.value);
 
   @override
   Widget build(BuildContext context) {
@@ -114,10 +113,10 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
     );
 
     return new AnimatedBuilder(
-        animation: _controller,
+        animation: _animationController,
         builder: (context, child) {
           return Positioned(
-            height: lerp(minHeightBottomSheet, getHeight-30),
+            height: scanHeight(minHeightBottomSheet, getHeight),
             left: 0,
             right: 0,
             bottom: 0,
@@ -136,9 +135,12 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
                   children: <Widget>[
                     _buildErlebnisseList(),
                     Padding(padding: EdgeInsets.only(top: headerTopMargin),
-                        child: Row(children: <Widget>[
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
                           //User settings
                           UserButton(dataHandler: dataHandler),
+                          Spacer(),
                           SheetHeader(fontStyle: subTitleStyle),
                           Spacer(),
                           //Mail-contact form
@@ -180,7 +182,7 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
   //Every event has an animation associated with it, opening a dialog box
   Widget _buildItem({Erlebniss erlebniss}) {
     return ExpandedErlebniss(
-        visibility: _controller.value,
+        visibility: _animationController.value,
             onTap: () => _openDialog(ShowErlebniss(erlebniss: erlebniss, dataHandler: dataHandler,
                 getWidth: getWidth, getHeight: getHeight),
                 context),
@@ -198,27 +200,32 @@ class MenuBottomSheetState extends State<MenuBottomSheet>
 
   //Stuff to control the animation of the sheet
   void _toggle() {
-    final bool isOpen = _controller.status == AnimationStatus.completed;
-    _controller.fling(velocity: isOpen ? -2 : 2);
+    final bool isOpen = _animationController.status == AnimationStatus.completed;
+    _animationController.fling(velocity: isOpen ? -2 : 2);
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    _controller.value -= details.primaryDelta / getHeight;
+    _animationController.value -= details.primaryDelta / getHeight;
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    if (_controller.isAnimating ||
-        _controller.status == AnimationStatus.completed) return;
+    if (_animationController.isAnimating ||
+        _animationController.status == AnimationStatus.completed) return;
 
     //Fliging the sheet
     final double flingVelocity =
         details.velocity.pixelsPerSecond.dy / getHeight;
+    //Velocity in fling determins whether the animation will complete or not
+    //If velocity is positive, the animation will complete, otherwise it will dismiss.
     if (flingVelocity < 0.0)
-      _controller.fling(velocity: math.max(2.0, -flingVelocity));
+      //Finish the animation
+      _animationController.fling(velocity: math.max(2.0, -flingVelocity));
     else if (flingVelocity > 0.0)
-      _controller.fling(velocity: math.min(-2.0, -flingVelocity));
+      //Dismiss the animation (close the manu)
+      _animationController.fling(velocity: math.min(-2.0, -flingVelocity));
     else
-      _controller.fling(velocity: _controller.value < 0.5 ? -2.0 : 2.0);
+      //See which edge is closer and act accordingly
+      _animationController.fling(velocity: _animationController.value < 0.5 ? -2.0 : 2.0);
   }
 }
 
@@ -462,12 +469,9 @@ class SheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: EdgeInsets.only(left: 15),
-          child: Text(
+    return Text(
             'Erlebnisse',
             style: fontStyle,
-          ),
     );
   }
 }

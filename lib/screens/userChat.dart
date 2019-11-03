@@ -8,6 +8,7 @@ import 'package:hundetage/screens/adventures.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
+import 'package:path_provider/path_provider.dart';
 
 //User settings main class
 class UserChat extends StatefulWidget {
@@ -58,37 +59,23 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
 
   Future<void> _sendImage({bool defaultImage = false}) async {
     File imageFile;
+    Directory directory = await getApplicationDocumentsDirectory();
     //We hand in an image if the user does not want to set one of their own
-    if(!defaultImage) {
-      imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
-      //Save image to file
-      if (dataHandler.hero.userImage == null && !_chatRunning) {
-        await saveCameraImageToFile(image: imageFile, filename: 'user_image');
-      }
-      setState(() {
-        if (dataHandler.hero.userImage == null && !_chatRunning) {
-          dataHandler.hero.userImage = Image.file(imageFile, fit: BoxFit.cover);
-        }
-        _messages.add(_newImage(dataHandler.hero.userImage, 'user'));
-      });
+    if(defaultImage){
+      imageFile = File(directory.path +'/assets/images/jakob.png');
+      _defaultImage = true;
     }
-    else{
-      //Default image url
-      String _url = 'https://firebasestorage.googleapis.com/v0/b/'
-          'hundetage-51cac.appspot.com/o/raja_computer.png?alt=media'
-          '&token=c41f6be2-da14-4fe1-86a4-73e3ecd85f87';
-      //Save image to file
-      if (dataHandler.hero.userImage == null && !_chatRunning) {
-        await saveImageToFile(url: _url, filename: 'user_image');
-        _defaultImage = true;
-      }
-      setState(() {
-        if (dataHandler.hero.userImage == null && !_chatRunning) {
-          dataHandler.hero.userImage = Image.network(_url, fit: BoxFit.cover);
-        }
-        _messages.add(_newImage(dataHandler.hero.userImage, 'user'));
-      });
+    else {imageFile = await ImagePicker.pickImage(source: ImageSource.camera);}
+    //Save image to file
+    if (dataHandler.hero.userImage == null && !_chatRunning) {
+      saveCameraImageToFile(image: imageFile, filename: 'user_image');
     }
+    setState(() {
+      if (dataHandler.hero.userImage == null && !_chatRunning) {
+        dataHandler.hero.userImage = Image.file(imageFile, fit: BoxFit.cover);
+      }
+      _messages.add(_newImage(dataHandler.hero.userImage, 'user'));
+    });
     if(!_chatRunning){await _performQandA();}
   }
 
@@ -358,6 +345,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
   //Button for gender selection - icons are random
   Widget _genderButton(String _gender) {
     return GestureDetector(
+        key: Key('Button_'+_gender),
         onTap: () => _setGender(_gender),
         child: Container(
           height: 100,
@@ -412,7 +400,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
   //Adds a new image to the chat
   Widget _newImage(Image _image, String user){
     return GestureDetector(
-      key: Key('Posted Image'),
+      key: Key('Poste Image'),
       onTap: () => showDialog(context: context, builder: (BuildContext context) => _showImage(_image)),
       child: Stack(children: <Widget>[
         Container(
@@ -473,7 +461,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
   Widget _newItem(String text, String user){
     return Stack(children: <Widget>[
       Container(
-          key: Key('Posted Message'),
+          key: Key('Poste Message'),
           padding: EdgeInsets.fromLTRB(user=='user'?0:4,4,user=='user'?4:0,10),
           child: Row(
               mainAxisAlignment: user=='user'?MainAxisAlignment.end:MainAxisAlignment.start,

@@ -252,7 +252,7 @@ Future<GeneralData> loadLocalErlebnisseData(GeneralData generalData) async {
     try {
         for(String _key in _keys){
           _mapOut[_key] = Erlebniss(image: await loadImageFromFile(_key),
-          text: _map[_key]['text'], url: _map[_key]['image'], title: _map[_key]['title']);
+          text: _map[_key]['text'], url: _map[_key]['url'], title: _map[_key]['title']);
       }
     }
     catch (e) {return null;}

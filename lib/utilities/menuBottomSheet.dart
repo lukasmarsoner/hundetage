@@ -42,7 +42,7 @@ class DummyMenuButtonSheetState extends State<DummyMenuButtonSheet>{
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget>[
-                        Icon(Icons.face, color: Colors.white, key: Key('Inactive User Button'), size: 35),
+                        Icon(Icons.account_circle, color: Colors.white, key: Key('Inactive User Button'), size: 35),
                         Spacer(),
                         SheetHeader(fontStyle: subTitleStyle),
                         Spacer(),
@@ -271,7 +271,7 @@ class MailDialogState extends State<MailDialog>{
     );
   }
 
-  //Image showing the attachement. If we have nothing, we add an empty container
+  //Image showing the attachment. If we have nothing, we add an empty container
   Widget attachment(double size){
     return mailSender.attachmentPath == null
         ?Container()
@@ -433,9 +433,10 @@ class ShowErlebniss extends StatelessWidget{
           borderRadius: BorderRadius.circular(20),
         ),
         child: Container(
-          constraints: BoxConstraints(minHeight: 100, maxWidth: getWidth * 4/5,
-              minWidth: 00, maxHeight: getHeight * 3/4),
-            child: ListView(
+          padding: EdgeInsets.all(10.0),
+          constraints: BoxConstraints(minHeight: 100, maxWidth: getWidth * 0.98,
+              maxHeight: getHeight * 3/4),
+            child: Column(
                 children: <Widget>[
                   Center(child: Container(
                       padding: EdgeInsets.fromLTRB(15,10,15,0),
@@ -451,9 +452,15 @@ class ShowErlebniss extends StatelessWidget{
                           child: erlebniss.image)),
                   SizedBox(height: 10,),
                   Container(
+                      constraints: BoxConstraints(minHeight: 40, maxWidth: getWidth * 0.98,
+                          maxHeight: getHeight * 3/4 - 220 - 80),
                       padding: EdgeInsets.fromLTRB(15,10,15,10),
-                      child: Text(dataHandler.substitution.applyAllSubstitutions(erlebniss.text),
-                          style: textStyle))
+                      child: ListView(
+                      children: <Widget>[
+                        Text(dataHandler.substitution.applyAllSubstitutions(erlebniss.text),
+                            style: textStyle)]
+                      )
+                  )
                 ]
             )
         )

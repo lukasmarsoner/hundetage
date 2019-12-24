@@ -7,6 +7,8 @@ import 'package:hundetage/utilities/dataHandling.dart';
 import 'dart:io';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  
   DataHandler dataHandler = new DataHandler();
   dataHandler.firestore = mockFirestore;
   dataHandler.connectionStatus.online = true;

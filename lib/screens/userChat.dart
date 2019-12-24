@@ -472,7 +472,7 @@ class UserChatState extends State<UserChat> with SingleTickerProviderStateMixin{
                               color: user=='user'?Colors.orange:user=='Lukas'?red:blue,
                               borderRadius: BorderRadius.circular(40)),
                           child: Padding(
-                              padding: user=='user'?EdgeInsets.fromLTRB(15,15,40,15):EdgeInsets.all(15),
+                              padding: user=='user'?EdgeInsets.fromLTRB(20,20,40,15):EdgeInsets.all(20),
                               child: Text((user=='user'?'':(' '*6)) + text,
                                   style: chatStyle, softWrap: true))
                           )

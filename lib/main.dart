@@ -7,6 +7,7 @@ import 'package:hundetage/screens/userChat.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(SplashScreen());
 }
 

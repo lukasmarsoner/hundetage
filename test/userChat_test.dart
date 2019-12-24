@@ -7,8 +7,8 @@ import 'package:hundetage/utilities/dataHandling.dart';
 import 'dart:io';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   DataHandler dataHandler = new DataHandler();
   dataHandler.firestore = mockFirestore;
   dataHandler.connectionStatus.online = true;
@@ -51,7 +51,7 @@ void main() {
       await _tester.tap(find.byKey(Key('Send Message')));
       
       await _tester.pumpAndSettle(Duration(minutes: 10));
-      expect(find.byKey(Key('Poste Message')), findsNWidgets(4));
+      expect(find.byKey(Key('Poste Message')), findsNWidgets(3));
 
       expect(find.byKey(Key('Kein Bild')), findsOneWidget);
       await _tester.tap(find.byKey(Key('Kein Bild')));

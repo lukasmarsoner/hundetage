@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  TestWidgetsFlutterBinding.ensureInitialized();
 
   //Mock the collection
   when(mockFirestore.collection('general_data')).thenReturn(mockCollectionReference);

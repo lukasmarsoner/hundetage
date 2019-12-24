@@ -7,7 +7,7 @@ import 'package:hundetage/screens/adventures.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  TestWidgetsFlutterBinding.ensureInitialized();
 
   DataHandler dataHandler = new DataHandler();
   dataHandler.firestore = mockFirestore;

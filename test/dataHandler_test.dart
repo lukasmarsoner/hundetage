@@ -1,11 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'utilities.dart';
+import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:mockito/mockito.dart';
 import 'package:hundetage/utilities/dataHandling.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   //Mock the collection
   when(mockFirestore.collection('general_data')).thenReturn(mockCollectionReference);
   //Mock both documents

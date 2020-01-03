@@ -72,3 +72,5 @@
 coverage/
 
 hundetage_backup\.zip
+
+android/app/google-services.json
